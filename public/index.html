@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Swoop — Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --green: #059669;
+            --green-bg: #f0fdf4;
+            --yellow: #d97706;
+            --yellow-bg: #fefce8;
+            --red: #dc2626;
+            --red-bg: #fef2f2;
+            --blue-bg: #eff6ff;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --border: #e2e8f0;
+        }
+
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+
+        .header {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #06b6d4 100%);
+            color: white;
+            padding: 1.5rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .header h1 { font-size: 1.5rem; }
+        .header h1 span { font-weight: 300; opacity: 0.8; font-size: 0.9rem; margin-left: 0.5rem; }
+        .header .status { display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; }
+        .header .status .dot { width: 10px; height: 10px; border-radius: 50%; background: #4ade80; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 1.5rem; }
+
+        /* Stats Grid */
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+        .stat-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.25rem;
+            border: 1px solid var(--border);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .stat-card .label { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+        .stat-card .value { font-size: 2rem; font-weight: 700; margin-top: 0.25rem; }
+        .stat-card .value.green { color: var(--green); }
+        .stat-card .value.blue { color: var(--primary); }
+        .stat-card .value.yellow { color: var(--yellow); }
+
+        /* Lead List */
+        .section-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+        .lead-list { display: flex; flex-direction: column; gap: 0.75rem; }
+        .lead-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            border: 1px solid var(--border);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            cursor: pointer;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .lead-card:hover { border-color: var(--primary); box-shadow: 0 2px 8px rgba(37,99,235,0.12); }
+        .lead-card .avatar {
+            width: 44px; height: 44px;
+            border-radius: 50%;
+            background: var(--blue-bg);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem; font-weight: 700; color: var(--primary);
+            flex-shrink: 0;
+        }
+        .lead-card .info { flex: 1; min-width: 0; }
+        .lead-card .info .name { font-weight: 600; font-size: 0.95rem; }
+        .lead-card .info .phone { font-size: 0.82rem; color: var(--text-muted); }
+        .lead-card .info .last-msg { font-size: 0.82rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 0.15rem; }
+        .lead-card .meta { text-align: right; flex-shrink: 0; }
+        .lead-card .meta .time { font-size: 0.78rem; color: var(--text-muted); }
+
+        .badge {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .badge-new { background: var(--blue-bg); color: var(--primary); }
+        .badge-engaged { background: var(--green-bg); color: var(--green); }
+        .badge-converted { background: #f0fdf4; color: #15803d; }
+        .badge-review { background: var(--yellow-bg); color: var(--yellow); }
+
+        /* Lead Detail Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: var(--card-bg);
+            border-radius: 16px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 1.5rem;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+        }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .modal-header h2 { font-size: 1.2rem; }
+        .modal-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted); }
+
+        .message-thread { display: flex; flex-direction: column; gap: 0.5rem; margin: 1rem 0; }
+        .msg {
+            max-width: 80%;
+            padding: 0.6rem 0.9rem;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        .msg.outbound { align-self: flex-end; background: var(--primary); color: white; border-bottom-right-radius: 4px; }
+        .msg.inbound { align-self: flex-start; background: #f1f5f9; color: var(--text); border-bottom-left-radius: 4px; }
+        .msg .msg-time { font-size: 0.7rem; opacity: 0.7; margin-top: 0.2rem; }
+
+        .action-bar { display: flex; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap; }
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--card-bg);
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn:hover { border-color: var(--primary); color: var(--primary); }
+        .btn-primary { background: var(--primary); color: white; border-color: var(--primary); }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-green { background: var(--green); color: white; border-color: var(--green); }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-muted);
+        }
+        .empty-state .emoji { font-size: 3rem; margin-bottom: 1rem; }
+        .empty-state h3 { font-size: 1.1rem; color: var(--text); margin-bottom: 0.5rem; }
+
+        /* Setup Banner */
+        .setup-banner {
+            background: linear-gradient(135deg, var(--yellow-bg) 0%, #fff7ed 100%);
+            border: 1px solid #fed7aa;
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+        .setup-banner h3 { font-size: 1rem; margin-bottom: 0.5rem; }
+        .setup-banner code { background: #fff; padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.85rem; }
+        .setup-steps { margin-top: 0.75rem; }
+        .setup-steps li { font-size: 0.9rem; margin-bottom: 0.4rem; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🦅 Swoop <span>Never miss a lead</span></h1>
+        <div class="status">
+            <div class="dot"></div>
+            <span id="status-text">Connecting...</span>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Stats -->
+        <div class="stats" id="stats">
+            <div class="stat-card"><div class="label">Total Leads</div><div class="value blue" id="stat-total">—</div></div>
+            <div class="stat-card"><div class="label">New</div><div class="value" id="stat-new">—</div></div>
+            <div class="stat-card"><div class="label">Engaged</div><div class="value green" id="stat-engaged">—</div></div>
+            <div class="stat-card"><div class="label">Texts Sent</div><div class="value blue" id="stat-sent">—</div></div>
+            <div class="stat-card"><div class="label">Pending Follow-ups</div><div class="value yellow" id="stat-followups">—</div></div>
+            <div class="stat-card"><div class="label">Reviews Requested</div><div class="value green" id="stat-reviews">—</div></div>
+        </div>
+
+        <!-- Setup Banner (shown when no businesses exist) -->
+        <div class="setup-banner" id="setup-banner" style="display:none;">
+            <h3>⚡ Quick Setup</h3>
+            <p>Swoop is running! Here's how to connect it to Twilio:</p>
+            <ol class="setup-steps">
+                <li>Copy <code>.env.example</code> to <code>.env</code> and add your <a href="https://console.twilio.com" target="_blank">Twilio credentials</a></li>
+                <li>Buy a Twilio phone number ($1/mo + usage)</li>
+                <li>Set the Voice webhook to <code>YOUR_URL/webhooks/voice</code></li>
+                <li>Set the Voice status callback to <code>YOUR_URL/webhooks/voice-status</code></li>
+                <li>Set the SMS webhook to <code>YOUR_URL/webhooks/sms</code></li>
+                <li>Register your business below 👇</li>
+            </ol>
+            <div style="margin-top:1rem;">
+                <button class="btn btn-primary" onclick="showAddBusiness()">+ Add Your Business</button>
+            </div>
+        </div>
+
+        <!-- Lead List -->
+        <div class="section-title">📋 Recent Leads</div>
+        <div class="lead-list" id="lead-list">
+            <div class="empty-state" id="empty-state">
+                <div class="emoji">🦅</div>
+                <h3>No leads yet</h3>
+                <p>When someone misses a call, Swoop texts them back instantly. Their info shows up here.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lead Detail Modal -->
+    <div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+        <div class="modal" id="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h2 id="modal-title">Lead Details</h2>
+                <button class="modal-close" onclick="document.getElementById('modal-overlay').classList.remove('active')">&times;</button>
+            </div>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <script>
+        const API = '';
+
+        // ---- Dashboard Data ----
+        async function loadDashboard() {
+            try {
+                const [statsRes, leadsRes] = await Promise.all([
+                    fetch(`${API}/api/dashboard`),
+                    fetch(`${API}/api/leads`),
+                ]);
+
+                if (statsRes.ok) {
+                    const s = await statsRes.json();
+                    document.getElementById('stat-total').textContent = s.totalLeads;
+                    document.getElementById('stat-new').textContent = s.newLeads;
+                    document.getElementById('stat-engaged').textContent = s.engagedLeads;
+                    document.getElementById('stat-sent').textContent = s.messagesSent;
+                    document.getElementById('stat-followups').textContent = s.pendingFollowUps;
+                    document.getElementById('stat-reviews').textContent = s.reviewsSent;
+                    document.getElementById('status-text').textContent = 'Live';
+
+                    // Show setup banner if no leads yet
+                    if (s.totalLeads === 0) {
+                        document.getElementById('setup-banner').style.display = 'block';
+                    }
+                }
+
+                if (leadsRes.ok) {
+                    const leads = await leadsRes.json();
+                    renderLeads(leads);
+                }
+            } catch (err) {
+                document.getElementById('status-text').textContent = 'Offline';
+                console.error('Dashboard load error:', err);
+            }
+        }
+
+        function renderLeads(leads) {
+            const list = document.getElementById('lead-list');
+            const empty = document.getElementById('empty-state');
+
+            if (leads.length === 0) {
+                empty.style.display = 'block';
+                return;
+            }
+
+            empty.style.display = 'none';
+            list.innerHTML = leads.map(lead => `
+                <div class="lead-card" onclick="openLead(${lead.id})">
+                    <div class="avatar">${(lead.caller_name || lead.caller_phone).charAt(0).toUpperCase()}</div>
+                    <div class="info">
+                        <div class="name">${escapeHtml(lead.caller_name || lead.caller_phone)}</div>
+                        <div class="phone">${lead.caller_name ? escapeHtml(lead.caller_phone) : ''}</div>
+                        <div class="last-msg">${lead.last_message ? escapeHtml(lead.last_message) : 'No messages yet'}</div>
+                    </div>
+                    <div class="meta">
+                        <div class="time">${timeAgo(lead.updated_at)}</div>
+                        <div class="badge badge-${lead.lead_status === 'new' ? 'new' : lead.lead_status === 'engaged' ? 'engaged' : lead.lead_status === 'review_sent' ? 'review' : 'converted'}">${lead.lead_status}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ---- Lead Detail ----
+        async function openLead(id) {
+            const res = await fetch(`${API}/api/leads/${id}`);
+            if (!res.ok) return;
+            const lead = await res.json();
+
+            document.getElementById('modal-title').textContent = lead.caller_name || lead.caller_phone;
+
+            let html = `
+                <div style="margin-bottom:1rem;">
+                    <span class="badge badge-${lead.lead_status === 'new' ? 'new' : lead.lead_status === 'engaged' ? 'engaged' : 'review'}">${lead.lead_status}</span>
+                    <span style="font-size:0.85rem;color:var(--text-muted);margin-left:0.5rem;">${escapeHtml(lead.caller_phone)} · ${lead.message_count || lead.messages.length} messages</span>
+                </div>
+                <div class="message-thread">
+            `;
+
+            for (const msg of lead.messages) {
+                html += `
+                    <div class="msg ${msg.direction}">
+                        ${escapeHtml(msg.body)}
+                        <div class="msg-time">${new Date(msg.sent_at + 'Z').toLocaleString()}</div>
+                    </div>
+                `;
+            }
+
+            html += '</div>';
+
+            // Follow-up status
+            if (lead.followUps && lead.followUps.length > 0) {
+                html += '<div style="margin-top:1rem;font-size:0.85rem;"><strong>Follow-ups:</strong><ul style="margin-top:0.3rem;">';
+                for (const fu of lead.followUps) {
+                    const icon = fu.status === 'sent' ? '✅' : fu.status === 'cancelled' ? '⏹️' : '⏳';
+                    html += `<li>${icon} ${fu.status} — ${new Date(fu.scheduled_for + 'Z').toLocaleDateString()}</li>`;
+                }
+                html += '</ul></div>';
+            }
+
+            // Action buttons
+            html += `
+                <div class="action-bar">
+                    ${lead.lead_status !== 'converted' ? `<button class="btn btn-green" onclick="updateLead(${lead.id}, 'converted')">✅ Mark Converted</button>` : ''}
+                    ${lead.lead_status !== 'review_sent' ? `<button class="btn" onclick="requestReview(${lead.id})">⭐ Request Review</button>` : ''}
+                </div>
+            `;
+
+            document.getElementById('modal-body').innerHTML = html;
+            document.getElementById('modal-overlay').classList.add('active');
+        }
+
+        async function updateLead(id, status) {
+            await fetch(`${API}/api/leads/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ lead_status: status }),
+            });
+            document.getElementById('modal-overlay').classList.remove('active');
+            loadDashboard();
+        }
+
+        async function requestReview(id) {
+            await fetch(`${API}/api/leads/${id}/review`, { method: 'POST' });
+            openLead(id); // Refresh the modal
+            loadDashboard();
+        }
+
+        function closeModal(event) {
+            if (event.target === document.getElementById('modal-overlay')) {
+                document.getElementById('modal-overlay').classList.remove('active');
+            }
+        }
+
+        // ---- Add Business ----
+        function showAddBusiness() {
+            const html = `
+                <h2 style="margin-bottom:1rem;">Add Your Business</h2>
+                <form onsubmit="createBusiness(event)" style="display:flex;flex-direction:column;gap:0.75rem;">
+                    <div>
+                        <label style="font-size:0.85rem;font-weight:600;">Business Name *</label>
+                        <input id="biz-name" type="text" required placeholder="Mike's Plumbing" style="width:100%;padding:0.5rem;border:1px solid var(--border);border-radius:8px;font-size:0.9rem;margin-top:0.25rem;">
+                    </div>
+                    <div>
+                        <label style="font-size:0.85rem;font-weight:600;">Twilio Phone Number *</label>
+                        <input id="biz-phone" type="text" required placeholder="+12065551234" style="width:100%;padding:0.5rem;border:1px solid var(--border);border-radius:8px;font-size:0.9rem;margin-top:0.25rem;">
+                    </div>
+                    <div>
+                        <label style="font-size:0.85rem;font-weight:600;">Owner Name</label>
+                        <input id="biz-owner" type="text" placeholder="Mike" style="width:100%;padding:0.5rem;border:1px solid var(--border);border-radius:8px;font-size:0.9rem;margin-top:0.25rem;">
+                    </div>
+                    <div>
+                        <label style="font-size:0.85rem;font-weight:600;">Auto-Reply Message</label>
+                        <textarea id="biz-reply" rows="2" placeholder="Hey! Sorry we missed your call. What do you need help with?" style="width:100%;padding:0.5rem;border:1px solid var(--border);border-radius:8px;font-size:0.9rem;margin-top:0.25rem;"></textarea>
+                    </div>
+                    <div>
+                        <label style="font-size:0.85rem;font-weight:600;">Google Review Link</label>
+                        <input id="biz-review" type="url" placeholder="https://g.page/r/your-business/review" style="width:100%;padding:0.5rem;border:1px solid var(--border);border-radius:8px;font-size:0.9rem;margin-top:0.25rem;">
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="margin-top:0.5rem;">Create Business</button>
+                </form>
+            `;
+            document.getElementById('modal-body').innerHTML = html;
+            document.getElementById('modal-title').textContent = '';
+            document.getElementById('modal-overlay').classList.add('active');
+        }
+
+        async function createBusiness(e) {
+            e.preventDefault();
+            const body = {
+                name: document.getElementById('biz-name').value,
+                phone: document.getElementById('biz-phone').value,
+                owner_name: document.getElementById('biz-owner').value || undefined,
+                auto_reply_message: document.getElementById('biz-reply').value || undefined,
+                review_link: document.getElementById('biz-review').value || undefined,
+            };
+            const res = await fetch(`${API}/api/businesses`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body),
+            });
+            if (res.ok) {
+                document.getElementById('modal-overlay').classList.remove('active');
+                document.getElementById('setup-banner').style.display = 'none';
+                loadDashboard();
+            } else {
+                const err = await res.json();
+                alert(err.error || 'Failed to create business');
+            }
+        }
+
+        // ---- Utilities ----
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        function timeAgo(dateStr) {
+            const date = new Date(dateStr + 'Z');
+            const now = new Date();
+            const seconds = Math.floor((now - date) / 1000);
+            if (seconds < 60) return 'just now';
+            if (seconds < 3600) return Math.floor(seconds / 60) + 'm ago';
+            if (seconds < 86400) return Math.floor(seconds / 3600) + 'h ago';
+            return Math.floor(seconds / 86400) + 'd ago';
+        }
+
+        // ---- Init ----
+        loadDashboard();
+        setInterval(loadDashboard, 30000); // Refresh every 30s
+    </script>
+</body>
+</html>
