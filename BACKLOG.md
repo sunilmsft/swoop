@@ -44,7 +44,7 @@
 
 ---
 
-## 🔜 Next Up (v0.3) — Self-Service & Deployment
+## 🔜 Next Up (v0.3) — Auth, Settings & Deploy
 
 > **Priority labels:** 🔴 Blocker — can't ship without it | 🟡 High — should do before first customer | 🟢 Nice — improves product but not urgent | 🔵 By Design — consciously deferred
 
@@ -60,33 +60,63 @@
 - [ ] 🟡 Rate limiting on webhook and API endpoints
 - [ ] 🟡 Sanitize/validate phone number format (E.164)
 
-### Self-Service Business Dashboard
-- [ ] 🟡 Inline editing: services, FAQs, pricing, hours — _Jordan: "No business profile edit after creation"_
-- [ ] 🟡 Toggle AI on/off from dashboard
+### Owner Dashboard — Leads
 - [ ] 🟡 Send manual SMS from dashboard — _Jordan: "After AI hands off, owner can't reply through Swoop"_
-- [ ] 🟢 Customizable voice greeting per business (seasonal messages, peak hours) — _Jordan: "Should be fully customizable eventually"_
-- [ ] 🟢 Onboarding wizard (3-step guided setup)
-- [ ] 🟢 Pre-fill default auto-reply template — _Priya: "Owner has to write their own from scratch"_
-
-### Owner Notifications (🟡 High — Squad Review May 11)
-- [ ] 🟡 Text owner when a lead hits "needs_attention" with a dashboard link — _Ray: "No way to know a lead needs me unless I'm watching the dashboard"_
-- [ ] 🟢 Email notification option for leads needing attention
-
-### Dashboard Improvements
-- [ ] 🟢 Wire logo into dashboard header
 - [ ] 🟡 Mobile-responsive polish — _Ray: "I'm on my phone. Always."_
-- [ ] 🟢 Business selector (currently shows all leads mixed)
 - [ ] 🟢 Search/filter leads (by status, phone, name)
 - [ ] 🟢 Pagination for leads list (currently capped at 50)
+- [ ] 🟢 Wire logo into dashboard header
 
-### Messaging
+### Owner Dashboard — Settings Panel
+> One screen, accordion sections, auto-save. Plain language labels. Pre-filled with smart defaults.
+
+**Business Profile**
+- [ ] 🟡 Inline editing: name, services, pricing, hours, service area — _Jordan: "No business profile edit after creation"_
+- [ ] 🟢 Pre-fill default auto-reply template — _Priya: "Owner has to write their own from scratch"_
+
+**AI Agent**
+- [ ] 🟡 Toggle AI on/off from dashboard
+- [ ] 🟢 Edit tone, max turns, FAQs, "never say" rules from settings
+
+**Messages**
+- [ ] 🟢 Customizable voice greeting per business (seasonal messages, peak hours) — _Jordan: "Should be fully customizable eventually"_
 - [ ] 🟢 Customize follow-up message templates per business
 - [ ] 🟢 Configurable follow-up timing (not hardcoded 1/3/7 days)
+
+**Notifications**
+- [ ] 🟡 Text owner when a lead hits "needs_attention" — _Ray: "No way to know a lead needs me unless I'm watching the dashboard"_
+- [ ] 🟢 Email notification option for leads needing attention
+- [ ] 🟢 Choose who gets notified (owner phone/email)
+
+**Coverage & Delegation**
+- [ ] 🟢 Redirect notifications to a backup person (owner on vacation/unavailable)
+- [ ] 🟢 Quiet hours — batch notifications instead of real-time
+
+### Messaging Infrastructure
 - [ ] 🟢 Message delivery status tracking (Twilio status callbacks)
 
 ---
 
-## 📋 Future (v0.4+)
+## 📋 v0.3.5 — Notifications & Coverage
+- [ ] Owner SMS/email alerts on AI handoff
+- [ ] Backup person redirect (delegation)
+- [ ] Quiet hours / do-not-disturb mode
+
+---
+
+## 📋 v0.4 — Insights & Team
+
+### Insights Dashboard
+- [ ] Leads this week/month trend
+- [ ] Conversion rate (leads → converted)
+- [ ] Response time (how fast AI responded)
+- [ ] Missed calls by time of day (shows when they need coverage)
+- [ ] ROI calculator: "Swoop captured X leads worth ~$Y this month" — _Jordan: "No analytics at all"_
+
+### Team & Roles
+- [ ] Add a second person (employee/partner)
+- [ ] Role-based access: can reply vs. view-only
+- [ ] Lead routing by zip code (multi-truck businesses)
 
 ### AI Features (Advanced)
 - [ ] Smart lead scoring (based on message sentiment, response speed)
@@ -95,25 +125,31 @@
 - [ ] Conditional call forwarding mode (carrier forwards missed calls directly)
 - [ ] AI voice agent (answer the actual call)
 
-### Integrations
-- [ ] Google Calendar integration for appointment scheduling
-- [ ] Zapier/webhook triggers for CRM integrations
-- [ ] Stripe billing for SaaS pricing ($29/$49/mo tiers)
-- [ ] White-label support (custom branding per business)
-- [ ] ServiceTitan / Housecall Pro CRM sync
-
 ### Operations
 - [ ] Automated tests (unit + integration)
 - [ ] CI/CD pipeline (GitHub Actions)
 - [ ] Error monitoring (Sentry or similar)
 - [ ] Logging improvements (structured JSON logs)
 - [ ] Database backups strategy
-- [ ] Analytics: conversion funnel, response time metrics — _Jordan: "No analytics at all"_
+
+---
+
+## 📋 v0.5 — Billing & Scale
+
+### Billing (Stripe)
+- [ ] Self-service plan selection ($29/$59/$99)
+- [ ] Usage tracking (text-backs this month)
+- [ ] Upgrade/downgrade from settings
+- [ ] 14-day free trial flow
+
+### Integrations
+- [ ] Google Calendar integration for appointment scheduling
+- [ ] Zapier/webhook triggers for CRM integrations
+- [ ] White-label support (custom branding per business)
+- [ ] ServiceTitan / Housecall Pro CRM sync
 
 ### Growth
 - [ ] Landing page / marketing site
-- [ ] Onboarding wizard (guided Twilio setup)
-- [ ] Email notifications to business owner on new leads
 - [ ] Multi-number support (one business, multiple Twilio numbers)
 - [ ] Voicemail transcription
 
