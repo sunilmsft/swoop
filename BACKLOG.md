@@ -23,80 +23,77 @@
 
 ---
 
-## 🔜 Next Up (v0.2)
+## ✅ Done (v0.2.5) — AI Reply Agent
+- [x] Business profile schema: name, owner, description, services, pricing, hours, service area
+- [x] Tone/personality settings: friendly, professional, casual
+- [x] FAQ entries per business
+- [x] Rules/guardrails: things to never say, topics to redirect
+- [x] Onboarding form in dashboard to collect business profile (2-column grid)
+- [x] System prompt builder: auto-generate LLM prompt from business profile
+- [x] OpenAI gpt-4o-mini integration for two-way SMS conversations
+- [x] 3-turn budget per lead before graceful handoff (configurable per business)
+- [x] Context-aware: uses business profile, hours, services to answer questions
+- [x] After turn limit: send handoff message with callback timeframe
+- [x] Configurable timeframe per business: during hours / after hours
+- [x] Lead status changes to "Needs Attention" 🔔 on dashboard
+- [x] Conversation summary in lead notes for business owner
+- [x] Resilient SMS sending (logs AI reply even if Twilio send fails)
+- [x] Dashboard: needs_attention badge, AI turn count, handoff summary box
+- [x] Playbook updated: Accounts & Keys tab, AI Agent tab
+- [x] New logo (bold wordmark with chat dots in "p")
+
+---
+
+## 🔜 Next Up (v0.3) — Self-Service & Deployment
+
+### Deploy to Production
+- [ ] Deploy to Render (render.yaml ready)
+- [ ] Set environment variables on Render
+- [ ] Update Twilio webhooks to Render URL
+- [ ] Complete Twilio toll-free SMS verification
+
+### Self-Service Business Dashboard
+- [ ] Per-business auth (magic link or phone + code)
+- [ ] Business owner dashboard (filtered to their leads only)
+- [ ] Inline editing: services, FAQs, pricing, hours
+- [ ] Toggle AI on/off from dashboard
+- [ ] Send manual SMS from dashboard (owner replies to leads)
+- [ ] Onboarding wizard (3-step guided setup)
 
 ### Security & Auth
 - [ ] Add basic auth or API key to dashboard/API (currently wide open)
 - [ ] Rate limiting on webhook and API endpoints
-- [ ] CSRF protection on dashboard forms
 - [ ] Sanitize/validate phone number format (E.164)
 
-### Multi-Tenant
-- [ ] Business selector in dashboard (currently shows all leads mixed)
-- [ ] Scope API endpoints to a business (query param or auth)
-- [ ] Per-business settings page in dashboard
-
 ### Dashboard Improvements
-- [ ] Auto-refresh indicator / last-updated timestamp
+- [ ] Wire logo into dashboard header
+- [ ] Business selector (currently shows all leads mixed)
 - [ ] Search/filter leads (by status, phone, name)
 - [ ] Pagination for leads list (currently capped at 50)
-- [ ] Date range filter for stats
 - [ ] Mobile-responsive polish
 
 ### Messaging
-- [ ] Send manual SMS from dashboard (two-way conversation)
 - [ ] Customize follow-up message templates per business
 - [ ] Configurable follow-up timing (not hardcoded 1/3/7 days)
-- [ ] Message delivery status tracking (Twilio status callbacks for SMS)
+- [ ] Message delivery status tracking (Twilio status callbacks)
 
 ---
 
-## 🤖 Next Priority (v0.2.5) — AI Reply Agent
-
-### Business Knowledge Base (Grounding)
-- [ ] Business profile schema: name, owner, description, services, pricing, hours, service area
-- [ ] Tone/personality settings: friendly, professional, casual
-- [ ] FAQ entries per business (e.g., "Do you offer free estimates?" → "Yes!")
-- [ ] Rules/guardrails: things to never say, topics to redirect
-- [ ] Onboarding form in dashboard to collect business profile
-- [ ] System prompt builder: auto-generate LLM prompt from business profile
-
-### AI Conversational Agent
-- [ ] LLM integration (OpenAI / Azure OpenAI) for two-way SMS conversations
-- [ ] 3-4 turn budget per lead before graceful handoff
-- [ ] Turn 1: Warm greeting + "What do you need help with?"
-- [ ] Turn 2: Acknowledge need, ask qualifying question (location, timeline, scope)
-- [ ] Turn 3: Confirm details, set expectation for business owner callback
-- [ ] Context-aware: uses business profile, hours, services to answer questions
-
-### Graceful Handoff
-- [ ] After turn limit: send handoff message with callback timeframe
-- [ ] Configurable timeframe per business: during hours / after hours / emergency
-- [ ] Lead status changes to "Needs Attention" on dashboard
-- [ ] Business owner notification with conversation summary
-- [ ] Customer hears: "Mike will personally reach out within [X hours]"
-- [ ] Business owner can take over the conversation at any point
-
-### Conditional Call Forwarding Mode
-- [ ] Simpler webhook path: carrier forwards missed calls → Swoop handles directly
-- [ ] No <Dial> needed — call is already missed when it reaches Swoop
-- [ ] Immediate text-back (faster than current forwarding flow)
-- [ ] Onboarding wizard: detect carrier, show exact forwarding code to dial
-
----
-
-## 📋 Future (v0.3+)
+## 📋 Future (v0.4+)
 
 ### AI Features (Advanced)
 - [ ] Smart lead scoring (based on message sentiment, response speed)
 - [ ] AI-generated follow-up messages tailored to the lead's inquiry
 - [ ] Appointment booking via text (integrate with calendar)
+- [ ] Conditional call forwarding mode (carrier forwards missed calls directly)
+- [ ] AI voice agent (answer the actual call)
 
 ### Integrations
 - [ ] Google Calendar integration for appointment scheduling
 - [ ] Zapier/webhook triggers for CRM integrations
-- [ ] Stripe billing for SaaS pricing ($79/$149/mo tiers)
+- [ ] Stripe billing for SaaS pricing ($29/$49/mo tiers)
 - [ ] White-label support (custom branding per business)
+- [ ] ServiceTitan / Housecall Pro CRM sync
 
 ### Operations
 - [ ] Automated tests (unit + integration)

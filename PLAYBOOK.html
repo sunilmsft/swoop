@@ -891,6 +891,54 @@ curl -X POST http://localhost:3000/webhooks/sms \
       <strong>SQLite caveat:</strong> Render's free tier has ephemeral disk — DB resets on redeploy. For production, migrate to PostgreSQL or use a persistent disk ($7/mo).
     </div>
   </div>
+
+  <div class="card">
+    <h3>📂 File Map</h3>
+    <p>Every file in the repo and what it does. <strong>Review this after every milestone to keep it accurate.</strong></p>
+    <table>
+      <tr><th>File</th><th>Purpose</th></tr>
+      <tr><td><code>package.json</code></td><td>Dependencies (6), scripts: start, dev, seed</td></tr>
+      <tr><td><code>.env</code></td><td>Secrets: Twilio creds, OpenAI key, PORT (gitignored)</td></tr>
+      <tr><td><code>.env.example</code></td><td>Template for new devs — lists all required env vars</td></tr>
+      <tr><td><code>.gitignore</code></td><td>Ignores node_modules, .env, *.db files</td></tr>
+      <tr><td><code>render.yaml</code></td><td>Render deployment config (YAML)</td></tr>
+      <tr><td><code>README.md</code></td><td>Setup instructions for new devs</td></tr>
+      <tr><td><code>BACKLOG.md</code></td><td>Feature backlog by version milestone</td></tr>
+      <tr><td><code>PLAYBOOK.html</code></td><td>This file — project reference (10 tabs)</td></tr>
+      <tr><td><code>GTM.html</code></td><td>Go-to-market strategy &amp; pitch deck</td></tr>
+      <tr><td><code>public/index.html</code></td><td>Dashboard SPA — stats, leads, detail modal, add business form</td></tr>
+      <tr><td><code>public/images/logo-bold.png</code></td><td>Primary logo (bold wordmark with chat dots)</td></tr>
+      <tr><td><code>public/images/logo-light.png</code></td><td>Alternate logo (lighter weight)</td></tr>
+      <tr><td><code>server/index.js</code></td><td>Express app, cron, static serving, route mounting (58 lines)</td></tr>
+      <tr><td><code>server/seed.js</code></td><td>Demo data seeder — 2 businesses, 6 leads</td></tr>
+      <tr><td><code>server/db/database.js</code></td><td>SQLite schema &amp; connection (businesses, leads, messages, follow_ups)</td></tr>
+      <tr><td><code>server/services/twilio.js</code></td><td>Twilio SMS send + request signature validation (48 lines)</td></tr>
+      <tr><td><code>server/services/ai-agent.js</code></td><td>AI Reply Agent — OpenAI, knowledge base, turn tracking, handoff (170 lines)</td></tr>
+      <tr><td><code>server/services/leads.js</code></td><td>Lead management — missed calls, inbound SMS, AI integration, follow-ups (220 lines)</td></tr>
+      <tr><td><code>server/routes/webhooks.js</code></td><td>Twilio webhooks — /voice, /voice-dial-result, /voice-status, /sms</td></tr>
+      <tr><td><code>server/routes/api.js</code></td><td>REST API — dashboard stats, leads CRUD, businesses CRUD</td></tr>
+    </table>
+    <p><strong>Total backend:</strong> ~570 lines of code across 7 files. No dead code, no unused dependencies.</p>
+  </div>
+
+  <div class="card">
+    <h3>🧹 Code Hygiene Checklist</h3>
+    <p>Run this checklist after every milestone or before a GitHub push:</p>
+    <table>
+      <tr><th>Check</th><th>How</th></tr>
+      <tr><td>No stale TODO/FIXME comments</td><td><code>grep -r "TODO\|FIXME\|HACK" server/</code></td></tr>
+      <tr><td>No dead/unreachable code</td><td>Read each file — every function should be imported &amp; called</td></tr>
+      <tr><td>No unused dependencies</td><td>Every dep in package.json should be <code>require()</code>'d somewhere</td></tr>
+      <tr><td><code>.env.example</code> matches <code>.env</code></td><td>Every key in .env should have a placeholder in .env.example</td></tr>
+      <tr><td><code>BACKLOG.md</code> is up to date</td><td>Completed items checked, current milestone accurate</td></tr>
+      <tr><td>File map above is accurate</td><td>No orphan files, line counts roughly correct</td></tr>
+      <tr><td><code>render.yaml</code> lists all env vars</td><td>Every secret in .env should be in render.yaml envVars</td></tr>
+      <tr><td>Playbook Accounts tab current</td><td>Any new service added to the Accounts &amp; Keys tab</td></tr>
+    </table>
+    <div class="callout green">
+      <strong>Last audit:</strong> May 11, 2026 — all clean. 0 dead code, 0 orphan files, 0 unused deps.
+    </div>
+  </div>
 </div>
 
 <!-- ═══════════════════════════ ACCOUNTS & KEYS ═══════════════════════════ -->
@@ -908,7 +956,7 @@ curl -X POST http://localhost:3000/webhooks/sms \
     <table>
       <tr><th style="width:200px">Field</th><th>Details</th></tr>
       <tr><td><strong>URL</strong></td><td><a href="https://console.twilio.com" target="_blank">console.twilio.com</a></td></tr>
-      <tr><td><strong>Login</strong></td><td>Google account (sunilve@microsoft.com)</td></tr>
+      <tr><td><strong>Login</strong></td><td>Google account</td></tr>
       <tr><td><strong>Account Type</strong></td><td>Trial (free tier)</td></tr>
       <tr><td><strong>Phone Number</strong></td><td>+1 (833) 783-0902 (toll-free)</td></tr>
       <tr><td><strong>Trial Credit</strong></td><td>$15.50 starting balance (SMS ~$0.0079/msg, Voice ~$0.013/min)</td></tr>

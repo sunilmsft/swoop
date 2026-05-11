@@ -110,8 +110,6 @@ router.post('/sms', validateTwilioRequest, async (req, res) => {
     try {
       await handleInboundSMS(business.id, From, Body);
       console.log(`Inbound SMS from ${From}: "${Body}"`);
-      // Don't auto-reply to inbound texts in v1 — just log them
-      // v2 will add AI two-way conversations here
     } catch (err) {
       console.error('Error handling inbound SMS:', err.message);
     }

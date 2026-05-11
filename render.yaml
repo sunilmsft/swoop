@@ -1,1 +1,18 @@
-{"serviceType": "web", "buildCommand": "npm install", "startCommand": "npm start", "envVars": [{"key": "NODE_ENV", "value": "production"}]}
+services:
+  - type: web
+    name: swoop
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_PHONE_NUMBER
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
