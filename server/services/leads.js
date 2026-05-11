@@ -1,6 +1,6 @@
 const db = require('../db/database');
 const { sendSMS } = require('./twilio');
-const { generateReply, buildHandoffSummary } = require('./ai-agent');
+const { generateReply, buildHandoffSummary, extractName } = require('./ai-agent');
 
 /**
  * Handle a missed call:
@@ -144,6 +144,18 @@ async function handleInboundSMS(businessId, callerPhone, body) {
         db.prepare('UPDATE leads SET notes = ? WHERE id = ?').run(summary, lead.id);
         console.log(`🤝 AI handoff complete for lead ${lead.id}: ${summary}`);
       }
+    }
+  }
+
+  // --- Auto-extract customer name from conversation ---
+  if (!lead.caller_name) {
+    const allMsgs = db.prepare(
+      'SELECT direction, body FROM messages WHERE lead_id = ? ORDER BY sent_at ASC'
+    ).all(lead.id);
+    const name = await extractName(allMsgs);
+    if (name) {
+      db.prepare('UPDATE leads SET caller_name = ? WHERE id = ?').run(name, lead.id);
+      console.log(`📛 Auto-extracted name for lead ${lead.id}: ${name}`);
     }
   }
 

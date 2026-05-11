@@ -171,4 +171,38 @@ function buildHandoffSummary(lead, messages) {
   return `Customer said: "${truncated}" — ${inboundMsgs.length} messages exchanged, expecting callback.`;
 }
 
-module.exports = { generateReply, buildHandoffSummary, buildSystemPrompt };
+/**
+ * Extract the customer's name from conversation messages.
+ * Returns the name if found, or null if not mentioned.
+ */
+async function extractName(messages) {
+  if (!openai) return null;
+
+  const convo = messages
+    .filter(m => m.direction === 'inbound')
+    .map(m => m.body)
+    .join('\n');
+
+  if (!convo.trim()) return null;
+
+  try {
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: 'Extract the customer\'s first name (or full name) from these text messages. Reply with ONLY the name, nothing else. If no name is mentioned, reply with "NONE".' },
+        { role: 'user', content: convo },
+      ],
+      max_tokens: 20,
+      temperature: 0,
+    });
+
+    const result = completion.choices[0]?.message?.content?.trim();
+    if (!result || result === 'NONE' || result.length > 50) return null;
+    return result;
+  } catch (err) {
+    console.error('🤖 Name extraction error:', err.message);
+    return null;
+  }
+}
+
+module.exports = { generateReply, buildHandoffSummary, buildSystemPrompt, extractName };
