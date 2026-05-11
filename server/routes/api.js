@@ -13,6 +13,7 @@ router.get('/dashboard', (req, res) => {
     newLeads: db.prepare('SELECT COUNT(*) as count FROM leads WHERE lead_status = ?').get('new').count,
     engagedLeads: db.prepare('SELECT COUNT(*) as count FROM leads WHERE lead_status = ?').get('engaged').count,
     convertedLeads: db.prepare('SELECT COUNT(*) as count FROM leads WHERE lead_status = ?').get('converted').count,
+    needsAttention: db.prepare('SELECT COUNT(*) as count FROM leads WHERE lead_status = ?').get('needs_attention').count,
     reviewsSent: db.prepare('SELECT COUNT(*) as count FROM leads WHERE lead_status = ?').get('review_sent').count,
     messagesSent: db.prepare('SELECT COUNT(*) as count FROM messages WHERE direction = ?').get('outbound').count,
     messagesReceived: db.prepare('SELECT COUNT(*) as count FROM messages WHERE direction = ?').get('inbound').count,
@@ -106,7 +107,9 @@ router.get('/businesses', (req, res) => {
  * POST /api/businesses — Create a new business
  */
 router.post('/businesses', (req, res) => {
-  const { name, phone, forward_phone, owner_name, auto_reply_message, review_link } = req.body;
+  const { name, phone, forward_phone, owner_name, auto_reply_message, review_link,
+          description, services, pricing, service_area, hours, emergency_policy,
+          tone, faqs, never_say, max_ai_turns, handoff_minutes, handoff_after_hours_msg } = req.body;
 
   if (!name || !phone) {
     return res.status(400).json({ error: 'name and phone are required' });
@@ -114,8 +117,13 @@ router.post('/businesses', (req, res) => {
 
   try {
     const result = db.prepare(
-      'INSERT INTO businesses (name, phone, forward_phone, owner_name, auto_reply_message, review_link) VALUES (?, ?, ?, ?, ?, ?)'
-    ).run(name, phone, forward_phone || null, owner_name || null, auto_reply_message || null, review_link || null);
+      `INSERT INTO businesses (name, phone, forward_phone, owner_name, auto_reply_message, review_link,
+        description, services, pricing, service_area, hours, emergency_policy,
+        tone, faqs, never_say, max_ai_turns, handoff_minutes, handoff_after_hours_msg)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ).run(name, phone, forward_phone || null, owner_name || null, auto_reply_message || null, review_link || null,
+          description || null, services || null, pricing || null, service_area || null, hours || null, emergency_policy || null,
+          tone || 'friendly', faqs || null, never_say || null, max_ai_turns || 3, handoff_minutes || 120, handoff_after_hours_msg || null);
 
     const business = db.prepare('SELECT * FROM businesses WHERE id = ?').get(result.lastInsertRowid);
     res.status(201).json(business);

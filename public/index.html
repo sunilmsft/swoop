@@ -100,6 +100,7 @@
         .badge-engaged { background: var(--green-bg); color: var(--green); }
         .badge-converted { background: #f0fdf4; color: #15803d; }
         .badge-review { background: var(--yellow-bg); color: var(--yellow); }
+        .badge-needs_attention { background: #fef2f2; color: #dc2626; animation: pulse 2s infinite; }
 
         /* Lead Detail Modal */
         .modal-overlay {
@@ -190,6 +191,7 @@
         <div class="stats" id="stats">
             <div class="stat-card"><div class="label">Total Leads</div><div class="value blue" id="stat-total">—</div></div>
             <div class="stat-card"><div class="label">New</div><div class="value" id="stat-new">—</div></div>
+            <div class="stat-card"><div class="label">Needs Attention</div><div class="value" style="color:var(--red)" id="stat-attention">—</div></div>
             <div class="stat-card"><div class="label">Engaged</div><div class="value green" id="stat-engaged">—</div></div>
             <div class="stat-card"><div class="label">Texts Sent</div><div class="value blue" id="stat-sent">—</div></div>
             <div class="stat-card"><div class="label">Pending Follow-ups</div><div class="value yellow" id="stat-followups">—</div></div>
@@ -250,6 +252,7 @@
                     const s = await statsRes.json();
                     document.getElementById('stat-total').textContent = s.totalLeads;
                     document.getElementById('stat-new').textContent = s.newLeads;
+                    document.getElementById('stat-attention').textContent = s.needsAttention || 0;
                     document.getElementById('stat-engaged').textContent = s.engagedLeads;
                     document.getElementById('stat-sent').textContent = s.messagesSent;
                     document.getElementById('stat-followups').textContent = s.pendingFollowUps;
@@ -292,7 +295,7 @@
                     </div>
                     <div class="meta">
                         <div class="time">${timeAgo(lead.updated_at)}</div>
-                        <div class="badge badge-${lead.lead_status === 'new' ? 'new' : lead.lead_status === 'engaged' ? 'engaged' : lead.lead_status === 'review_sent' ? 'review' : 'converted'}">${lead.lead_status}</div>
+                        <div class="badge badge-${lead.lead_status === 'needs_attention' ? 'needs_attention' : lead.lead_status === 'new' ? 'new' : lead.lead_status === 'engaged' ? 'engaged' : lead.lead_status === 'review_sent' ? 'review' : 'converted'}">${lead.lead_status === 'needs_attention' ? '🔔 needs attention' : lead.lead_status}</div>
                     </div>
                 </div>
             `).join('');
@@ -308,8 +311,8 @@
 
             let html = `
                 <div style="margin-bottom:1rem;">
-                    <span class="badge badge-${lead.lead_status === 'new' ? 'new' : lead.lead_status === 'engaged' ? 'engaged' : 'review'}">${lead.lead_status}</span>
-                    <span style="font-size:0.85rem;color:var(--text-muted);margin-left:0.5rem;">${escapeHtml(lead.caller_phone)} · ${lead.message_count || lead.messages.length} messages</span>
+                    <span class="badge badge-${lead.lead_status === 'needs_attention' ? 'needs_attention' : lead.lead_status === 'new' ? 'new' : lead.lead_status === 'engaged' ? 'engaged' : 'review'}">${lead.lead_status === 'needs_attention' ? '🔔 needs attention' : lead.lead_status}</span>
+                    <span style="font-size:0.85rem;color:var(--text-muted);margin-left:0.5rem;">${escapeHtml(lead.caller_phone)} · ${lead.message_count || lead.messages.length} messages${lead.ai_turn_count ? ` · 🤖 ${lead.ai_turn_count} AI turns` : ''}</span>
                 </div>
                 <div class="message-thread">
             `;
@@ -324,6 +327,14 @@
             }
 
             html += '</div>';
+
+            // AI handoff summary
+            if (lead.ai_handoff_done && lead.notes) {
+                html += `<div style="margin-top:1rem;padding:0.75rem 1rem;background:#fef2f2;border-radius:8px;border:1px solid #fecaca;">
+                    <strong style="color:#dc2626;">🤝 AI Handoff Summary</strong>
+                    <p style="font-size:0.85rem;margin-top:0.3rem;">${escapeHtml(lead.notes)}</p>
+                </div>`;
+            }
 
             // Follow-up status
             if (lead.followUps && lead.followUps.length > 0) {
@@ -371,28 +382,86 @@
 
         // ---- Add Business ----
         function showAddBusiness() {
+            const inputStyle = 'width:100%;padding:0.5rem;border:1px solid var(--border);border-radius:8px;font-size:0.9rem;margin-top:0.25rem;';
+            const labelStyle = 'font-size:0.85rem;font-weight:600;';
             const html = `
-                <h2 style="margin-bottom:1rem;">Add Your Business</h2>
+                <h2 style="margin-bottom:0.5rem;">Add Your Business</h2>
+                <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1rem;">This info powers your auto-replies and AI agent.</p>
                 <form onsubmit="createBusiness(event)" style="display:flex;flex-direction:column;gap:0.75rem;">
-                    <div>
-                        <label style="font-size:0.85rem;font-weight:600;">Business Name *</label>
-                        <input id="biz-name" type="text" required placeholder="Mike's Plumbing" style="width:100%;padding:0.5rem;border:1px solid var(--border);border-radius:8px;font-size:0.9rem;margin-top:0.25rem;">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+                        <div>
+                            <label style="${labelStyle}">Business Name *</label>
+                            <input id="biz-name" type="text" required placeholder="Mike's Plumbing" style="${inputStyle}">
+                        </div>
+                        <div>
+                            <label style="${labelStyle}">Owner Name</label>
+                            <input id="biz-owner" type="text" placeholder="Mike" style="${inputStyle}">
+                        </div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+                        <div>
+                            <label style="${labelStyle}">Twilio Phone Number *</label>
+                            <input id="biz-phone" type="text" required placeholder="+12065551234" style="${inputStyle}">
+                        </div>
+                        <div>
+                            <label style="${labelStyle}">Forward Calls To</label>
+                            <input id="biz-forward" type="text" placeholder="+12065559999" style="${inputStyle}">
+                        </div>
                     </div>
                     <div>
-                        <label style="font-size:0.85rem;font-weight:600;">Twilio Phone Number *</label>
-                        <input id="biz-phone" type="text" required placeholder="+12065551234" style="width:100%;padding:0.5rem;border:1px solid var(--border);border-radius:8px;font-size:0.9rem;margin-top:0.25rem;">
+                        <label style="${labelStyle}">What does your business do?</label>
+                        <textarea id="biz-description" rows="2" placeholder="Residential plumbing — repairs, installations, and emergencies. Serving the Seattle metro area for 10 years." style="${inputStyle}"></textarea>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+                        <div>
+                            <label style="${labelStyle}">Services Offered</label>
+                            <textarea id="biz-services" rows="2" placeholder="Leak repair, water heater install, drain cleaning, faucet replacement, pipe repair" style="${inputStyle}"></textarea>
+                        </div>
+                        <div>
+                            <label style="${labelStyle}">Pricing Info</label>
+                            <textarea id="biz-pricing" rows="2" placeholder="$75 service call, jobs typically $150-800. Free estimates for jobs over $200." style="${inputStyle}"></textarea>
+                        </div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+                        <div>
+                            <label style="${labelStyle}">Service Area</label>
+                            <input id="biz-area" type="text" placeholder="Seattle metro, 25-mile radius" style="${inputStyle}">
+                        </div>
+                        <div>
+                            <label style="${labelStyle}">Business Hours</label>
+                            <input id="biz-hours" type="text" placeholder="Mon-Fri 7am-6pm, Sat 8am-2pm" style="${inputStyle}">
+                        </div>
                     </div>
                     <div>
-                        <label style="font-size:0.85rem;font-weight:600;">Owner Name</label>
-                        <input id="biz-owner" type="text" placeholder="Mike" style="width:100%;padding:0.5rem;border:1px solid var(--border);border-radius:8px;font-size:0.9rem;margin-top:0.25rem;">
+                        <label style="${labelStyle}">Auto-Reply Message</label>
+                        <textarea id="biz-reply" rows="2" placeholder="Hey! Sorry we missed your call. What do you need help with?" style="${inputStyle}"></textarea>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+                        <div>
+                            <label style="${labelStyle}">AI Tone</label>
+                            <select id="biz-tone" style="${inputStyle}">
+                                <option value="friendly" selected>Friendly</option>
+                                <option value="professional">Professional</option>
+                                <option value="casual">Casual</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="${labelStyle}">Max AI Turns Before Handoff</label>
+                            <select id="biz-turns" style="${inputStyle}">
+                                <option value="2">2 turns</option>
+                                <option value="3" selected>3 turns</option>
+                                <option value="4">4 turns</option>
+                                <option value="5">5 turns</option>
+                            </select>
+                        </div>
                     </div>
                     <div>
-                        <label style="font-size:0.85rem;font-weight:600;">Auto-Reply Message</label>
-                        <textarea id="biz-reply" rows="2" placeholder="Hey! Sorry we missed your call. What do you need help with?" style="width:100%;padding:0.5rem;border:1px solid var(--border);border-radius:8px;font-size:0.9rem;margin-top:0.25rem;"></textarea>
+                        <label style="${labelStyle}">FAQs (one per line: Question → Answer)</label>
+                        <textarea id="biz-faqs" rows="3" placeholder="Do you offer free estimates? → Yes for jobs over $200\nAre you licensed? → Yes, WA license #12345\nDo you work weekends? → Saturdays 8am-2pm" style="${inputStyle}"></textarea>
                     </div>
                     <div>
-                        <label style="font-size:0.85rem;font-weight:600;">Google Review Link</label>
-                        <input id="biz-review" type="url" placeholder="https://g.page/r/your-business/review" style="width:100%;padding:0.5rem;border:1px solid var(--border);border-radius:8px;font-size:0.9rem;margin-top:0.25rem;">
+                        <label style="${labelStyle}">Google Review Link</label>
+                        <input id="biz-review" type="url" placeholder="https://g.page/r/your-business/review" style="${inputStyle}">
                     </div>
                     <button type="submit" class="btn btn-primary" style="margin-top:0.5rem;">Create Business</button>
                 </form>
@@ -407,7 +476,16 @@
             const body = {
                 name: document.getElementById('biz-name').value,
                 phone: document.getElementById('biz-phone').value,
+                forward_phone: document.getElementById('biz-forward').value || undefined,
                 owner_name: document.getElementById('biz-owner').value || undefined,
+                description: document.getElementById('biz-description').value || undefined,
+                services: document.getElementById('biz-services').value || undefined,
+                pricing: document.getElementById('biz-pricing').value || undefined,
+                service_area: document.getElementById('biz-area').value || undefined,
+                hours: document.getElementById('biz-hours').value || undefined,
+                tone: document.getElementById('biz-tone').value || undefined,
+                max_ai_turns: Number(document.getElementById('biz-turns').value) || 3,
+                faqs: document.getElementById('biz-faqs').value || undefined,
                 auto_reply_message: document.getElementById('biz-reply').value || undefined,
                 review_link: document.getElementById('biz-review').value || undefined,
             };

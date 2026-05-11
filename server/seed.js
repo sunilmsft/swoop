@@ -17,26 +17,44 @@ db.exec('DELETE FROM businesses');
 
 // ---- Businesses ----
 const biz1 = db.prepare(`
-  INSERT INTO businesses (name, phone, forward_phone, owner_name, auto_reply_message, review_link)
-  VALUES (?, ?, ?, ?, ?, ?)
+  INSERT INTO businesses (name, phone, forward_phone, owner_name, auto_reply_message, review_link,
+    description, services, pricing, service_area, hours, emergency_policy, tone, faqs, max_ai_turns)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `).run(
   "Mike's Plumbing",
   '+18337830902',
   '+14257867232',
   'Mike',
   "Hey! Sorry we missed your call. What do you need help with? — Mike's Plumbing",
-  'https://g.page/r/mikes-plumbing/review'
+  'https://g.page/r/mikes-plumbing/review',
+  'Residential plumbing — repairs, installations, and emergencies. Family-owned, serving the Seattle metro area for 10 years. Licensed and insured.',
+  'Leak repair, water heater installation, drain cleaning, faucet replacement, pipe repair, toilet repair, garbage disposal, sump pump',
+  '$75 service call fee. Most jobs $150-800. Free estimates for jobs over $200. Water heater install starts at $1,200.',
+  'Seattle metro area, 25-mile radius from downtown',
+  'Mon-Fri 7am-6pm, Sat 8am-2pm, closed Sunday',
+  '24/7 emergency service available. $150 after-hours surcharge.',
+  'friendly',
+  'Do you offer free estimates? → Yes for jobs over $200\nAre you licensed and insured? → Yes, WA license #MIKEP1234\nDo you work weekends? → Saturdays 8am-2pm\nHow fast can you come out? → Usually same-day or next-day for non-emergencies\nDo you do commercial work? → Residential only',
+  3
 );
 
 const biz2 = db.prepare(`
-  INSERT INTO businesses (name, phone, owner_name, auto_reply_message, review_link)
-  VALUES (?, ?, ?, ?, ?)
+  INSERT INTO businesses (name, phone, owner_name, auto_reply_message, review_link,
+    description, services, pricing, service_area, hours, tone, max_ai_turns)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `).run(
   "Sara's Electric",
   '+12065552000',
   'Sara',
   "Hi! We missed your call. How can we help? — Sara's Electric",
-  'https://g.page/r/saras-electric/review'
+  'https://g.page/r/saras-electric/review',
+  'Licensed electrician specializing in residential and light commercial work. Panel upgrades, EV charger installations, rewiring, and troubleshooting.',
+  'Panel upgrade, EV charger install, outlet/switch install, rewiring, lighting, ceiling fan, circuit breaker, troubleshooting',
+  'Service calls start at $95. Most jobs $200-1,500. Free estimates for panel upgrades and EV chargers.',
+  'Greater Seattle area including Bellevue, Redmond, Kirkland',
+  'Mon-Fri 8am-5pm',
+  'professional',
+  3
 );
 
 const bizId1 = biz1.lastInsertRowid;

@@ -1,5 +1,6 @@
 const db = require('../db/database');
 const { sendSMS } = require('./twilio');
+const { generateReply, buildHandoffSummary } = require('./ai-agent');
 
 /**
  * Handle a missed call:
@@ -74,8 +75,11 @@ function scheduleFollowUps(leadId, business) {
 
 /**
  * Handle an inbound SMS from a lead
+ * If AI is enabled, generate an AI reply (up to max_ai_turns), then hand off.
  */
 async function handleInboundSMS(businessId, callerPhone, body) {
+  const business = db.prepare('SELECT * FROM businesses WHERE id = ?').get(businessId);
+
   // Find existing lead
   let lead = db.prepare(
     'SELECT * FROM leads WHERE business_id = ? AND caller_phone = ? ORDER BY created_at DESC LIMIT 1'
@@ -101,6 +105,47 @@ async function handleInboundSMS(businessId, callerPhone, body) {
   // Cancel pending follow-ups since they replied
   db.prepare('UPDATE follow_ups SET status = ? WHERE lead_id = ? AND status = ?')
     .run('cancelled', lead.id, 'pending');
+
+  // --- AI Reply Agent ---
+  if (business && !lead.ai_handoff_done) {
+    const aiReply = await generateReply(business, lead, body);
+
+    if (aiReply) {
+      // Send the AI-generated reply
+      let twilioSid = null;
+      try {
+        const twilioMsg = await sendSMS(callerPhone, aiReply);
+        twilioSid = twilioMsg.sid;
+      } catch (err) {
+        console.log(`⚠️ AI reply generated but SMS send failed: ${err.message}`);
+      }
+
+      // Log the outbound AI message (even if send failed — we still want the record)
+      db.prepare(
+        'INSERT INTO messages (lead_id, direction, body, twilio_sid) VALUES (?, ?, ?, ?)'
+      ).run(lead.id, 'outbound', aiReply, twilioSid);
+
+      // Increment turn count
+      const newTurnCount = (lead.ai_turn_count || 0) + 1;
+      const maxTurns = business.max_ai_turns || 3;
+      const isHandoff = newTurnCount >= maxTurns;
+
+      db.prepare(
+        'UPDATE leads SET ai_turn_count = ?, ai_handoff_done = ?, lead_status = ?, updated_at = datetime(\'now\') WHERE id = ?'
+      ).run(newTurnCount, isHandoff ? 1 : 0, isHandoff ? 'needs_attention' : 'engaged', lead.id);
+
+      if (isHandoff) {
+        // Build summary for the business owner
+        const allMessages = db.prepare(
+          'SELECT direction, body FROM messages WHERE lead_id = ? ORDER BY sent_at ASC'
+        ).all(lead.id);
+        const summary = buildHandoffSummary(lead, allMessages);
+
+        db.prepare('UPDATE leads SET notes = ? WHERE id = ?').run(summary, lead.id);
+        console.log(`🤝 AI handoff complete for lead ${lead.id}: ${summary}`);
+      }
+    }
+  }
 
   return lead;
 }

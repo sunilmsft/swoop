@@ -108,6 +108,7 @@
   <button onclick="showTab('gtm')">Go-To-Market</button>
   <button onclick="showTab('backlog')">Backlog</button>
   <button onclick="showTab('runbook')">Dev Runbook</button>
+  <button onclick="showTab('accounts')">Accounts &amp; Keys</button>
 </div>
 
 <!-- ═══════════════════════════ OVERVIEW ═══════════════════════════ -->
@@ -889,6 +890,92 @@ curl -X POST http://localhost:3000/webhooks/sms \
     <div class="callout">
       <strong>SQLite caveat:</strong> Render's free tier has ephemeral disk — DB resets on redeploy. For production, migrate to PostgreSQL or use a persistent disk ($7/mo).
     </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ ACCOUNTS & KEYS ═══════════════════════════ -->
+<div id="accounts" class="tab-content">
+  <h2>🔑 Accounts &amp; API Keys</h2>
+  <p>Central reference for all third-party services, login methods, and credits/billing status.</p>
+
+  <div class="callout">
+    <strong>Security:</strong> Never commit API keys to Git. All keys live in <code>.env</code> (gitignored). This page tracks <em>where</em> accounts live and their status — not the keys themselves.
+  </div>
+
+  <!-- Twilio -->
+  <div class="card">
+    <h3>📞 Twilio</h3>
+    <table>
+      <tr><th style="width:200px">Field</th><th>Details</th></tr>
+      <tr><td><strong>URL</strong></td><td><a href="https://console.twilio.com" target="_blank">console.twilio.com</a></td></tr>
+      <tr><td><strong>Login</strong></td><td>Google account (sunilve@microsoft.com)</td></tr>
+      <tr><td><strong>Account Type</strong></td><td>Trial (free tier)</td></tr>
+      <tr><td><strong>Phone Number</strong></td><td>+1 (833) 783-0902 (toll-free)</td></tr>
+      <tr><td><strong>Trial Credit</strong></td><td>$15.50 starting balance (SMS ~$0.0079/msg, Voice ~$0.013/min)</td></tr>
+      <tr><td><strong>Env Vars</strong></td><td><code>TWILIO_ACCOUNT_SID</code>, <code>TWILIO_AUTH_TOKEN</code>, <code>TWILIO_PHONE_NUMBER</code></td></tr>
+      <tr><td><strong>Limitations</strong></td><td>Trial: can only send to verified numbers. Toll-free SMS verification pending.</td></tr>
+      <tr><td><strong>Upgrade Cost</strong></td><td>$1/mo per phone number + pay-per-use</td></tr>
+    </table>
+    <div class="callout blue" style="margin-top:12px">
+      <strong>To-do:</strong> Complete toll-free SMS verification to send to unverified numbers.
+    </div>
+  </div>
+
+  <!-- OpenAI -->
+  <div class="card">
+    <h3>🤖 OpenAI</h3>
+    <table>
+      <tr><th style="width:200px">Field</th><th>Details</th></tr>
+      <tr><td><strong>URL</strong></td><td><a href="https://platform.openai.com" target="_blank">platform.openai.com</a></td></tr>
+      <tr><td><strong>Login</strong></td><td>Google account</td></tr>
+      <tr><td><strong>Account Type</strong></td><td>Pay-as-you-go</td></tr>
+      <tr><td><strong>Model Used</strong></td><td><code>gpt-4o-mini</code></td></tr>
+      <tr><td><strong>Pricing</strong></td><td>~$0.15 / 1M input tokens, ~$0.60 / 1M output tokens</td></tr>
+      <tr><td><strong>Credits Added</strong></td><td>$5.00 (added May 2026)</td></tr>
+      <tr><td><strong>Env Vars</strong></td><td><code>OPENAI_API_KEY</code></td></tr>
+      <tr><td><strong>Billing Page</strong></td><td><a href="https://platform.openai.com/settings/organization/billing" target="_blank">Billing settings</a></td></tr>
+    </table>
+    <div class="callout green" style="margin-top:12px">
+      <strong>Estimate:</strong> At ~3 AI turns per lead, $5 covers roughly 10,000+ conversations.
+    </div>
+  </div>
+
+  <!-- GitHub -->
+  <div class="card">
+    <h3>🐙 GitHub</h3>
+    <table>
+      <tr><th style="width:200px">Field</th><th>Details</th></tr>
+      <tr><td><strong>Repo</strong></td><td><a href="https://github.com/sunilmsft/swoop" target="_blank">github.com/sunilmsft/swoop</a></td></tr>
+      <tr><td><strong>Branch</strong></td><td><code>master</code></td></tr>
+      <tr><td><strong>Visibility</strong></td><td>Public</td></tr>
+      <tr><td><strong>Cost</strong></td><td>Free</td></tr>
+    </table>
+  </div>
+
+  <!-- Render -->
+  <div class="card">
+    <h3>🚀 Render (Planned)</h3>
+    <table>
+      <tr><th style="width:200px">Field</th><th>Details</th></tr>
+      <tr><td><strong>URL</strong></td><td><a href="https://render.com" target="_blank">render.com</a></td></tr>
+      <tr><td><strong>Status</strong></td><td>Not yet deployed</td></tr>
+      <tr><td><strong>Free Tier</strong></td><td>Web service: free (spins down after 15min inactivity)</td></tr>
+      <tr><td><strong>Paid Tier</strong></td><td>$7/mo for persistent disk (needed for SQLite)</td></tr>
+      <tr><td><strong>Config</strong></td><td><code>render.yaml</code> included in repo</td></tr>
+    </table>
+  </div>
+
+  <!-- Cost Summary -->
+  <div class="highlight">
+    <h3 style="margin-top:0; color:#ffd700;">💰 Monthly Cost Summary</h3>
+    <table style="color:#fff;">
+      <tr><th style="background:rgba(255,255,255,0.1); color:#ffd700;">Service</th><th style="background:rgba(255,255,255,0.1); color:#ffd700;">Current</th><th style="background:rgba(255,255,255,0.1); color:#ffd700;">At Scale</th></tr>
+      <tr><td>Twilio</td><td>$0 (trial credits)</td><td>~$1/mo + usage</td></tr>
+      <tr><td>OpenAI</td><td>$5 prepaid credits</td><td>~$1-5/mo per 1K leads</td></tr>
+      <tr><td>GitHub</td><td>$0</td><td>$0</td></tr>
+      <tr><td>Render</td><td>$0 (not deployed)</td><td>$7/mo (persistent disk)</td></tr>
+      <tr style="font-weight:bold;"><td>Total</td><td>~$5 one-time</td><td>~$10-15/mo</td></tr>
+    </table>
   </div>
 </div>
 

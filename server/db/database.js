@@ -17,6 +17,19 @@ db.exec(`
     timezone TEXT DEFAULT 'America/Los_Angeles',
     auto_reply_message TEXT DEFAULT 'Hey! Sorry we missed your call. What do you need help with?',
     review_link TEXT,
+    description TEXT,
+    services TEXT,
+    pricing TEXT,
+    service_area TEXT,
+    hours TEXT,
+    emergency_policy TEXT,
+    tone TEXT DEFAULT 'friendly',
+    faqs TEXT,
+    never_say TEXT,
+    max_ai_turns INTEGER DEFAULT 3,
+    handoff_minutes INTEGER DEFAULT 120,
+    handoff_after_hours_msg TEXT DEFAULT 'first thing tomorrow morning',
+    ai_enabled INTEGER DEFAULT 1,
     created_at TEXT DEFAULT (datetime('now'))
   );
 
@@ -27,6 +40,8 @@ db.exec(`
     caller_name TEXT,
     call_status TEXT DEFAULT 'missed',
     lead_status TEXT DEFAULT 'new',
+    ai_turn_count INTEGER DEFAULT 0,
+    ai_handoff_done INTEGER DEFAULT 0,
     notes TEXT,
     created_at TEXT DEFAULT (datetime('now')),
     updated_at TEXT DEFAULT (datetime('now')),
