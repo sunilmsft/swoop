@@ -106,7 +106,7 @@ router.get('/businesses', (req, res) => {
  * POST /api/businesses — Create a new business
  */
 router.post('/businesses', (req, res) => {
-  const { name, phone, owner_name, auto_reply_message, review_link } = req.body;
+  const { name, phone, forward_phone, owner_name, auto_reply_message, review_link } = req.body;
 
   if (!name || !phone) {
     return res.status(400).json({ error: 'name and phone are required' });
@@ -114,8 +114,8 @@ router.post('/businesses', (req, res) => {
 
   try {
     const result = db.prepare(
-      'INSERT INTO businesses (name, phone, owner_name, auto_reply_message, review_link) VALUES (?, ?, ?, ?, ?)'
-    ).run(name, phone, owner_name || null, auto_reply_message || null, review_link || null);
+      'INSERT INTO businesses (name, phone, forward_phone, owner_name, auto_reply_message, review_link) VALUES (?, ?, ?, ?, ?, ?)'
+    ).run(name, phone, forward_phone || null, owner_name || null, auto_reply_message || null, review_link || null);
 
     const business = db.prepare('SELECT * FROM businesses WHERE id = ?').get(result.lastInsertRowid);
     res.status(201).json(business);

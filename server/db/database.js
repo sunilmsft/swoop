@@ -12,6 +12,7 @@ db.exec(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     phone TEXT NOT NULL UNIQUE,
+    forward_phone TEXT,
     owner_name TEXT,
     timezone TEXT DEFAULT 'America/Los_Angeles',
     auto_reply_message TEXT DEFAULT 'Hey! Sorry we missed your call. What do you need help with?',

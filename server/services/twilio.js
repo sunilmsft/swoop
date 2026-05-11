@@ -23,6 +23,7 @@ async function sendSMS(to, body) {
  * Validate that an incoming request is actually from Twilio
  */
 function validateTwilioRequest(req, res, next) {
+  console.log('🔒 NODE_ENV:', process.env.NODE_ENV, '| Auth token exists:', !!process.env.TWILIO_AUTH_TOKEN);
   if (process.env.NODE_ENV === 'development') {
     return next(); // Skip validation in dev for easy testing
   }

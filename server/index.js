@@ -22,17 +22,19 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Process follow-ups every 15 minutes
-cron.schedule('*/15 * * * *', async () => {
-  try {
-    const result = await processDueFollowUps();
-    if (result.total > 0) {
-      console.log(`Follow-ups processed: ${result.sent} sent, ${result.skipped} skipped`);
+// Process follow-ups every 15 minutes (skip in dev to avoid blocking with fake seed data)
+if (process.env.NODE_ENV !== 'development') {
+  cron.schedule('*/15 * * * *', async () => {
+    try {
+      const result = await processDueFollowUps();
+      if (result.total > 0) {
+        console.log(`Follow-ups processed: ${result.sent} sent, ${result.skipped} skipped`);
+      }
+    } catch (err) {
+      console.error('Cron error:', err.message);
     }
-  } catch (err) {
-    console.error('Cron error:', err.message);
-  }
-});
+  });
+}
 
 app.listen(PORT, () => {
   console.log(`

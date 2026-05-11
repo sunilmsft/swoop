@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Swoop — Playbook</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #1a1a2e; background: #f5f6fa; }
+
+  /* ── Header ── */
+  header { background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); color: #fff; padding: 40px 24px 20px; text-align: center; }
+  header h1 { font-size: 2.4rem; }
+  header h1 span { color: #ffd700; }
+  header p { opacity: 0.8; margin-top: 6px; font-size: 1rem; }
+
+  /* ── Tab Navigation ── */
+  .tab-bar { background: #fff; border-bottom: 2px solid #e8e8ee; position: sticky; top: 0; z-index: 100; display: flex; overflow-x: auto; padding: 0 16px; }
+  .tab-bar button { background: none; border: none; padding: 14px 20px; font-size: 0.9rem; font-weight: 600; color: #666; cursor: pointer; white-space: nowrap; border-bottom: 3px solid transparent; transition: all 0.2s; }
+  .tab-bar button:hover { color: #302b63; }
+  .tab-bar button.active { color: #302b63; border-bottom-color: #ffd700; }
+
+  /* ── Tab Content ── */
+  .tab-content { display: none; max-width: 960px; margin: 0 auto; padding: 32px 20px 60px; }
+  .tab-content.active { display: block; }
+
+  /* ── Shared ── */
+  h2 { font-size: 1.6rem; color: #302b63; margin-bottom: 16px; }
+  h3 { font-size: 1.15rem; color: #444; margin: 24px 0 10px; }
+  h4 { font-size: 1rem; color: #302b63; margin: 16px 0 8px; }
+  p { line-height: 1.65; margin-bottom: 10px; }
+  a { color: #302b63; }
+
+  .card { background: #fff; border-radius: 10px; padding: 24px; margin: 16px 0; box-shadow: 0 1px 6px rgba(0,0,0,0.06); }
+  .card h3:first-child { margin-top: 0; }
+  .highlight { background: linear-gradient(135deg, #302b63, #24243e); color: #fff; border-radius: 10px; padding: 24px; margin: 16px 0; }
+  .highlight a { color: #ffd700; }
+  .callout { background: #fffbe6; border-left: 4px solid #ffd700; padding: 16px 20px; border-radius: 0 8px 8px 0; margin: 16px 0; }
+  .callout.green { background: #f0fff4; border-color: #27ae60; }
+  .callout.blue { background: #f0f4ff; border-color: #3498db; }
+
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.9rem; }
+  th { background: #302b63; color: #fff; padding: 10px 14px; text-align: left; }
+  td { padding: 9px 14px; border-bottom: 1px solid #eee; }
+  tr:hover td { background: #fafafe; }
+  code { background: #f0eef8; padding: 2px 7px; border-radius: 4px; font-size: 0.88rem; color: #302b63; }
+  pre { background: #1e1e2e; color: #cdd6f4; padding: 18px; border-radius: 8px; overflow-x: auto; font-size: 0.85rem; line-height: 1.5; margin: 12px 0; }
+  pre code { background: none; color: inherit; padding: 0; }
+  ul, ol { margin: 8px 0 8px 22px; }
+  li { margin: 4px 0; line-height: 1.5; }
+
+  .status-badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; }
+  .badge-done { background: #d4edda; color: #155724; }
+  .badge-next { background: #fff3cd; color: #856404; }
+  .badge-future { background: #e2e3e5; color: #383d41; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 700px) { .grid-2 { grid-template-columns: 1fr; } }
+
+  .arch-flow { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px; margin: 20px 0; }
+  .arch-box { background: #302b63; color: #fff; padding: 10px 18px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; text-align: center; }
+  .arch-box.alt { background: #27ae60; }
+  .arch-box.warn { background: #e67e22; }
+  .arch-arrow { font-size: 1.3rem; color: #ffd700; }
+
+  .check { color: #27ae60; } .cross { color: #e74c3c; }
+
+  /* Pricing cards */
+  .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin: 16px 0; }
+  .price-card { background: #fff; border: 2px solid #e0e0e0; border-radius: 10px; padding: 24px; text-align: center; }
+  .price-card.featured { border-color: #ffd700; }
+  .price-card h4 { margin: 0 0 4px; }
+  .price-card .price { font-size: 2.2rem; font-weight: 800; color: #302b63; }
+  .price-card .price span { font-size: 0.9rem; font-weight: 400; color: #888; }
+  .price-card ul { text-align: left; list-style: none; margin: 12px 0 0; }
+  .price-card ul li { padding: 4px 0 4px 22px; position: relative; font-size: 0.88rem; }
+  .price-card ul li::before { content: "✓"; position: absolute; left: 0; color: #302b63; font-weight: 700; }
+
+  /* Objection */
+  .obj { margin: 10px 0; }
+  .obj .q { font-weight: 700; color: #c0392b; }
+  .obj .a { color: #27ae60; margin-top: 2px; }
+  .obj .a::before { content: "→ "; font-weight: 700; }
+
+  /* Onboarding steps */
+  .onboard-steps { counter-reset: onboard; }
+  .onboard-step { position: relative; padding-left: 52px; margin-bottom: 20px; }
+  .onboard-step::before { counter-increment: onboard; content: counter(onboard); position: absolute; left: 0; top: 0; width: 36px; height: 36px; background: #302b63; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+  .onboard-step h4 { margin-top: 0; }
+
+  footer { text-align: center; padding: 30px; color: #999; font-size: 0.8rem; border-top: 1px solid #eee; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🦅 <span>Swoop</span> Playbook</h1>
+  <p>Everything you need to know — architecture, setup, onboarding, GTM, and roadmap</p>
+</header>
+
+<div class="tab-bar">
+  <button class="active" onclick="showTab('overview')">Overview</button>
+  <button onclick="showTab('architecture')">Architecture</button>
+  <button onclick="showTab('twilio')">Twilio Setup</button>
+  <button onclick="showTab('onboarding')">Business Onboarding</button>
+  <button onclick="showTab('ai-agent')">AI Reply Agent</button>
+  <button onclick="showTab('dashboard')">Dashboard &amp; API</button>
+  <button onclick="showTab('gtm')">Go-To-Market</button>
+  <button onclick="showTab('backlog')">Backlog</button>
+  <button onclick="showTab('runbook')">Dev Runbook</button>
+</div>
+
+<!-- ═══════════════════════════ OVERVIEW ═══════════════════════════ -->
+<div id="overview" class="tab-content active">
+  <h2>What is Swoop?</h2>
+  <div class="card">
+    <p><strong>Swoop is an AI-powered missed-call text-back service for small businesses.</strong></p>
+    <p>A plumber is under a sink. Phone rings. Can't answer. Customer calls a competitor. That's $300 gone — and it happens 3–5 times a week.</p>
+    <p><strong>Swoop fixes this:</strong> Missed call → instant text in 3 seconds → AI conversation → lead captured → follow-up sequence → Google review request. All automated.</p>
+  </div>
+
+  <h3>The Flow</h3>
+  <div class="arch-flow">
+    <div class="arch-box">Customer Calls</div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-box warn">Missed!</div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-box alt">Swoop Texts Back</div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-box">Lead Captured</div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-box alt">Follow-ups</div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-box">Review Request ⭐</div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>Tech Stack</h3>
+      <table>
+        <tr><td><strong>Backend</strong></td><td>Node.js + Express 5</td></tr>
+        <tr><td><strong>SMS / Voice</strong></td><td>Twilio SDK v6</td></tr>
+        <tr><td><strong>Database</strong></td><td>SQLite (better-sqlite3) — WAL mode</td></tr>
+        <tr><td><strong>Cron</strong></td><td>node-cron — follow-up scheduling</td></tr>
+        <tr><td><strong>Dashboard</strong></td><td>Single HTML file (no framework)</td></tr>
+        <tr><td><strong>Hosting</strong></td><td>Render (render.yaml included)</td></tr>
+        <tr><td><strong>AI (v0.2.5)</strong></td><td>OpenAI / Azure OpenAI</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h3>Project Structure</h3>
+<pre><code>swoop/
+├── package.json
+├── render.yaml
+├── public/
+│   └── index.html        ← Dashboard SPA
+└── server/
+    ├── index.js           ← Express app + cron
+    ├── seed.js            ← Demo data
+    ├── db/
+    │   └── database.js    ← SQLite schema
+    ├── routes/
+    │   ├── api.js         ← REST API
+    │   └── webhooks.js    ← Twilio webhooks
+    └── services/
+        ├── leads.js       ← Lead management
+        └── twilio.js      ← SMS + validation</code></pre>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>v0.1.0 Features (Shipped)</h3>
+    <ul>
+      <li>Missed call detection with call forwarding + voicemail detection</li>
+      <li>Instant auto-reply SMS via Twilio</li>
+      <li>Lead creation / dedup on missed calls and inbound texts</li>
+      <li>Follow-up sequence: Day 1, 3, 7 automatic texts</li>
+      <li>Smart follow-up cancellation when lead replies</li>
+      <li>Google review request with one click</li>
+      <li>Dashboard: stats cards, lead list, detail modal with chat bubbles</li>
+      <li>Add business form, mark converted, request review</li>
+      <li>Twilio signature validation (production) / skip (development)</li>
+      <li>Seed script with demo data</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ ARCHITECTURE ═══════════════════════════ -->
+<div id="architecture" class="tab-content">
+  <h2>System Architecture</h2>
+
+  <div class="card">
+    <h3>Call Flow — Forwarding Mode (Current)</h3>
+    <p>Business publishes their Twilio number. Customer calls it. Swoop forwards to the owner's cell.</p>
+    <div class="arch-flow">
+      <div class="arch-box">Customer dials Twilio #</div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-box">/webhooks/voice</div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-box warn">&lt;Dial&gt; owner's cell (20s)</div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-box">/webhooks/voice-dial-result</div>
+    </div>
+    <div class="arch-flow" style="margin-top: 8px;">
+      <div class="arch-box alt">If answered → normal call</div>
+      <div style="width:40px"></div>
+      <div class="arch-box warn">If missed/voicemail → handleMissedCall()</div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-box alt">Auto-reply SMS + lead created</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Call Flow — Conditional Forwarding Mode (Planned)</h3>
+    <p>Business keeps their existing number. Carrier forwards <strong>only missed calls</strong> to Swoop.</p>
+    <div class="arch-flow">
+      <div class="arch-box">Customer dials business's real #</div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-box warn">No answer</div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-box">Carrier forwards to Twilio #</div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-box alt">Swoop handles immediately</div>
+    </div>
+    <p style="margin-top: 12px"><strong>Advantage:</strong> No &lt;Dial&gt; needed — the call is already missed. Instant text-back. Business keeps their number.</p>
+  </div>
+
+  <div class="card">
+    <h3>Database Schema</h3>
+    <table>
+      <tr><th>Table</th><th>Key Columns</th><th>Purpose</th></tr>
+      <tr><td><code>businesses</code></td><td>name, phone, forward_phone, auto_reply_message, review_link</td><td>Business profiles</td></tr>
+      <tr><td><code>leads</code></td><td>business_id, caller_phone, call_status, lead_status</td><td>Every caller becomes a lead</td></tr>
+      <tr><td><code>messages</code></td><td>lead_id, direction, body, twilio_sid</td><td>Full conversation history</td></tr>
+      <tr><td><code>follow_ups</code></td><td>lead_id, scheduled_for, status, message_template</td><td>Scheduled follow-up texts</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>API Endpoints</h3>
+    <table>
+      <tr><th>Method</th><th>Path</th><th>Description</th></tr>
+      <tr><td>GET</td><td><code>/api/dashboard</code></td><td>Summary stats (totals, pending follow-ups)</td></tr>
+      <tr><td>GET</td><td><code>/api/leads</code></td><td>All leads with last message (limit 50)</td></tr>
+      <tr><td>GET</td><td><code>/api/leads/:id</code></td><td>Single lead + messages + follow-ups</td></tr>
+      <tr><td>PATCH</td><td><code>/api/leads/:id</code></td><td>Update status, notes, name</td></tr>
+      <tr><td>POST</td><td><code>/api/leads/:id/review</code></td><td>Send Google review request SMS</td></tr>
+      <tr><td>GET</td><td><code>/api/businesses</code></td><td>List all businesses</td></tr>
+      <tr><td>POST</td><td><code>/api/businesses</code></td><td>Create a business</td></tr>
+      <tr><td>GET</td><td><code>/health</code></td><td>Health check</td></tr>
+    </table>
+
+    <h3 style="margin-top: 24px;">Webhook Endpoints (Twilio)</h3>
+    <table>
+      <tr><th>Method</th><th>Path</th><th>Description</th></tr>
+      <tr><td>POST</td><td><code>/webhooks/voice</code></td><td>Incoming call → forward to owner's cell</td></tr>
+      <tr><td>POST</td><td><code>/webhooks/voice-dial-result</code></td><td>Dial outcome → detect missed/voicemail</td></tr>
+      <tr><td>POST</td><td><code>/webhooks/voice-status</code></td><td>Call status callback (fallback)</td></tr>
+      <tr><td>POST</td><td><code>/webhooks/sms</code></td><td>Incoming SMS → log + mark engaged</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>Voicemail Detection</h3>
+    <p>When an owner declines a call or doesn't pick up, their carrier voicemail may answer. Twilio reports this as <code>DialCallStatus: completed</code>. Swoop detects it by checking <code>DialCallDuration &lt; 15 seconds</code> — real conversations are longer, voicemail pickups are typically &lt; 10 seconds.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ TWILIO SETUP ═══════════════════════════ -->
+<div id="twilio" class="tab-content">
+  <h2>Twilio Setup Reference</h2>
+
+  <div class="callout blue">
+    <strong>Twilio Console:</strong> <a href="https://console.twilio.com" target="_blank">console.twilio.com</a>
+  </div>
+
+  <div class="card">
+    <h3>Account Setup</h3>
+    <ol>
+      <li>Create a Twilio account at <a href="https://www.twilio.com/try-twilio" target="_blank">twilio.com/try-twilio</a></li>
+      <li>Get your <strong>Account SID</strong> and <strong>Auth Token</strong> from the dashboard</li>
+      <li>Buy a phone number (toll-free recommended for SMS deliverability)</li>
+      <li>Add to <code>.env</code>:
+<pre><code>TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+TWILIO_AUTH_TOKEN=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+TWILIO_PHONE_NUMBER=+1xxxxxxxxxx</code></pre>
+      </li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <h3>Webhook Configuration</h3>
+    <p>In the Twilio console, configure your phone number's webhooks:</p>
+    <table>
+      <tr><th>Setting</th><th>Value</th></tr>
+      <tr><td>Voice — A Call Comes In</td><td><code>https://your-domain.com/webhooks/voice</code> (HTTP POST)</td></tr>
+      <tr><td>Voice — Call Status Changes</td><td><code>https://your-domain.com/webhooks/voice-status</code> (HTTP POST)</td></tr>
+      <tr><td>Messaging — A Message Comes In</td><td><code>https://your-domain.com/webhooks/sms</code> (HTTP POST)</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>Dev Tunnels (Local Development)</h3>
+    <p>Twilio needs a public URL to send webhooks. Use VS Code Dev Tunnels:</p>
+    <ol>
+      <li>Open VS Code → Ports panel → Forward port 3000</li>
+      <li>Set visibility to <strong>Public</strong></li>
+      <li>Copy the tunnel URL (e.g., <code>https://xxxxx-3000.usw2.devtunnels.ms</code>)</li>
+      <li>Update Twilio webhook URLs to use this tunnel URL</li>
+    </ol>
+    <div class="callout">
+      <strong>Note:</strong> The tunnel URL changes each session. Update Twilio webhooks when it changes.
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Toll-Free Verification</h3>
+    <p>Toll-free numbers require verification before SMS messages will deliver. Submit verification in the Twilio console under <strong>Messaging → Toll-Free Verification</strong>. Approval can take 1-5 business days.</p>
+    <p>Voice calls work immediately — no verification needed for calling.</p>
+  </div>
+
+  <div class="card">
+    <h3>Key Twilio Concepts</h3>
+    <table>
+      <tr><th>Concept</th><th>How Swoop Uses It</th></tr>
+      <tr><td>TwiML (VoiceResponse)</td><td><code>&lt;Dial&gt;</code> to forward calls, <code>&lt;Say&gt;</code> for missed-call message</td></tr>
+      <tr><td>Dial Action URL</td><td><code>/webhooks/voice-dial-result</code> — handles what happens after dial attempt</td></tr>
+      <tr><td>DialCallStatus</td><td>completed, no-answer, busy, failed, canceled</td></tr>
+      <tr><td>DialCallDuration</td><td>Used to detect voicemail (< 15 seconds = likely voicemail)</td></tr>
+      <tr><td>Signature Validation</td><td>Validates <code>x-twilio-signature</code> header in production</td></tr>
+      <tr><td>Messaging API</td><td><code>client.messages.create()</code> for outbound SMS</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>Useful Links</h3>
+    <ul>
+      <li><a href="https://www.twilio.com/docs/voice/twiml/dial" target="_blank">TwiML &lt;Dial&gt; Documentation</a></li>
+      <li><a href="https://www.twilio.com/docs/messaging/api/message-resource" target="_blank">Messaging API — Send SMS</a></li>
+      <li><a href="https://www.twilio.com/docs/usage/security" target="_blank">Request Validation (Signatures)</a></li>
+      <li><a href="https://www.twilio.com/docs/voice/tutorials/how-to-respond-to-incoming-phone-calls-node-js" target="_blank">Incoming Call Tutorial (Node.js)</a></li>
+    </ul>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ ONBOARDING ═══════════════════════════ -->
+<div id="onboarding" class="tab-content">
+  <h2>Business Onboarding</h2>
+
+  <div class="highlight">
+    <p><strong>"Keep your number. Change nothing. Dial one code."</strong></p>
+    <p style="opacity:0.8; margin:0">This is Swoop's #1 competitive advantage — zero-risk setup via conditional call forwarding.</p>
+  </div>
+
+  <div class="card">
+    <h3>Onboarding Flow</h3>
+    <div class="onboard-steps">
+      <div class="onboard-step">
+        <h4>Business Basics</h4>
+        <p>Collect: business name, owner name, phone number, service area, hours of operation.</p>
+      </div>
+      <div class="onboard-step">
+        <h4>Services &amp; Offerings</h4>
+        <p>What they do, price ranges (or "call for quote"), common jobs, typical timelines. This grounds the AI reply agent.</p>
+      </div>
+      <div class="onboard-step">
+        <h4>Tone &amp; FAQs</h4>
+        <p>How should the AI sound? Friendly, professional, casual? Common questions and answers. Things to never say or promise.</p>
+      </div>
+      <div class="onboard-step">
+        <h4>Auto-Reply Customization</h4>
+        <p>Customize the instant text-back message. Default: <em>"Hey! [Business Name] here — saw we missed your call. How can we help?"</em></p>
+      </div>
+      <div class="onboard-step">
+        <h4>Carrier Forwarding Setup</h4>
+        <p>Detect their carrier, show the exact code to dial. One code = Swoop is live.</p>
+      </div>
+      <div class="onboard-step">
+        <h4>Test Call</h4>
+        <p>Call their number, let it ring, show the text arrive in real-time. Show the lead on the dashboard. Done.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Carrier Forwarding Codes</h3>
+    <table>
+      <tr><th>Carrier</th><th>"Forward when I don't answer"</th><th>Turn Off</th></tr>
+      <tr><td>T-Mobile</td><td><code>*61*[Swoop Number]#</code></td><td><code>##61#</code></td></tr>
+      <tr><td>AT&amp;T</td><td><code>*61*[Swoop Number]#</code></td><td><code>##61#</code></td></tr>
+      <tr><td>Verizon</td><td><code>*71[Swoop Number]</code></td><td><code>*73</code></td></tr>
+      <tr><td>US Cellular</td><td><code>*61*[Swoop Number]#</code></td><td><code>##61#</code></td></tr>
+      <tr><td>Landline / VoIP</td><td>Set in provider's online portal</td><td>Same portal</td></tr>
+    </table>
+    <p style="margin-top:8px; color:#666; font-size:0.88rem;">Works on 95%+ of US carriers including prepaid plans.</p>
+  </div>
+
+  <div class="card">
+    <h3>Business Knowledge Base Template</h3>
+    <p>This data grounds the AI reply agent. Collected during onboarding.</p>
+    <table>
+      <tr><th>Field</th><th>Example</th><th>Used By</th></tr>
+      <tr><td>Business Name</td><td>Mike's Plumbing</td><td>Auto-reply, AI agent</td></tr>
+      <tr><td>Owner Name</td><td>Mike Johnson</td><td>Handoff messages</td></tr>
+      <tr><td>Description</td><td>Residential plumbing — repairs, installs, emergencies</td><td>AI agent context</td></tr>
+      <tr><td>Services</td><td>Leak repair, water heater, drain cleaning, faucet install</td><td>AI agent answers</td></tr>
+      <tr><td>Price Range</td><td>$75 service call, $150-800 per job</td><td>AI agent (or "call for quote")</td></tr>
+      <tr><td>Service Area</td><td>Seattle metro, 25-mile radius</td><td>AI agent qualifying</td></tr>
+      <tr><td>Hours</td><td>Mon-Fri 7am-6pm, Sat 8am-2pm</td><td>Handoff timing</td></tr>
+      <tr><td>Emergency Policy</td><td>24/7 emergency available, $150 after-hours fee</td><td>AI agent</td></tr>
+      <tr><td>Tone</td><td>Friendly, casual</td><td>AI agent personality</td></tr>
+      <tr><td>FAQs</td><td>"Free estimates?" → "Yes for jobs over $200"</td><td>AI agent answers</td></tr>
+      <tr><td>Never Say</td><td>Don't quote exact prices, don't badmouth competitors</td><td>AI guardrails</td></tr>
+      <tr><td>Review Link</td><td>g.page/mikes-plumbing/review</td><td>Review request SMS</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ AI REPLY AGENT ═══════════════════════════ -->
+<div id="ai-agent" class="tab-content">
+  <h2>AI Reply Agent Design</h2>
+
+  <div class="card">
+    <h3>Overview</h3>
+    <p>The AI agent handles the first 3-4 text message turns with a new lead. Its job is to <strong>acknowledge, qualify, and hand off</strong> — not to close the deal or be the business owner.</p>
+  </div>
+
+  <div class="card">
+    <h3>Turn-by-Turn Strategy</h3>
+    <table>
+      <tr><th>Turn</th><th>AI's Job</th><th>Example</th></tr>
+      <tr>
+        <td><strong>1</strong></td>
+        <td>Warm greeting + open question</td>
+        <td><em>"Hey! Mike's Plumbing here — saw we missed your call. What do you need help with?"</em></td>
+      </tr>
+      <tr>
+        <td><strong>2</strong></td>
+        <td>Acknowledge need + qualifying question</td>
+        <td><em>"Got it — a leaky kitchen faucet. Are you in the Seattle area? And is this something you'd want fixed this week?"</em></td>
+      </tr>
+      <tr>
+        <td><strong>3</strong></td>
+        <td>Confirm + set expectation</td>
+        <td><em>"Perfect, we can definitely help with that. I'll have Mike reach out to you within 2 hours to get this scheduled."</em></td>
+      </tr>
+      <tr>
+        <td><strong>4</strong> (if needed)</td>
+        <td>Answer one follow-up + same handoff</td>
+        <td><em>"Great question — yes, we offer free estimates for jobs over $200. Mike will have all the details when he calls."</em></td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>Graceful Handoff</h3>
+    <p>After the turn limit, the AI sends a handoff message and notifies the business owner.</p>
+
+    <h4>What the customer sees:</h4>
+    <div style="background:#f8f8f8; border-radius:8px; padding:16px; margin:8px 0; font-style:italic;">
+      "Thanks for the details, John! I've passed this along to Mike — he'll personally reach out to you within 2 hours. If it's urgent, feel free to call back."
+    </div>
+
+    <h4>What the business owner sees (dashboard + notification):</h4>
+    <div style="background:#f0fff4; border-radius:8px; padding:16px; margin:8px 0;">
+      <strong>New Lead — Needs Attention</strong><br>
+      John (+14255551234) — Kitchen faucet leak, Seattle area, wants it fixed this week.<br>
+      <em>3 messages exchanged. Customer expecting callback within 2 hours.</em>
+    </div>
+
+    <h4>Configurable timeframes:</h4>
+    <table>
+      <tr><th>Scenario</th><th>Handoff Message</th></tr>
+      <tr><td>During business hours</td><td>"…within 1-2 hours"</td></tr>
+      <tr><td>After hours</td><td>"…first thing tomorrow morning"</td></tr>
+      <tr><td>Emergency services</td><td>"…within 30 minutes"</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>Grounding: System Prompt Structure</h3>
+    <p>The business knowledge base is assembled into a system prompt for the LLM:</p>
+<pre><code>You are a friendly text-message assistant for {business_name}.
+Owner: {owner_name}. 
+
+ABOUT THE BUSINESS:
+{description}
+
+SERVICES: {services_list}
+PRICING: {pricing_info}
+SERVICE AREA: {service_area}
+HOURS: {hours}
+
+RULES:
+- Keep responses short (1-3 sentences, SMS-friendly)
+- Never quote exact prices unless specified in the pricing info
+- After 3 turns, hand off to the business owner
+- Tone: {tone_setting}
+- NEVER: {never_say_rules}
+
+YOUR GOAL: Acknowledge the customer's need, ask one qualifying 
+question, then hand off to {owner_name} with a callback timeframe.</code></pre>
+  </div>
+
+  <div class="callout green">
+    <strong>Why 3-4 turns?</strong> Enough to capture lead info and build trust. Not enough to make promises the business can't keep. The business owner gets a warm lead with context, not a cold callback.
+  </div>
+</div>
+
+<!-- ═══════════════════════════ DASHBOARD & API ═══════════════════════════ -->
+<div id="dashboard" class="tab-content">
+  <h2>Dashboard &amp; API</h2>
+
+  <div class="card">
+    <h3>Dashboard Features (v0.1)</h3>
+    <ul>
+      <li><strong>Stats cards:</strong> Total leads, new, engaged, converted, review requests sent</li>
+      <li><strong>Lead list:</strong> All leads sorted by most recent, with status and last message preview</li>
+      <li><strong>Lead detail modal:</strong> Full conversation history with chat bubbles, follow-up schedule</li>
+      <li><strong>Actions:</strong> Mark as converted, send review request</li>
+      <li><strong>Add business form:</strong> Name, phone, forward number</li>
+      <li><strong>Auto-refresh:</strong> Dashboard polls every 10 seconds</li>
+    </ul>
+    <p style="margin-top: 12px;">Dashboard is a single HTML file at <code>public/index.html</code> — no build step, no framework.</p>
+  </div>
+
+  <div class="card">
+    <h3>REST API Reference</h3>
+    <table>
+      <tr><th>Endpoint</th><th>Description</th><th>Notes</th></tr>
+      <tr><td><code>GET /api/dashboard</code></td><td>Summary stats</td><td>Returns counts for all lead statuses</td></tr>
+      <tr><td><code>GET /api/leads</code></td><td>List leads</td><td>Limit 50, includes last message + count</td></tr>
+      <tr><td><code>GET /api/leads/:id</code></td><td>Lead detail</td><td>Full messages array + follow-ups</td></tr>
+      <tr><td><code>PATCH /api/leads/:id</code></td><td>Update lead</td><td>Accepts: lead_status, notes, caller_name</td></tr>
+      <tr><td><code>POST /api/leads/:id/review</code></td><td>Send review SMS</td><td>Uses business review_link</td></tr>
+      <tr><td><code>GET /api/businesses</code></td><td>List businesses</td><td></td></tr>
+      <tr><td><code>POST /api/businesses</code></td><td>Create business</td><td>Required: name, phone</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>Lead Statuses</h3>
+    <table>
+      <tr><th>Status</th><th>Meaning</th><th>Set By</th></tr>
+      <tr><td><code>new</code></td><td>Just captured, no reply yet</td><td>Missed call handler</td></tr>
+      <tr><td><code>engaged</code></td><td>Customer replied to a text</td><td>Inbound SMS handler</td></tr>
+      <tr><td><code>converted</code></td><td>Job booked / sale made</td><td>Manual (dashboard)</td></tr>
+      <tr><td><code>review_sent</code></td><td>Google review request sent</td><td>Review request action</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ GO-TO-MARKET ═══════════════════════════ -->
+<div id="gtm" class="tab-content">
+  <h2>Go-To-Market Strategy</h2>
+
+  <div class="highlight">
+    <p style="font-size:1.3rem"><strong>"Never lose a customer to a missed call again — without changing your phone number."</strong></p>
+  </div>
+
+  <div class="card">
+    <h3>The Zero-Risk Pitch</h3>
+    <p>Business owners don't need to:</p>
+    <ul style="list-style:none; margin-left:0;">
+      <li>❌ Change their phone number</li>
+      <li>❌ Port anything</li>
+      <li>❌ Install an app</li>
+      <li>❌ Learn new software</li>
+      <li>❌ Sign a contract</li>
+    </ul>
+    <p style="margin-top:12px"><strong>All they do:</strong> Dial one forwarding code on their phone. That's it. To undo it — dial one code.</p>
+  </div>
+
+  <div class="card">
+    <h3>The Live Demo (Do This Every Time)</h3>
+    <ol>
+      <li>Ask: <em>"Can I call your business number real quick?"</em></li>
+      <li>Call their number. Let it ring.</li>
+      <li>Their phone buzzes with a text from Swoop within 3 seconds.</li>
+      <li>Show them the lead on the dashboard.</li>
+      <li><strong>Say:</strong> <em>"That customer would have called your competitor. Now you have their number and a conversation started. That took 3 seconds."</em></li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <h3>Target Customer</h3>
+    <div class="grid-2">
+      <div>
+        <h4>Primary: Service Businesses</h4>
+        <ul>
+          <li>Plumbers, electricians, HVAC</li>
+          <li>Landscapers, cleaners</li>
+          <li>Auto mechanics, locksmiths</li>
+          <li>Mobile pet groomers</li>
+        </ul>
+      </div>
+      <div>
+        <h4>Why Them?</h4>
+        <ul>
+          <li>Every call = $200-2,000 job</li>
+          <li>Can't answer — on ladders, under sinks</li>
+          <li>Already pay for ads to get calls</li>
+          <li>Understand ROI instantly</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Pricing</h3>
+    <div class="pricing-grid">
+      <div class="price-card">
+        <h4>Starter</h4>
+        <div class="price">$29<span>/mo</span></div>
+        <ul>
+          <li>100 text-backs/month</li>
+          <li>1 business number</li>
+          <li>Lead dashboard</li>
+          <li>14-day free trial</li>
+        </ul>
+      </div>
+      <div class="price-card featured">
+        <h4>⭐ Pro</h4>
+        <div class="price">$59<span>/mo</span></div>
+        <ul>
+          <li>500 text-backs/month</li>
+          <li>AI-powered follow-ups</li>
+          <li>Review automation</li>
+          <li>14-day free trial</li>
+        </ul>
+      </div>
+      <div class="price-card">
+        <h4>Unlimited</h4>
+        <div class="price">$99<span>/mo</span></div>
+        <ul>
+          <li>Unlimited text-backs</li>
+          <li>Priority support</li>
+          <li>White-label option</li>
+          <li>14-day free trial</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Objection Handling</h3>
+    <div class="obj"><div class="q">"I don't want to change my number"</div><div class="a">You don't. Keep your number. Dial one code. Done.</div></div>
+    <div class="obj"><div class="q">"I already have voicemail"</div><div class="a">80% of callers don't leave a message. They call the next guy. Swoop texts them in 3 seconds.</div></div>
+    <div class="obj"><div class="q">"I can just call them back"</div><div class="a">By the time you're off the job, they've already booked someone else.</div></div>
+    <div class="obj"><div class="q">"Sounds expensive"</div><div class="a">$29/month. If it saves one $300 job, it pays for itself 10x.</div></div>
+    <div class="obj"><div class="q">"What if I don't like it?"</div><div class="a">Dial one code to turn it off. No contract. No cancellation call.</div></div>
+    <div class="obj"><div class="q">"I'm not techy"</div><div class="a">Can you dial a phone number? That's the entire setup.</div></div>
+  </div>
+
+  <div class="card">
+    <h3>Sales Channels</h3>
+    <table>
+      <tr><th>Channel</th><th>Timeline</th><th>Approach</th></tr>
+      <tr><td>Direct outreach</td><td>Day 1</td><td>Call local businesses from Google Maps. Use the live demo.</td></tr>
+      <tr><td>Referral partners</td><td>Month 2+</td><td>Local SEO agencies, Google Ads managers, trade associations.</td></tr>
+      <tr><td>Content + organic</td><td>Ongoing</td><td>YouTube demos, "missed call calculator" tool, case studies.</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>Competitive Advantage</h3>
+    <table>
+      <tr><th>Feature</th><th>Swoop</th><th>GoHighLevel</th><th>Podium</th></tr>
+      <tr><td>Setup time</td><td class="check"><strong>60 seconds</strong></td><td>Hours</td><td>Days</td></tr>
+      <tr><td>No app required</td><td class="check"><strong>✅</strong></td><td class="cross">❌</td><td class="cross">❌</td></tr>
+      <tr><td>Monthly price</td><td class="check"><strong>$29/mo</strong></td><td>$297/mo</td><td>$249/mo</td></tr>
+      <tr><td>Zero-risk trial</td><td class="check"><strong>✅</strong></td><td class="cross">❌</td><td class="cross">❌</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ BACKLOG ═══════════════════════════ -->
+<div id="backlog" class="tab-content">
+  <h2>Product Backlog</h2>
+
+  <div class="card">
+    <h3><span class="status-badge badge-done">DONE</span> v0.1.0 — Core Product</h3>
+    <ul>
+      <li>Express server with static file serving</li>
+      <li>SQLite database with businesses, leads, messages, follow_ups tables</li>
+      <li>Twilio webhooks: /voice, /voice-dial-result, /voice-status, /sms</li>
+      <li>Missed call detection + voicemail detection (DialCallDuration &lt; 15s)</li>
+      <li>Call forwarding via &lt;Dial&gt; to owner's cell</li>
+      <li>Instant auto-reply SMS via Twilio</li>
+      <li>Lead creation/dedup on missed calls and inbound texts</li>
+      <li>Follow-up sequence scheduling (Day 1, 3, 7)</li>
+      <li>Smart follow-up cancellation when lead replies</li>
+      <li>Cron job to process due follow-ups every 15 min</li>
+      <li>Google review request SMS with link</li>
+      <li>REST API: dashboard stats, leads CRUD, businesses CRUD</li>
+      <li>Dashboard UI: stats cards, lead list, detail modal with chat bubbles</li>
+      <li>Add business form, mark converted, request review</li>
+      <li>Twilio request signature validation (prod) / skip (dev)</li>
+      <li>Seed script with demo data</li>
+      <li>render.yaml for deployment</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3><span class="status-badge badge-next">NEXT</span> v0.2 — Security, Multi-Tenant, Polish</h3>
+    <h4>Security &amp; Auth</h4>
+    <ul>
+      <li>Basic auth or API key for dashboard/API</li>
+      <li>Rate limiting on webhook and API endpoints</li>
+      <li>CSRF protection</li>
+      <li>Phone number format validation (E.164)</li>
+    </ul>
+    <h4>Multi-Tenant</h4>
+    <ul>
+      <li>Business selector in dashboard</li>
+      <li>Scope API endpoints to a business</li>
+      <li>Per-business settings page</li>
+    </ul>
+    <h4>Dashboard Improvements</h4>
+    <ul>
+      <li>Search/filter leads</li>
+      <li>Pagination</li>
+      <li>Date range filter for stats</li>
+      <li>Mobile-responsive polish</li>
+    </ul>
+    <h4>Messaging</h4>
+    <ul>
+      <li>Send manual SMS from dashboard (two-way conversation)</li>
+      <li>Customize follow-up templates per business</li>
+      <li>Configurable follow-up timing</li>
+      <li>Message delivery status tracking</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3><span class="status-badge badge-next">NEXT</span> v0.2.5 — AI Reply Agent</h3>
+    <h4>Business Knowledge Base</h4>
+    <ul>
+      <li>Business profile schema: description, services, pricing, hours, service area</li>
+      <li>Tone/personality settings</li>
+      <li>FAQ entries per business</li>
+      <li>Rules/guardrails (never say, redirect topics)</li>
+      <li>Onboarding form to collect business profile</li>
+      <li>System prompt builder from profile data</li>
+    </ul>
+    <h4>AI Conversational Agent</h4>
+    <ul>
+      <li>LLM integration (OpenAI / Azure OpenAI)</li>
+      <li>3-4 turn budget per lead before handoff</li>
+      <li>Context-aware responses using business profile</li>
+    </ul>
+    <h4>Graceful Handoff</h4>
+    <ul>
+      <li>Configurable callback timeframe (during hours / after hours / emergency)</li>
+      <li>Lead status → "Needs Attention" on dashboard</li>
+      <li>Business owner notification with conversation summary</li>
+      <li>Customer gets clear callback expectation</li>
+    </ul>
+    <h4>Conditional Call Forwarding Mode</h4>
+    <ul>
+      <li>Simpler webhook: carrier forwards missed calls directly</li>
+      <li>Onboarding wizard: detect carrier, show forwarding code</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3><span class="status-badge badge-future">FUTURE</span> v0.3+ — Scale &amp; Integrate</h3>
+    <h4>AI Advanced</h4>
+    <ul>
+      <li>Smart lead scoring (sentiment, response speed)</li>
+      <li>AI-generated follow-up messages</li>
+      <li>Appointment booking via text</li>
+    </ul>
+    <h4>Integrations</h4>
+    <ul>
+      <li>Google Calendar for scheduling</li>
+      <li>Zapier/webhook triggers for CRMs</li>
+      <li>Stripe billing</li>
+      <li>White-label support</li>
+    </ul>
+    <h4>Operations</h4>
+    <ul>
+      <li>Automated tests (unit + integration)</li>
+      <li>CI/CD pipeline (GitHub Actions)</li>
+      <li>Error monitoring (Sentry)</li>
+      <li>Structured logging</li>
+      <li>Database backups</li>
+      <li>Analytics: conversion funnel, response time metrics</li>
+    </ul>
+    <h4>Growth</h4>
+    <ul>
+      <li>Landing page / marketing site</li>
+      <li>Email notifications to business owners</li>
+      <li>Multi-number support per business</li>
+      <li>Voicemail transcription</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ DEV RUNBOOK ═══════════════════════════ -->
+<div id="runbook" class="tab-content">
+  <h2>Developer Runbook</h2>
+
+  <div class="card">
+    <h3>Quick Start</h3>
+<pre><code># Clone &amp; install
+git clone https://github.com/sunilmsft/swoop.git
+cd swoop
+npm install
+
+# Configure environment
+cp .env.example .env
+# Edit .env with your Twilio credentials
+
+# Seed demo data
+npm run seed
+
+# Start the server
+npm run dev
+
+# Open dashboard
+# http://localhost:3000</code></pre>
+  </div>
+
+  <div class="card">
+    <h3>Environment Variables</h3>
+    <table>
+      <tr><th>Variable</th><th>Required</th><th>Description</th></tr>
+      <tr><td><code>TWILIO_ACCOUNT_SID</code></td><td>Yes</td><td>Twilio Account SID (starts with AC)</td></tr>
+      <tr><td><code>TWILIO_AUTH_TOKEN</code></td><td>Yes</td><td>Twilio Auth Token</td></tr>
+      <tr><td><code>TWILIO_PHONE_NUMBER</code></td><td>Yes</td><td>Your Twilio phone number (E.164)</td></tr>
+      <tr><td><code>PORT</code></td><td>No</td><td>Server port (default: 3000)</td></tr>
+      <tr><td><code>NODE_ENV</code></td><td>No</td><td>Set to <code>development</code> to skip Twilio validation + cron</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>NPM Scripts</h3>
+    <table>
+      <tr><th>Command</th><th>Description</th></tr>
+      <tr><td><code>npm start</code></td><td>Start production server</td></tr>
+      <tr><td><code>npm run dev</code></td><td>Start with --watch (auto-reload on changes)</td></tr>
+      <tr><td><code>npm run seed</code></td><td>Reset DB with demo data (deletes existing data)</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>Testing Webhooks Locally</h3>
+<pre><code># Test voice webhook
+curl -X POST http://localhost:3000/webhooks/voice \
+  -d "From=%2B14255551234&amp;To=%2B18337830902&amp;CallStatus=ringing"
+
+# Test dial result (missed call)
+curl -X POST http://localhost:3000/webhooks/voice-dial-result \
+  -d "From=%2B14255551234&amp;To=%2B18337830902&amp;DialCallStatus=no-answer&amp;DialCallDuration=0"
+
+# Test dial result (voicemail)
+curl -X POST http://localhost:3000/webhooks/voice-dial-result \
+  -d "From=%2B14255551234&amp;To=%2B18337830902&amp;DialCallStatus=completed&amp;DialCallDuration=3"
+
+# Test inbound SMS
+curl -X POST http://localhost:3000/webhooks/sms \
+  -d "From=%2B14255551234&amp;To=%2B18337830902&amp;Body=I+need+a+plumber"</code></pre>
+  </div>
+
+  <div class="card">
+    <h3>Common Issues</h3>
+    <table>
+      <tr><th>Issue</th><th>Fix</th></tr>
+      <tr><td>Twilio signature validation fails</td><td>Set <code>NODE_ENV=development</code> in .env for local testing</td></tr>
+      <tr><td>Stale node processes</td><td><code>Get-Process -Name node | Stop-Process -Force</code> then restart</td></tr>
+      <tr><td>Cron blocking event loop</td><td>Already fixed — cron disabled in development mode</td></tr>
+      <tr><td>Webhooks not reaching local</td><td>Use VS Code Dev Tunnels (set to Public visibility)</td></tr>
+      <tr><td>SMS not delivering</td><td>Check toll-free verification status in Twilio console</td></tr>
+      <tr><td>ngrok blocked</td><td>Use VS Code Dev Tunnels instead (org Device Guard blocks ngrok)</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>Deployment (Render)</h3>
+    <p>The project includes a <code>render.yaml</code> for one-click Render deployment.</p>
+    <ol>
+      <li>Push to GitHub</li>
+      <li>Connect repo to <a href="https://render.com" target="_blank">Render</a></li>
+      <li>Set environment variables in Render dashboard</li>
+      <li>Update Twilio webhook URLs to your Render URL</li>
+      <li>Set <code>NODE_ENV=production</code> on Render</li>
+    </ol>
+    <div class="callout">
+      <strong>SQLite caveat:</strong> Render's free tier has ephemeral disk — DB resets on redeploy. For production, migrate to PostgreSQL or use a persistent disk ($7/mo).
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ FOOTER ═══════════════════════════ -->
+<footer>
+  <p>Swoop Playbook — v0.1.0 — Last updated May 2026</p>
+</footer>
+
+<script>
+function showTab(tabId) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-bar button').forEach(b => b.classList.remove('active'));
+  document.getElementById(tabId).classList.add('active');
+  event.target.classList.add('active');
+  window.scrollTo(0, 0);
+}
+</script>
+
+</body>
+</html>
