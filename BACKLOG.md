@@ -64,6 +64,7 @@
 - [ ] 🟡 Inline editing: services, FAQs, pricing, hours — _Jordan: "No business profile edit after creation"_
 - [ ] 🟡 Toggle AI on/off from dashboard
 - [ ] 🟡 Send manual SMS from dashboard — _Jordan: "After AI hands off, owner can't reply through Swoop"_
+- [ ] 🟢 Customizable voice greeting per business (seasonal messages, peak hours) — _Jordan: "Should be fully customizable eventually"_
 - [ ] 🟢 Onboarding wizard (3-step guided setup)
 - [ ] 🟢 Pre-fill default auto-reply template — _Priya: "Owner has to write their own from scratch"_
 
