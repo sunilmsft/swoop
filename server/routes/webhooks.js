@@ -65,7 +65,7 @@ router.post('/voice-dial-result', validateTwilioRequest, async (req, res) => {
     }
 
     const bizName = business ? business.name : 'us';
-    twiml.say(`Thanks for calling ${bizName}! Sorry we missed you. We just sent you a text message.`);
+    twiml.say({ voice: 'Google.en-US-Neural2-F' }, `Thanks for calling ${bizName}! Sorry we missed you. We just sent you a text message.`);
   }
 
   res.type('text/xml');
