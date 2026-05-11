@@ -175,11 +175,52 @@
         .setup-banner code { background: #fff; padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.85rem; }
         .setup-steps { margin-top: 0.75rem; }
         .setup-steps li { font-size: 0.9rem; margin-bottom: 0.4rem; }
+
+        /* SMS Compose */
+        .sms-compose {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+        }
+        .sms-compose input {
+            flex: 1;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+        .sms-compose input:focus { outline: none; border-color: var(--primary); }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .header { padding: 1rem; }
+            .header h1 { font-size: 1.2rem; }
+            .header .logo-img { height: 28px; }
+            .container { padding: 1rem; }
+            .stats { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+            .stat-card { padding: 1rem; }
+            .stat-card .value { font-size: 1.5rem; }
+            .lead-card { padding: 0.75rem; gap: 0.75rem; }
+            .lead-card .avatar { width: 36px; height: 36px; font-size: 1rem; }
+            .lead-card .meta .time { font-size: 0.72rem; }
+            .modal { width: 95%; max-height: 90vh; padding: 1rem; border-radius: 12px; }
+            .action-bar { flex-direction: column; }
+            .action-bar .btn { width: 100%; text-align: center; }
+            .sms-compose { flex-direction: column; }
+            .sms-compose .btn-primary { width: 100%; text-align: center; }
+        }
+        @media (max-width: 480px) {
+            .stats { grid-template-columns: 1fr 1fr; }
+            .stat-card .label { font-size: 0.7rem; }
+            .lead-card .info .last-msg { display: none; }
+        }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>🦅 Swoop <span>Never miss a lead</span></h1>
+        <h1><img src="/images/logo-light.png" alt="Swoop" class="logo-img" style="height:32px;vertical-align:middle;margin-right:0.5rem;">Swoop <span>Never miss a lead</span></h1>
         <div class="status">
             <div class="dot"></div>
             <span id="status-text">Connecting...</span>
@@ -348,6 +389,10 @@
 
             // Action buttons
             html += `
+                <div class="sms-compose">
+                    <input type="text" id="sms-input" placeholder="Type a message..." onkeydown="if(event.key==='Enter'){sendManualSMS(${lead.id})}">
+                    <button class="btn btn-primary" onclick="sendManualSMS(${lead.id})">Send</button>
+                </div>
                 <div class="action-bar">
                     ${lead.lead_status !== 'converted' ? `<button class="btn btn-green" onclick="updateLead(${lead.id}, 'converted')">✅ Mark Converted</button>` : ''}
                     ${lead.lead_status !== 'review_sent' ? `<button class="btn" onclick="requestReview(${lead.id})">⭐ Request Review</button>` : ''}
@@ -372,6 +417,33 @@
             await fetch(`${API}/api/leads/${id}/review`, { method: 'POST' });
             openLead(id); // Refresh the modal
             loadDashboard();
+        }
+
+        async function sendManualSMS(id) {
+            const input = document.getElementById('sms-input');
+            const body = input.value.trim();
+            if (!body) return;
+            input.disabled = true;
+            try {
+                const res = await fetch(`${API}/api/leads/${id}/sms`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ body }),
+                });
+                if (res.ok) {
+                    input.value = '';
+                    openLead(id); // Refresh thread
+                    loadDashboard();
+                } else {
+                    const err = await res.json();
+                    alert(err.error || 'Failed to send');
+                }
+            } catch (err) {
+                alert('Network error');
+            } finally {
+                input.disabled = false;
+                input.focus();
+            }
         }
 
         function closeModal(event) {

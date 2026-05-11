@@ -1,6 +1,7 @@
 const express = require('express');
 const db = require('../db/database');
 const { sendReviewRequest } = require('../services/leads');
+const { sendSMS } = require('../services/twilio');
 
 const router = express.Router();
 
@@ -92,6 +93,33 @@ router.post('/leads/:id/review', async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     res.status(400).json({ error: err.message });
+  }
+});
+
+/**
+ * POST /api/leads/:id/sms — Send a manual SMS to a lead
+ */
+router.post('/leads/:id/sms', async (req, res) => {
+  const { body } = req.body;
+  if (!body || !body.trim()) {
+    return res.status(400).json({ error: 'Message body is required' });
+  }
+
+  const lead = db.prepare('SELECT * FROM leads WHERE id = ?').get(req.params.id);
+  if (!lead) return res.status(404).json({ error: 'Lead not found' });
+
+  try {
+    await sendSMS(lead.caller_phone, body.trim());
+
+    db.prepare(
+      'INSERT INTO messages (lead_id, direction, body, sent_at) VALUES (?, ?, ?, datetime(\'now\'))'
+    ).run(lead.id, 'outbound', body.trim());
+
+    db.prepare('UPDATE leads SET updated_at = datetime(\'now\') WHERE id = ?').run(lead.id);
+
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to send SMS: ' + err.message });
   }
 });
 
