@@ -6,6 +6,7 @@ const cron = require('node-cron');
 const { processDueFollowUps } = require('./services/leads');
 
 const app = express();
+app.set('trust proxy', 1); // Trust Render's reverse proxy (fixes req.protocol for Twilio signature validation)
 const PORT = process.env.PORT || 3000;
 
 // Middleware
