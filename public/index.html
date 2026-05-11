@@ -33,9 +33,8 @@
             align-items: center;
             justify-content: space-between;
         }
-        .header h1 { font-size: 1.8rem; font-weight: 800; letter-spacing: -0.5px; }
-        .header h1 .brand-dot { color: #3b82f6; }
-        .header .logo-img { filter: brightness(0) invert(1); }
+        .header h1 { font-size: 1.8rem; font-weight: 800; letter-spacing: -0.5px; line-height: 1; }
+        .header .logo-img { height: 36px; filter: brightness(0) invert(1); }
         .header h1 span { font-weight: 300; opacity: 0.8; font-size: 0.9rem; margin-left: 0.5rem; }
         .header .status { display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; }
         .header .status .dot { width: 10px; height: 10px; border-radius: 50%; background: #4ade80; animation: pulse 2s infinite; }
@@ -222,7 +221,7 @@
 </head>
 <body>
     <div class="header">
-        <h1>swoop<span class="brand-dot">.</span></h1>
+        <h1><img src="/images/logo-bold.png" alt="Swoop" class="logo-img" height="36"></h1>
         <div class="status">
             <div class="dot"></div>
             <span id="status-text">Connecting...</span>

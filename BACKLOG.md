@@ -178,3 +178,21 @@ _Items the Squad flagged that we've decided NOT to address now, with rationale._
 | "Test your setup" flow | Priya | Manual onboarding is fine at <10 customers. Build when it saves more time than it costs. | v0.4 onboarding wizard |
 | Analytics dashboard | Jordan | Premature — need real data from real customers first | After 30-day usage data exists |
 | Add Business form has 15+ fields | Ray | Advanced fields are optional. Could hide behind "Advanced" toggle but not blocking. | If onboarding drop-off is measured |
+
+---
+
+## 💰 Service Stack & Costs
+
+_Current infrastructure and upgrade triggers. Update this as services change._
+
+| Service | Current Tier | Monthly Cost | Upgrade Trigger | Paid Cost |
+|---------|-------------|-------------|-----------------|-----------|
+| **Render** (hosting) | Free | $0 | First paying customer | $7/mo + $0.25/GB disk |
+| **Twilio** (voice/SMS) | Pay-as-you-go | ~$2/number | Already paying | ~$2/number + $0.0085/SMS + $0.014/min |
+| **OpenAI** (AI replies) | $5 prepaid | ~$1-2/mo | Top up when low | ~$1-5/mo (gpt-4o-mini) |
+| **GitHub** (repo) | Free | $0 | Never | $0 |
+| **Domain** | None | $0 | Before first customer | ~$12/yr |
+| **Stripe** (billing) | Not set up | $0 | When billing goes live (v0.5) | 2.9% + $0.30/txn |
+
+**Est. total at launch (1-5 customers): ~$15-20/mo**
+**Break-even: 1 customer at $29/mo**
