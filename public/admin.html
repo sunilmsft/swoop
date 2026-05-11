@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Swoop — Admin Console</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #2563eb;
+            --green: #059669;
+            --yellow: #d97706;
+            --red: #dc2626;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --border: #e2e8f0;
+        }
+
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+
+        .header {
+            background: #0f172a;
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .header h1 { font-size: 1.5rem; font-weight: 800; }
+        .header h1 .accent { color: #f59e0b; }
+        .header .nav-link { color: #94a3b8; text-decoration: none; font-size: 0.85rem; }
+        .header .nav-link:hover { color: white; }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 1.5rem; }
+
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+        .stat-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.25rem;
+            border: 1px solid var(--border);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .stat-card .label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+        .stat-card .value { font-size: 1.8rem; font-weight: 700; margin-top: 0.25rem; }
+        .stat-card .value.blue { color: var(--primary); }
+        .stat-card .value.green { color: var(--green); }
+        .stat-card .value.yellow { color: var(--yellow); }
+        .stat-card .value.red { color: var(--red); }
+
+        .section-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--card-bg);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        th, td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+        th { background: #f1f5f9; font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.3px; color: var(--text-muted); }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: #f8fafc; }
+
+        .badge {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            font-weight: 600;
+        }
+        .badge-active { background: #f0fdf4; color: var(--green); }
+        .badge-inactive { background: #fef2f2; color: var(--red); }
+        .badge-warn { background: #fefce8; color: var(--yellow); }
+
+        .ai-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .ai-bar .bar {
+            flex: 1;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 3px;
+            overflow: hidden;
+            max-width: 60px;
+        }
+        .ai-bar .bar-fill {
+            height: 100%;
+            background: var(--primary);
+            border-radius: 3px;
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 1rem; }
+            .stats { grid-template-columns: repeat(2, 1fr); }
+            table { font-size: 0.8rem; }
+            th, td { padding: 0.5rem 0.6rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>swoop<span class="accent">.</span> admin</h1>
+        <a href="/" class="nav-link">← Back to Dashboard</a>
+    </div>
+
+    <div class="container">
+        <div class="stats" id="stats">
+            <div class="stat-card"><div class="label">Businesses</div><div class="value blue" id="s-biz">—</div></div>
+            <div class="stat-card"><div class="label">Total Leads</div><div class="value blue" id="s-leads">—</div></div>
+            <div class="stat-card"><div class="label">Converted</div><div class="value green" id="s-converted">—</div></div>
+            <div class="stat-card"><div class="label">Needs Attention</div><div class="value red" id="s-attention">—</div></div>
+            <div class="stat-card"><div class="label">Messages Sent</div><div class="value blue" id="s-out">—</div></div>
+            <div class="stat-card"><div class="label">Messages Received</div><div class="value blue" id="s-in">—</div></div>
+            <div class="stat-card"><div class="label">AI Turns Used</div><div class="value yellow" id="s-ai">—</div></div>
+            <div class="stat-card"><div class="label">AI Handoffs</div><div class="value yellow" id="s-handoffs">—</div></div>
+        </div>
+
+        <div class="section-title">📊 Businesses</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Business</th>
+                    <th>Owner</th>
+                    <th>Phone</th>
+                    <th>Leads</th>
+                    <th>Converted</th>
+                    <th>Messages</th>
+                    <th>AI Usage</th>
+                    <th>Status</th>
+                    <th>Last Activity</th>
+                </tr>
+            </thead>
+            <tbody id="biz-table"></tbody>
+        </table>
+    </div>
+
+    <script>
+        async function loadAdmin() {
+            try {
+                const [overviewRes, bizRes] = await Promise.all([
+                    fetch('/api/admin/overview'),
+                    fetch('/api/admin/businesses'),
+                ]);
+
+                if (overviewRes.ok) {
+                    const s = await overviewRes.json();
+                    document.getElementById('s-biz').textContent = s.totalBusinesses;
+                    document.getElementById('s-leads').textContent = s.totalLeads;
+                    document.getElementById('s-converted').textContent = s.convertedLeads;
+                    document.getElementById('s-attention').textContent = s.needsAttention;
+                    document.getElementById('s-out').textContent = s.outboundMessages;
+                    document.getElementById('s-in').textContent = s.inboundMessages;
+                    document.getElementById('s-ai').textContent = s.totalAiTurns;
+                    document.getElementById('s-handoffs').textContent = s.aiHandoffs;
+                }
+
+                if (bizRes.ok) {
+                    const businesses = await bizRes.json();
+                    renderBusinesses(businesses);
+                }
+            } catch (err) {
+                console.error('Admin load error:', err);
+            }
+        }
+
+        function renderBusinesses(businesses) {
+            const tbody = document.getElementById('biz-table');
+            if (businesses.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:2rem;">No businesses yet</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = businesses.map(b => {
+                const maxTurns = (b.max_ai_turns || 3) * b.lead_count || 1;
+                const aiPct = Math.min(100, Math.round((b.ai_turns_used / maxTurns) * 100));
+
+                // Activity status
+                let statusBadge;
+                if (!b.last_lead_activity) {
+                    statusBadge = '<span class="badge badge-inactive">No leads</span>';
+                } else {
+                    const daysSince = Math.floor((Date.now() - new Date(b.last_lead_activity + 'Z')) / 86400000);
+                    if (daysSince <= 2) statusBadge = '<span class="badge badge-active">Active</span>';
+                    else if (daysSince <= 7) statusBadge = '<span class="badge badge-warn">Quiet</span>';
+                    else statusBadge = '<span class="badge badge-inactive">Inactive</span>';
+                }
+
+                return `<tr>
+                    <td><strong>${esc(b.name)}</strong></td>
+                    <td>${esc(b.owner_name || '—')}</td>
+                    <td style="font-size:0.82rem;">${esc(b.phone)}</td>
+                    <td>${b.lead_count}</td>
+                    <td>${b.converted_count}</td>
+                    <td>${b.message_count}</td>
+                    <td>
+                        <div class="ai-bar">
+                            <span>${b.ai_turns_used}</span>
+                            <div class="bar"><div class="bar-fill" style="width:${aiPct}%"></div></div>
+                        </div>
+                    </td>
+                    <td>${statusBadge}</td>
+                    <td style="font-size:0.82rem;color:var(--text-muted);">${b.last_lead_activity ? timeAgo(b.last_lead_activity) : '—'}</td>
+                </tr>`;
+            }).join('');
+        }
+
+        function esc(str) {
+            if (!str) return '';
+            const d = document.createElement('div');
+            d.textContent = str;
+            return d.innerHTML;
+        }
+
+        function timeAgo(dateStr) {
+            const date = new Date(dateStr + 'Z');
+            const seconds = Math.floor((Date.now() - date) / 1000);
+            if (seconds < 60) return 'just now';
+            if (seconds < 3600) return Math.floor(seconds / 60) + 'm ago';
+            if (seconds < 86400) return Math.floor(seconds / 3600) + 'h ago';
+            return Math.floor(seconds / 86400) + 'd ago';
+        }
+
+        loadAdmin();
+        setInterval(loadAdmin, 30000);
+    </script>
+</body>
+</html>

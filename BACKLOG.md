@@ -136,6 +136,19 @@
 
 ## 📋 v0.5 — Billing & Scale
 
+### Admin Console (Platform Operator)
+> `/admin` — Single pane of glass for Swoop team to manage and monitor everything.
+
+- [x] 🟡 Platform-wide stats (businesses, leads, messages, AI usage, handoffs)
+- [x] 🟡 Businesses table with per-business metrics (leads, conversions, messages, AI turns, last activity, health status)
+- [ ] 🟡 Disable/enable a business from admin
+- [ ] 🟡 Impersonate/view a business owner's dashboard
+- [ ] 🟢 Onboarding funnel (signed up → configured → first lead → converted)
+- [ ] 🟢 System health (Twilio errors, OpenAI failures, webhook latency)
+- [ ] 🟢 Revenue tracking (when billing exists)
+- [ ] 🟢 Broadcast announcement to all business owners
+- [ ] 🔴 Auth gate on `/admin` — _must not be publicly accessible_
+
 ### Billing (Stripe)
 - [ ] Self-service plan selection ($29/$59/$99)
 - [ ] Usage tracking (text-backs this month)

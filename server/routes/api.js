@@ -163,4 +163,43 @@ router.post('/businesses', (req, res) => {
   }
 });
 
+// ---- Admin Console Endpoints ----
+
+/**
+ * GET /api/admin/overview — Platform-wide stats for the super admin
+ */
+router.get('/admin/overview', (req, res) => {
+  const stats = {
+    totalBusinesses: db.prepare('SELECT COUNT(*) as c FROM businesses').get().c,
+    totalLeads: db.prepare('SELECT COUNT(*) as c FROM leads').get().c,
+    totalMessages: db.prepare('SELECT COUNT(*) as c FROM messages').get().c,
+    outboundMessages: db.prepare('SELECT COUNT(*) as c FROM messages WHERE direction = ?').get('outbound').c,
+    inboundMessages: db.prepare('SELECT COUNT(*) as c FROM messages WHERE direction = ?').get('inbound').c,
+    aiHandoffs: db.prepare('SELECT COUNT(*) as c FROM leads WHERE ai_handoff_done = 1').get().c,
+    totalAiTurns: db.prepare('SELECT COALESCE(SUM(ai_turn_count), 0) as c FROM leads').get().c,
+    convertedLeads: db.prepare('SELECT COUNT(*) as c FROM leads WHERE lead_status = ?').get('converted').c,
+    needsAttention: db.prepare('SELECT COUNT(*) as c FROM leads WHERE lead_status = ?').get('needs_attention').c,
+    pendingFollowUps: db.prepare('SELECT COUNT(*) as c FROM follow_ups WHERE status = ?').get('pending').c,
+  };
+  res.json(stats);
+});
+
+/**
+ * GET /api/admin/businesses — All businesses with usage metrics
+ */
+router.get('/admin/businesses', (req, res) => {
+  const businesses = db.prepare(`
+    SELECT b.*,
+      (SELECT COUNT(*) FROM leads WHERE business_id = b.id) as lead_count,
+      (SELECT COUNT(*) FROM leads WHERE business_id = b.id AND lead_status = 'converted') as converted_count,
+      (SELECT COUNT(*) FROM leads WHERE business_id = b.id AND lead_status = 'needs_attention') as attention_count,
+      (SELECT COUNT(*) FROM messages m JOIN leads l ON m.lead_id = l.id WHERE l.business_id = b.id) as message_count,
+      (SELECT COALESCE(SUM(l.ai_turn_count), 0) FROM leads l WHERE l.business_id = b.id) as ai_turns_used,
+      (SELECT MAX(l.updated_at) FROM leads l WHERE l.business_id = b.id) as last_lead_activity
+    FROM businesses b
+    ORDER BY b.created_at DESC
+  `).all();
+  res.json(businesses);
+});
+
 module.exports = router;
