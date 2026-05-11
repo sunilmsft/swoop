@@ -46,36 +46,42 @@
 
 ## 🔜 Next Up (v0.3) — Self-Service & Deployment
 
+> **Priority labels:** 🔴 Blocker — can't ship without it | 🟡 High — should do before first customer | 🟢 Nice — improves product but not urgent | 🔵 By Design — consciously deferred
+
 ### Deploy to Production
-- [ ] Deploy to Render (render.yaml ready)
-- [ ] Set environment variables on Render
-- [ ] Update Twilio webhooks to Render URL
-- [ ] Complete Twilio toll-free SMS verification
+- [ ] 🟡 Deploy to Render (render.yaml ready)
+- [ ] 🟡 Set environment variables on Render
+- [ ] 🟡 Update Twilio webhooks to Render URL
+- [ ] 🟡 Complete Twilio toll-free SMS verification
+
+### Security & Auth (🔴 Blocker — Squad Review May 11)
+- [ ] 🔴 Per-business auth (magic link or phone + code) — _Priya: "Anyone with the URL sees ALL businesses' leads"_
+- [ ] 🔴 Business owner dashboard filtered to their leads only
+- [ ] 🟡 Rate limiting on webhook and API endpoints
+- [ ] 🟡 Sanitize/validate phone number format (E.164)
 
 ### Self-Service Business Dashboard
-- [ ] Per-business auth (magic link or phone + code)
-- [ ] Business owner dashboard (filtered to their leads only)
-- [ ] Inline editing: services, FAQs, pricing, hours
-- [ ] Toggle AI on/off from dashboard
-- [ ] Send manual SMS from dashboard (owner replies to leads)
-- [ ] Onboarding wizard (3-step guided setup)
+- [ ] 🟡 Inline editing: services, FAQs, pricing, hours — _Jordan: "No business profile edit after creation"_
+- [ ] 🟡 Toggle AI on/off from dashboard
+- [ ] 🟡 Send manual SMS from dashboard — _Jordan: "After AI hands off, owner can't reply through Swoop"_
+- [ ] 🟢 Onboarding wizard (3-step guided setup)
+- [ ] 🟢 Pre-fill default auto-reply template — _Priya: "Owner has to write their own from scratch"_
 
-### Security & Auth
-- [ ] Add basic auth or API key to dashboard/API (currently wide open)
-- [ ] Rate limiting on webhook and API endpoints
-- [ ] Sanitize/validate phone number format (E.164)
+### Owner Notifications (🟡 High — Squad Review May 11)
+- [ ] 🟡 Text owner when a lead hits "needs_attention" with a dashboard link — _Ray: "No way to know a lead needs me unless I'm watching the dashboard"_
+- [ ] 🟢 Email notification option for leads needing attention
 
 ### Dashboard Improvements
-- [ ] Wire logo into dashboard header
-- [ ] Business selector (currently shows all leads mixed)
-- [ ] Search/filter leads (by status, phone, name)
-- [ ] Pagination for leads list (currently capped at 50)
-- [ ] Mobile-responsive polish
+- [ ] 🟢 Wire logo into dashboard header
+- [ ] 🟡 Mobile-responsive polish — _Ray: "I'm on my phone. Always."_
+- [ ] 🟢 Business selector (currently shows all leads mixed)
+- [ ] 🟢 Search/filter leads (by status, phone, name)
+- [ ] 🟢 Pagination for leads list (currently capped at 50)
 
 ### Messaging
-- [ ] Customize follow-up message templates per business
-- [ ] Configurable follow-up timing (not hardcoded 1/3/7 days)
-- [ ] Message delivery status tracking (Twilio status callbacks)
+- [ ] 🟢 Customize follow-up message templates per business
+- [ ] 🟢 Configurable follow-up timing (not hardcoded 1/3/7 days)
+- [ ] 🟢 Message delivery status tracking (Twilio status callbacks)
 
 ---
 
@@ -101,7 +107,7 @@
 - [ ] Error monitoring (Sentry or similar)
 - [ ] Logging improvements (structured JSON logs)
 - [ ] Database backups strategy
-- [ ] Analytics: conversion funnel, response time metrics
+- [ ] Analytics: conversion funnel, response time metrics — _Jordan: "No analytics at all"_
 
 ### Growth
 - [ ] Landing page / marketing site
@@ -109,3 +115,16 @@
 - [ ] Email notifications to business owner on new leads
 - [ ] Multi-number support (one business, multiple Twilio numbers)
 - [ ] Voicemail transcription
+
+---
+
+## 🔵 By Design (Consciously Deferred)
+
+_Items the Squad flagged that we've decided NOT to address now, with rationale._
+
+| Item | Who flagged | Rationale | Revisit when? |
+|------|-------------|-----------|---------------|
+| Push notifications / mobile app | Jordan | Web-first, no app store overhead for a solo founder | After 10+ paying customers |
+| "Test your setup" flow | Priya | Manual onboarding is fine at <10 customers. Build when it saves more time than it costs. | v0.4 onboarding wizard |
+| Analytics dashboard | Jordan | Premature — need real data from real customers first | After 30-day usage data exists |
+| Add Business form has 15+ fields | Ray | Advanced fields are optional. Could hide behind "Advanced" toggle but not blocking. | If onboarding drop-off is measured |

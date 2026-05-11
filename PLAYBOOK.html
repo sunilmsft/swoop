@@ -680,121 +680,24 @@ question, then hand off to {owner_name} with a callback timeframe.</code></pre>
   <h2>Product Backlog</h2>
 
   <div class="card">
-    <h3><span class="status-badge badge-done">DONE</span> v0.1.0 — Core Product</h3>
+    <h3>📋 Single Source of Truth: BACKLOG.md</h3>
+    <p>The backlog lives in <code>BACKLOG.md</code> at the repo root — not here. This avoids two copies drifting out of sync.</p>
+    <p style="margin-top:0.75rem;"><strong>What's in it:</strong></p>
     <ul>
-      <li>Express server with static file serving</li>
-      <li>SQLite database with businesses, leads, messages, follow_ups tables</li>
-      <li>Twilio webhooks: /voice, /voice-dial-result, /voice-status, /sms</li>
-      <li>Missed call detection + voicemail detection (DialCallDuration &lt; 15s)</li>
-      <li>Call forwarding via &lt;Dial&gt; to owner's cell</li>
-      <li>Instant auto-reply SMS via Twilio</li>
-      <li>Lead creation/dedup on missed calls and inbound texts</li>
-      <li>Follow-up sequence scheduling (Day 1, 3, 7)</li>
-      <li>Smart follow-up cancellation when lead replies</li>
-      <li>Cron job to process due follow-ups every 15 min</li>
-      <li>Google review request SMS with link</li>
-      <li>REST API: dashboard stats, leads CRUD, businesses CRUD</li>
-      <li>Dashboard UI: stats cards, lead list, detail modal with chat bubbles</li>
-      <li>Add business form, mark converted, request review</li>
-      <li>Twilio request signature validation (prod) / skip (dev)</li>
-      <li>Seed script with demo data</li>
-      <li>render.yaml for deployment</li>
+      <li>✅ Done milestones (v0.1, v0.2.5)</li>
+      <li>🔜 Next up (v0.3) with priority labels: 🔴 Blocker, 🟡 High, 🟢 Nice</li>
+      <li>📋 Future (v0.4+)</li>
+      <li>🔵 By Design — consciously deferred items with rationale and revisit triggers</li>
     </ul>
-  </div>
-
-  <div class="card">
-    <h3><span class="status-badge badge-next">NEXT</span> v0.2 — Security, Multi-Tenant, Polish</h3>
-    <h4>Security &amp; Auth</h4>
+    <p style="margin-top:0.75rem;"><strong>How it stays current:</strong></p>
     <ul>
-      <li>Basic auth or API key for dashboard/API</li>
-      <li>Rate limiting on webhook and API endpoints</li>
-      <li>CSRF protection</li>
-      <li>Phone number format validation (E.164)</li>
+      <li>Every Squad Review (Ray, Priya, Jordan) auto-syncs findings into BACKLOG.md</li>
+      <li>Persona quotes are inline so you know <em>why</em> something was flagged</li>
+      <li>Code Hygiene Checklist includes "BACKLOG.md is up to date" as a gate</li>
     </ul>
-    <h4>Multi-Tenant</h4>
-    <ul>
-      <li>Business selector in dashboard</li>
-      <li>Scope API endpoints to a business</li>
-      <li>Per-business settings page</li>
-    </ul>
-    <h4>Dashboard Improvements</h4>
-    <ul>
-      <li>Search/filter leads</li>
-      <li>Pagination</li>
-      <li>Date range filter for stats</li>
-      <li>Mobile-responsive polish</li>
-    </ul>
-    <h4>Messaging</h4>
-    <ul>
-      <li>Send manual SMS from dashboard (two-way conversation)</li>
-      <li>Customize follow-up templates per business</li>
-      <li>Configurable follow-up timing</li>
-      <li>Message delivery status tracking</li>
-    </ul>
-  </div>
-
-  <div class="card">
-    <h3><span class="status-badge badge-next">NEXT</span> v0.2.5 — AI Reply Agent</h3>
-    <h4>Business Knowledge Base</h4>
-    <ul>
-      <li>Business profile schema: description, services, pricing, hours, service area</li>
-      <li>Tone/personality settings</li>
-      <li>FAQ entries per business</li>
-      <li>Rules/guardrails (never say, redirect topics)</li>
-      <li>Onboarding form to collect business profile</li>
-      <li>System prompt builder from profile data</li>
-    </ul>
-    <h4>AI Conversational Agent</h4>
-    <ul>
-      <li>LLM integration (OpenAI / Azure OpenAI)</li>
-      <li>3-4 turn budget per lead before handoff</li>
-      <li>Context-aware responses using business profile</li>
-    </ul>
-    <h4>Graceful Handoff</h4>
-    <ul>
-      <li>Configurable callback timeframe (during hours / after hours / emergency)</li>
-      <li>Lead status → "Needs Attention" on dashboard</li>
-      <li>Business owner notification with conversation summary</li>
-      <li>Customer gets clear callback expectation</li>
-    </ul>
-    <h4>Conditional Call Forwarding Mode</h4>
-    <ul>
-      <li>Simpler webhook: carrier forwards missed calls directly</li>
-      <li>Onboarding wizard: detect carrier, show forwarding code</li>
-    </ul>
-  </div>
-
-  <div class="card">
-    <h3><span class="status-badge badge-future">FUTURE</span> v0.3+ — Scale &amp; Integrate</h3>
-    <h4>AI Advanced</h4>
-    <ul>
-      <li>Smart lead scoring (sentiment, response speed)</li>
-      <li>AI-generated follow-up messages</li>
-      <li>Appointment booking via text</li>
-    </ul>
-    <h4>Integrations</h4>
-    <ul>
-      <li>Google Calendar for scheduling</li>
-      <li>Zapier/webhook triggers for CRMs</li>
-      <li>Stripe billing</li>
-      <li>White-label support</li>
-    </ul>
-    <h4>Operations</h4>
-    <ul>
-      <li>Automated tests (unit + integration)</li>
-      <li>CI/CD pipeline (GitHub Actions)</li>
-      <li>Error monitoring (Sentry)</li>
-      <li>Structured logging</li>
-      <li>Database backups</li>
-      <li>Analytics: conversion funnel, response time metrics</li>
-    </ul>
-    <h4>Growth</h4>
-    <ul>
-      <li>Landing page / marketing site</li>
-      <li>Email notifications to business owners</li>
-      <li>Multi-number support per business</li>
-      <li>Voicemail transcription</li>
-    </ul>
+    <p style="margin-top:1rem;">
+      <a href="https://github.com/sunilmsft/swoop/blob/master/BACKLOG.md" target="_blank" style="color:var(--primary);font-weight:600;">View BACKLOG.md on GitHub →</a>
+    </p>
   </div>
 </div>
 
