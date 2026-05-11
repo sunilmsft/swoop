@@ -49,10 +49,10 @@
 > **Priority labels:** 🔴 Blocker — can't ship without it | 🟡 High — should do before first customer | 🟢 Nice — improves product but not urgent | 🔵 By Design — consciously deferred
 
 ### Deploy to Production
-- [ ] 🟡 Deploy to Render (render.yaml ready)
-- [ ] 🟡 Set environment variables on Render
-- [ ] 🟡 Update Twilio webhooks to Render URL
-- [ ] 🟡 Complete Twilio toll-free SMS verification
+- [x] 🟡 Deploy to Render (render.yaml ready)
+- [x] 🟡 Set environment variables on Render
+- [x] 🟡 Update Twilio webhooks to Render URL
+- [ ] 🟡 Complete Twilio toll-free SMS verification (submitted, pending approval)
 
 ### Security & Auth (🔴 Blocker — Squad Review May 11)
 - [ ] 🔴 Per-business auth (magic link or phone + code) — _Priya: "Anyone with the URL sees ALL businesses' leads"_
@@ -61,11 +61,11 @@
 - [ ] 🟡 Sanitize/validate phone number format (E.164)
 
 ### Owner Dashboard — Leads
-- [ ] 🟡 Send manual SMS from dashboard — _Jordan: "After AI hands off, owner can't reply through Swoop"_
-- [ ] 🟡 Mobile-responsive polish — _Ray: "I'm on my phone. Always."_
+- [x] 🟡 Send manual SMS from dashboard — _Jordan: "After AI hands off, owner can't reply through Swoop"_
+- [x] 🟡 Mobile-responsive polish — _Ray: "I'm on my phone. Always."_
 - [ ] 🟢 Search/filter leads (by status, phone, name)
 - [ ] 🟢 Pagination for leads list (currently capped at 50)
-- [ ] 🟢 Wire logo into dashboard header
+- [x] 🟢 Wire logo into dashboard header
 
 ### Owner Dashboard — Settings Panel
 > One screen, accordion sections, auto-save. Plain language labels. Pre-filled with smart defaults.
