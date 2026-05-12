@@ -166,6 +166,57 @@ router.post('/businesses', (req, res) => {
 // ---- Admin Console Endpoints ----
 
 /**
+ * PUT /api/businesses/:id — Update a business (used by demo mode + admin)
+ */
+router.put('/businesses/:id', (req, res) => {
+  const business = db.prepare('SELECT * FROM businesses WHERE id = ?').get(req.params.id);
+  if (!business) return res.status(404).json({ error: 'Business not found' });
+
+  const allowed = ['name', 'phone', 'forward_phone', 'owner_name', 'auto_reply_message', 'review_link',
+    'description', 'services', 'pricing', 'service_area', 'hours', 'emergency_policy',
+    'tone', 'faqs', 'never_say', 'max_ai_turns', 'handoff_minutes', 'handoff_after_hours_msg', 'ai_enabled'];
+
+  const updates = [];
+  const values = [];
+
+  for (const key of allowed) {
+    if (req.body[key] !== undefined) {
+      updates.push(`${key} = ?`);
+      values.push(req.body[key]);
+    }
+  }
+
+  if (updates.length === 0) {
+    return res.status(400).json({ error: 'No valid fields to update' });
+  }
+
+  values.push(req.params.id);
+  db.prepare(`UPDATE businesses SET ${updates.join(', ')} WHERE id = ?`).run(...values);
+
+  const updated = db.prepare('SELECT * FROM businesses WHERE id = ?').get(req.params.id);
+  res.json(updated);
+});
+
+/**
+ * DELETE /api/businesses/:id/leads — Clear all leads (and their messages/follow-ups) for a business
+ */
+router.delete('/businesses/:id/leads', (req, res) => {
+  const business = db.prepare('SELECT * FROM businesses WHERE id = ?').get(req.params.id);
+  if (!business) return res.status(404).json({ error: 'Business not found' });
+
+  const leadIds = db.prepare('SELECT id FROM leads WHERE business_id = ?').all(req.params.id).map(r => r.id);
+
+  if (leadIds.length > 0) {
+    const placeholders = leadIds.map(() => '?').join(',');
+    db.prepare(`DELETE FROM follow_ups WHERE lead_id IN (${placeholders})`).run(...leadIds);
+    db.prepare(`DELETE FROM messages WHERE lead_id IN (${placeholders})`).run(...leadIds);
+    db.prepare(`DELETE FROM leads WHERE business_id = ?`).run(req.params.id);
+  }
+
+  res.json({ success: true, leadsDeleted: leadIds.length });
+});
+
+/**
  * GET /api/admin/overview — Platform-wide stats for the super admin
  */
 router.get('/admin/overview', (req, res) => {

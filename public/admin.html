@@ -105,6 +105,55 @@
             .stats { grid-template-columns: repeat(2, 1fr); }
             table { font-size: 0.8rem; }
             th, td { padding: 0.5rem 0.6rem; }
+            .demo-grid { grid-template-columns: 1fr !important; }
+        }
+
+        /* Demo Mode */
+        .demo-panel {
+            background: linear-gradient(135deg, #fffbeb 0%, #fff 100%);
+            border: 2px solid #f59e0b;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .demo-panel h2 {
+            font-size: 1.1rem; margin-bottom: 0.25rem; display: flex; align-items: center; gap: 8px;
+        }
+        .demo-panel .subtitle { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem; }
+        .demo-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;
+        }
+        .demo-field label {
+            display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-muted);
+            text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 4px;
+        }
+        .demo-field input, .demo-field textarea {
+            width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px;
+            font-size: 0.9rem; font-family: inherit; background: #fff;
+        }
+        .demo-field textarea { resize: vertical; min-height: 60px; }
+        .demo-field input:focus, .demo-field textarea:focus {
+            outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+        }
+        .demo-actions {
+            display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+        }
+        .btn {
+            padding: 10px 20px; border: none; border-radius: 8px; font-size: 0.9rem;
+            font-weight: 600; cursor: pointer; transition: all 0.2s;
+        }
+        .btn-primary { background: var(--primary); color: #fff; }
+        .btn-primary:hover { background: #1d4ed8; }
+        .btn-danger { background: #fff; color: var(--red); border: 2px solid #fecaca; }
+        .btn-danger:hover { background: #fef2f2; border-color: var(--red); }
+        .demo-status {
+            font-size: 0.85rem; color: var(--green); font-weight: 600;
+            opacity: 0; transition: opacity 0.3s;
+        }
+        .demo-status.show { opacity: 1; }
+        .demo-biz-select {
+            padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px;
+            font-size: 0.9rem; background: #fff; width: 100%; cursor: pointer;
         }
     </style>
 </head>
@@ -124,6 +173,50 @@
             <div class="stat-card"><div class="label">Messages Received</div><div class="value blue" id="s-in">—</div></div>
             <div class="stat-card"><div class="label">AI Turns Used</div><div class="value yellow" id="s-ai">—</div></div>
             <div class="stat-card"><div class="label">AI Handoffs</div><div class="value yellow" id="s-handoffs">—</div></div>
+        </div>
+
+        <!-- Demo Mode Panel -->
+        <div class="demo-panel" id="demo-panel">
+            <h2>🎯 Demo Mode</h2>
+            <p class="subtitle">Swap business details before each demo. Your Twilio number stays the same — just update who it represents.</p>
+
+            <div style="margin-bottom: 1rem;">
+                <div class="demo-field">
+                    <label>Select Business</label>
+                    <select class="demo-biz-select" id="demo-biz-select" onchange="loadDemoBusiness()">
+                        <option value="">Loading...</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="demo-grid">
+                <div class="demo-field">
+                    <label>Business Name</label>
+                    <input type="text" id="demo-name" placeholder="Mike's Plumbing">
+                </div>
+                <div class="demo-field">
+                    <label>Owner Name</label>
+                    <input type="text" id="demo-owner" placeholder="Mike Johnson">
+                </div>
+                <div class="demo-field">
+                    <label>Forward Phone (owner's cell)</label>
+                    <input type="tel" id="demo-forward" placeholder="+14255551234">
+                </div>
+                <div class="demo-field">
+                    <label>Business Description</label>
+                    <input type="text" id="demo-desc" placeholder="Residential plumbing — repairs, installs, emergencies">
+                </div>
+            </div>
+            <div class="demo-field" style="margin-bottom: 1rem;">
+                <label>Auto-Reply Message</label>
+                <textarea id="demo-reply" placeholder="Hey! Sorry we missed your call. What do you need help with?"></textarea>
+            </div>
+
+            <div class="demo-actions">
+                <button class="btn btn-primary" onclick="saveDemoBusiness()">💾 Save & Update</button>
+                <button class="btn btn-danger" onclick="clearDemoLeads()">🗑️ Clear Leads</button>
+                <span class="demo-status" id="demo-status"></span>
+            </div>
         </div>
 
         <div class="section-title">📊 Businesses</div>
@@ -233,6 +326,87 @@
 
         loadAdmin();
         setInterval(loadAdmin, 30000);
+
+        // ── Demo Mode ──
+        let demoBizList = [];
+
+        async function loadDemoBusinesses() {
+            try {
+                const res = await fetch('/api/businesses');
+                if (res.ok) {
+                    demoBizList = await res.json();
+                    const sel = document.getElementById('demo-biz-select');
+                    sel.innerHTML = demoBizList.map(b =>
+                        `<option value="${b.id}">${esc(b.name)} (${esc(b.phone)})</option>`
+                    ).join('');
+                    if (demoBizList.length > 0) loadDemoBusiness();
+                }
+            } catch (err) { console.error('Demo load error:', err); }
+        }
+
+        function loadDemoBusiness() {
+            const id = Number(document.getElementById('demo-biz-select').value);
+            const biz = demoBizList.find(b => b.id === id);
+            if (!biz) return;
+            document.getElementById('demo-name').value = biz.name || '';
+            document.getElementById('demo-owner').value = biz.owner_name || '';
+            document.getElementById('demo-forward').value = biz.forward_phone || '';
+            document.getElementById('demo-desc').value = biz.description || '';
+            document.getElementById('demo-reply').value = biz.auto_reply_message || '';
+        }
+
+        async function saveDemoBusiness() {
+            const id = document.getElementById('demo-biz-select').value;
+            if (!id) return;
+            const body = {
+                name: document.getElementById('demo-name').value,
+                owner_name: document.getElementById('demo-owner').value,
+                forward_phone: document.getElementById('demo-forward').value,
+                description: document.getElementById('demo-desc').value,
+                auto_reply_message: document.getElementById('demo-reply').value,
+            };
+            try {
+                const res = await fetch(`/api/businesses/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body),
+                });
+                if (res.ok) {
+                    showDemoStatus('✅ Business updated!');
+                    loadAdmin();
+                    loadDemoBusinesses();
+                } else {
+                    showDemoStatus('❌ Update failed', true);
+                }
+            } catch (err) { showDemoStatus('❌ Error: ' + err.message, true); }
+        }
+
+        async function clearDemoLeads() {
+            const id = document.getElementById('demo-biz-select').value;
+            if (!id) return;
+            const name = document.getElementById('demo-name').value || 'this business';
+            if (!confirm(`Clear all leads for "${name}"? This cannot be undone.`)) return;
+            try {
+                const res = await fetch(`/api/businesses/${id}/leads`, { method: 'DELETE' });
+                if (res.ok) {
+                    const data = await res.json();
+                    showDemoStatus(`✅ Cleared ${data.leadsDeleted} leads`);
+                    loadAdmin();
+                } else {
+                    showDemoStatus('❌ Clear failed', true);
+                }
+            } catch (err) { showDemoStatus('❌ Error: ' + err.message, true); }
+        }
+
+        function showDemoStatus(msg, isError) {
+            const el = document.getElementById('demo-status');
+            el.textContent = msg;
+            el.style.color = isError ? 'var(--red)' : 'var(--green)';
+            el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), 3000);
+        }
+
+        loadDemoBusinesses();
     </script>
 </body>
 </html>
