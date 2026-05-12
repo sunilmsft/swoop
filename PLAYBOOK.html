@@ -743,6 +743,28 @@ question, then hand off to {owner_name} with a callback timeframe.</code></pre>
     <div class="callout blue">
       <strong>Scaling note:</strong> One Twilio number works for sequential demos. Once a business signs up and goes live, they get their own dedicated number provisioned via the Onboarding tab checklist.
     </div>
+
+    <h4>🚀 First Demo Pre-Flight Checklist</h4>
+    <p style="color:#666; margin-bottom:12px;">One-time setup before your very first live demo. Do this once and you're good to go for all future demos.</p>
+    <div style="background:#fff7ed; border-radius:10px; padding:16px; margin:8px 0;">
+      <table>
+        <tr><th>✅</th><th>Task</th><th>Why</th><th>How</th></tr>
+        <tr><td>☐</td><td><strong>Upgrade Twilio to paid</strong></td><td>Trial blocks outbound SMS to unverified numbers + adds "trial account" prefix to every text</td><td>Twilio Console → Billing → Upgrade. ~$1/mo + ~$0.0079/SMS. No contract.</td></tr>
+        <tr><td>☐</td><td><strong>Verify Twilio number is active</strong></td><td>Make sure the number you bought is still provisioned</td><td>Console → Phone Numbers → Active Numbers. Confirm your number is listed.</td></tr>
+        <tr><td>☐</td><td><strong>Set webhook URLs on Twilio number</strong></td><td>Twilio needs to know where to send call/SMS events</td><td>Active Numbers → your number → Voice: <code>https://your-server/webhooks/voice</code> (POST), SMS: <code>https://your-server/webhooks/sms</code> (POST)</td></tr>
+        <tr><td>☐</td><td><strong>Render server is live</strong></td><td>Your backend must be running to receive webhooks</td><td>Visit <code>https://your-server/api/businesses</code> — should return JSON. If 502/503, check Render dashboard for deploy errors.</td></tr>
+        <tr><td>☐</td><td><strong>Database has a demo business row</strong></td><td>Swoop looks up the business by the Twilio number</td><td>Seed DB or create via API: business <code>phone</code> = your Twilio number, <code>forward_phone</code> = your cell, <code>name</code> = test name</td></tr>
+        <tr><td>☐</td><td><strong>Test call → auto-text works</strong></td><td>End-to-end proof before you demo for anyone</td><td>Call Twilio number from a 2nd phone → let it ring → confirm auto-text arrives within 3–5 seconds</td></tr>
+        <tr><td>☐</td><td><strong>Dashboard loads and shows the lead</strong></td><td>You'll show this to the prospect after the call</td><td>Open <code>https://your-server</code> → log in → confirm the test lead appears with caller phone and timestamp</td></tr>
+        <tr><td>☐</td><td><strong>AI follow-up replies work</strong></td><td>If AI is enabled, reply to the auto-text and confirm the AI responds</td><td>Reply "I need a quote for a leaky faucet" to the auto-text → check that AI responds within a few seconds</td></tr>
+        <tr><td>☐</td><td><strong>Prepare your demo phone setup</strong></td><td>You need 2 phones: one to call from (the "customer"), one to show the text arriving (the "business")</td><td>Your personal phone + a friend's phone, or your phone + a tablet with a 2nd number</td></tr>
+        <tr><td>☐</td><td><strong>Bookmark the pitch scripts</strong></td><td>Have the cold text, cold call, and in-person scripts handy</td><td>Open PLAYBOOK.html → GTM tab → Pitch Scripts section on your phone</td></tr>
+      </table>
+    </div>
+
+    <div class="callout green">
+      <strong>You're demo-ready when:</strong> You can call your Twilio number from any phone, let it ring, and within 3 seconds the caller gets a personalized text back — with no "trial account" prefix, no verification needed. If that works, everything works.
+    </div>
   </div>
 
   <div class="card">
