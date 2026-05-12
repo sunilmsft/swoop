@@ -155,6 +155,22 @@
             padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px;
             font-size: 0.9rem; background: #fff; width: 100%; cursor: pointer;
         }
+        .active-badge {
+            display: inline-block; background: #dcfce7; color: #16a34a; font-size: 0.75rem;
+            font-weight: 700; padding: 2px 8px; border-radius: 99px; margin-left: 8px;
+            vertical-align: middle;
+        }
+        .new-biz-form {
+            display: none; background: #f0f9ff; border: 1px dashed var(--primary);
+            border-radius: 8px; padding: 1rem; margin-top: 1rem;
+        }
+        .new-biz-form.show { display: block; }
+        .new-biz-form h3 { font-size: 0.95rem; margin-bottom: 0.75rem; }
+        .btn-secondary {
+            background: #fff; color: var(--primary); border: 2px solid var(--primary);
+        }
+        .btn-secondary:hover { background: #eff6ff; }
+        .btn-sm { padding: 7px 14px; font-size: 0.82rem; }
     </style>
 </head>
 <body>
@@ -216,6 +232,29 @@
                 <button class="btn btn-primary" onclick="saveDemoBusiness()">💾 Save & Update</button>
                 <button class="btn btn-danger" onclick="clearDemoLeads()">🗑️ Clear Leads</button>
                 <span class="demo-status" id="demo-status"></span>
+            </div>
+
+            <!-- Add New Business -->
+            <div class="new-biz-form" id="new-biz-form">
+                <h3>➕ Add New Business</h3>
+                <div class="demo-grid">
+                    <div class="demo-field">
+                        <label>Business Name *</label>
+                        <input type="text" id="new-biz-name" placeholder="Dave's HVAC">
+                    </div>
+                    <div class="demo-field">
+                        <label>Owner Name</label>
+                        <input type="text" id="new-biz-owner" placeholder="Dave">
+                    </div>
+                </div>
+                <div class="demo-field" style="margin-bottom: 0.75rem;">
+                    <label>Auto-Reply Message</label>
+                    <textarea id="new-biz-reply" placeholder="Hey! Sorry we missed your call. What do you need help with?"></textarea>
+                </div>
+                <div class="demo-actions">
+                    <button class="btn btn-primary btn-sm" onclick="createBusiness()">Create</button>
+                    <button class="btn btn-secondary btn-sm" onclick="toggleNewBizForm(false)">Cancel</button>
+                </div>
             </div>
         </div>
 
@@ -328,31 +367,92 @@
         setInterval(loadAdmin, 30000);
 
         // ── Demo Mode ──
+        const TWILIO_NUMBER = '+18337830902';
         let demoBizList = [];
 
-        async function loadDemoBusinesses() {
+        async function loadDemoBusinesses(selectId) {
             try {
                 const res = await fetch('/api/businesses');
                 if (res.ok) {
                     demoBizList = await res.json();
                     const sel = document.getElementById('demo-biz-select');
-                    sel.innerHTML = demoBizList.map(b =>
-                        `<option value="${b.id}">${esc(b.name)} (${esc(b.phone)})</option>`
-                    ).join('');
-                    if (demoBizList.length > 0) loadDemoBusiness();
+
+                    // Sort: active business (with Twilio number) first
+                    demoBizList.sort((a, b) => {
+                        if (a.phone === TWILIO_NUMBER) return -1;
+                        if (b.phone === TWILIO_NUMBER) return 1;
+                        return 0;
+                    });
+
+                    sel.innerHTML = demoBizList.map(b => {
+                        const isActive = b.phone === TWILIO_NUMBER;
+                        const label = isActive
+                            ? `⚡ ${b.name} — ACTIVE`
+                            : `${b.name} (${b.phone})`;
+                        return `<option value="${b.id}">${esc(label)}</option>`;
+                    }).join('') + '<option value="__new">➕ Add New Business...</option>';
+
+                    // Default to requested id, or active business, or first
+                    if (selectId) {
+                        sel.value = selectId;
+                    } else {
+                        const active = demoBizList.find(b => b.phone === TWILIO_NUMBER);
+                        if (active) sel.value = active.id;
+                    }
+                    loadDemoBusiness();
                 }
             } catch (err) { console.error('Demo load error:', err); }
         }
 
         function loadDemoBusiness() {
-            const id = Number(document.getElementById('demo-biz-select').value);
-            const biz = demoBizList.find(b => b.id === id);
+            const val = document.getElementById('demo-biz-select').value;
+            if (val === '__new') {
+                toggleNewBizForm(true);
+                return;
+            }
+            toggleNewBizForm(false);
+            const biz = demoBizList.find(b => b.id === Number(val));
             if (!biz) return;
             document.getElementById('demo-name').value = biz.name || '';
             document.getElementById('demo-owner').value = biz.owner_name || '';
             document.getElementById('demo-forward').value = biz.forward_phone || '';
             document.getElementById('demo-desc').value = biz.description || '';
             document.getElementById('demo-reply').value = biz.auto_reply_message || '';
+        }
+
+        function toggleNewBizForm(show) {
+            document.getElementById('new-biz-form').classList.toggle('show', show);
+        }
+
+        async function createBusiness() {
+            const name = document.getElementById('new-biz-name').value.trim();
+            if (!name) { showDemoStatus('❌ Business name is required', true); return; }
+            const body = {
+                name,
+                phone: '+1' + Math.floor(Math.random() * 9000000000 + 1000000000), // placeholder number
+                owner_name: document.getElementById('new-biz-owner').value.trim(),
+                auto_reply_message: document.getElementById('new-biz-reply').value.trim()
+                    || `Hey! Sorry we missed your call. What do you need help with? — ${name}`,
+            };
+            try {
+                const res = await fetch('/api/businesses', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body),
+                });
+                if (res.ok) {
+                    const created = await res.json();
+                    showDemoStatus(`✅ Created "${name}"`);
+                    document.getElementById('new-biz-name').value = '';
+                    document.getElementById('new-biz-owner').value = '';
+                    document.getElementById('new-biz-reply').value = '';
+                    loadAdmin();
+                    loadDemoBusinesses(created.id);
+                } else {
+                    const err = await res.json();
+                    showDemoStatus('❌ ' + (err.error || 'Create failed'), true);
+                }
+            } catch (err) { showDemoStatus('❌ Error: ' + err.message, true); }
         }
 
         async function saveDemoBusiness() {
