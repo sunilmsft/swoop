@@ -682,6 +682,69 @@ question, then hand off to {owner_name} with a callback timeframe.</code></pre>
     <p style="margin-top:12px">Then show them the setup: dial one code on their phone, done.</p>
   </div>
 
+  <div class="card" style="border-left: 4px solid #e74c3c;">
+    <h3>🛠️ Demo Setup — Single Twilio Number</h3>
+    <p style="color:#666; margin-bottom:12px;">You only need <strong>one Twilio number</strong> for all demos. The business identity is just a database row — swap it before each demo.</p>
+
+    <h4>How It Works</h4>
+    <div style="background:#fef2f2; border-radius:10px; padding:16px; margin:8px 0;">
+      <p><strong>Call flow:</strong> Prospect calls your Twilio number → Swoop looks up the business by that number → forwards to <code>forward_phone</code> → if unanswered, auto-texts the caller.</p>
+      <p style="margin-top:8px;"><strong>What makes it "their" demo:</strong> The business <code>name</code>, <code>auto_reply_message</code>, and <code>forward_phone</code> in the database. That's it.</p>
+    </div>
+
+    <h4>Before Each Demo — Checklist</h4>
+    <table>
+      <tr><th>#</th><th>Step</th><th>Where</th></tr>
+      <tr><td>1</td><td>Get the prospect's business name and cell number</td><td>Your conversation</td></tr>
+      <tr><td>2</td><td>Update the business row in the DB (name, forward_phone, auto_reply_message)</td><td>Admin dashboard or API</td></tr>
+      <tr><td>3</td><td>Clear old demo leads (optional — keeps dashboard clean)</td><td>Admin dashboard</td></tr>
+      <tr><td>4</td><td>Test: call the Twilio number yourself, let it ring, confirm the text arrives</td><td>Your phone</td></tr>
+      <tr><td>5</td><td>Do the live demo with the prospect</td><td>—</td></tr>
+    </table>
+
+    <h4>Quick API Calls (from your machine)</h4>
+    <div style="background:#1a1a2e; color:#e0e0e0; border-radius:10px; padding:16px; margin:8px 0; font-family:monospace; font-size:0.82rem; overflow-x:auto;">
+      <p style="color:#8be9fd;"># Swap business for demo (update name, forward number, auto-reply)</p>
+      <p>curl -X PUT https://your-server/api/businesses/1 \</p>
+      <p>&nbsp;&nbsp;-H "Content-Type: application/json" \</p>
+      <p>&nbsp;&nbsp;-d '{</p>
+      <p>&nbsp;&nbsp;&nbsp;&nbsp;"name": "Mike's Plumbing",</p>
+      <p>&nbsp;&nbsp;&nbsp;&nbsp;"forward_phone": "+14255551234",</p>
+      <p>&nbsp;&nbsp;&nbsp;&nbsp;"auto_reply_message": "Hey! Sorry we missed your call to Mike's Plumbing. What do you need help with?"</p>
+      <p>&nbsp;&nbsp;}'</p>
+      <br/>
+      <p style="color:#8be9fd;"># Clear old demo leads (fresh dashboard for this demo)</p>
+      <p>curl -X DELETE https://your-server/api/businesses/1/leads</p>
+    </div>
+
+    <h4>What You DON'T Touch</h4>
+    <div style="background:#f0fff4; border-radius:10px; padding:16px; margin:8px 0;">
+      <table>
+        <tr><th>Component</th><th>Changes Between Demos?</th></tr>
+        <tr><td>Twilio number</td><td>❌ Same number every time</td></tr>
+        <tr><td>Twilio Console (webhooks, config)</td><td>❌ Never changes</td></tr>
+        <tr><td>Render server / code</td><td>❌ Never changes</td></tr>
+        <tr><td>Database: business name, forward_phone, auto_reply</td><td>✅ Update before each demo</td></tr>
+        <tr><td>Database: old leads</td><td>🟡 Optional cleanup</td></tr>
+      </table>
+    </div>
+
+    <h4>Demo Day Workflow</h4>
+    <div style="background:#f0f4ff; border-radius:10px; padding:16px; margin:8px 0;">
+      <ol>
+        <li><strong>Morning:</strong> Update DB with first prospect's info via admin or API</li>
+        <li><strong>Demo 1:</strong> Call Twilio number → auto-text fires → show dashboard → pitch</li>
+        <li><strong>Between demos:</strong> Update DB row with next prospect's info, clear leads</li>
+        <li><strong>Demo 2:</strong> Same flow, different business name on the text</li>
+        <li><strong>End of day:</strong> Log which prospects saw the demo and their response</li>
+      </ol>
+    </div>
+
+    <div class="callout blue">
+      <strong>Scaling note:</strong> One Twilio number works for sequential demos. Once a business signs up and goes live, they get their own dedicated number provisioned via the Onboarding tab checklist.
+    </div>
+  </div>
+
   <div class="card">
     <h3>Target Customer</h3>
     <h4>Primary: Solo / Small-Crew Service Businesses</h4>
