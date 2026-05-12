@@ -248,8 +248,12 @@
                     </div>
                 </div>
                 <div class="demo-field" style="margin-bottom: 0.75rem;">
+                    <label>Business Description</label>
+                    <input type="text" id="new-biz-desc" placeholder="e.g. Residential HVAC — AC repair, furnace installs, seasonal tune-ups. Serving Dallas metro.">
+                </div>
+                <div class="demo-field" style="margin-bottom: 0.75rem;">
                     <label>Auto-Reply Message</label>
-                    <textarea id="new-biz-reply" placeholder="Hey! Sorry we missed your call. What do you need help with?"></textarea>
+                    <textarea id="new-biz-reply">Hey! Sorry we missed your call. What do you need help with?</textarea>
                 </div>
                 <div class="demo-actions">
                     <button class="btn btn-primary btn-sm" onclick="createBusiness()">Create</button>
@@ -407,6 +411,17 @@
         function loadDemoBusiness() {
             const val = document.getElementById('demo-biz-select').value;
             if (val === '__new') {
+                // Clear main edit fields so old data doesn't linger
+                document.getElementById('demo-name').value = '';
+                document.getElementById('demo-owner').value = '';
+                document.getElementById('demo-forward').value = '';
+                document.getElementById('demo-desc').value = '';
+                document.getElementById('demo-reply').value = '';
+                // Reset new-biz form fields
+                document.getElementById('new-biz-name').value = '';
+                document.getElementById('new-biz-owner').value = '';
+                document.getElementById('new-biz-desc').value = '';
+                document.getElementById('new-biz-reply').value = "Hey! Sorry we missed your call. What do you need help with?";
                 toggleNewBizForm(true);
                 return;
             }
@@ -431,6 +446,7 @@
                 name,
                 phone: '+1' + Math.floor(Math.random() * 9000000000 + 1000000000), // placeholder number
                 owner_name: document.getElementById('new-biz-owner').value.trim(),
+                description: document.getElementById('new-biz-desc').value.trim(),
                 auto_reply_message: document.getElementById('new-biz-reply').value.trim()
                     || `Hey! Sorry we missed your call. What do you need help with? — ${name}`,
             };
@@ -445,6 +461,7 @@
                     showDemoStatus(`✅ Created "${name}"`);
                     document.getElementById('new-biz-name').value = '';
                     document.getElementById('new-biz-owner').value = '';
+                    document.getElementById('new-biz-desc').value = '';
                     document.getElementById('new-biz-reply').value = '';
                     loadAdmin();
                     loadDemoBusinesses(created.id);
