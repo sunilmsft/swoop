@@ -419,9 +419,57 @@ TWILIO_PHONE_NUMBER=+1xxxxxxxxxx</code></pre>
       <tr><td>Review Link</td><td>g.page/mikes-plumbing/review</td><td>Review request SMS</td></tr>
     </table>
   </div>
-</div>
 
-<!-- ═══════════════════════════ AI REPLY AGENT ═══════════════════════════ -->
+  <div class="card" style="border-left: 4px solid #e67e22;">
+    <h3>🔧 Operator Provisioning Checklist (Manual — v0.1)</h3>
+    <p style="color:#666; margin-bottom:16px;">Follow this sequence for every new business. Don't skip steps. Copy this into a note and check off as you go.</p>
+
+    <h4>Phase 1 — Twilio Setup</h4>
+    <table>
+      <tr><th>#</th><th>Step</th><th>How</th><th>✓</th></tr>
+      <tr><td>1</td><td>Buy a local Twilio number</td><td>Twilio Console → Buy a Number → match business area code if possible</td><td>☐</td></tr>
+      <tr><td>2</td><td>Configure Voice webhook</td><td>Phone Number → Voice → "A call comes in" → <code>POST https://swoop-x79g.onrender.com/webhooks/voice</code></td><td>☐</td></tr>
+      <tr><td>3</td><td>Configure Voice status callback</td><td>Same page → Status callback → <code>POST https://swoop-x79g.onrender.com/webhooks/voice-status</code></td><td>☐</td></tr>
+      <tr><td>4</td><td>Configure SMS webhook</td><td>Messaging → "A message comes in" → <code>POST https://swoop-x79g.onrender.com/webhooks/sms</code></td><td>☐</td></tr>
+      <tr><td>5</td><td>Note the Twilio number</td><td>Save it — you'll need it for the business record and forwarding code</td><td>☐</td></tr>
+    </table>
+
+    <h4>Phase 2 — Business Record</h4>
+    <table>
+      <tr><th>#</th><th>Step</th><th>How</th><th>✓</th></tr>
+      <tr><td>6</td><td>Create business via API or dashboard</td><td>POST <code>/api/businesses</code> or use the Add Business form</td><td>☐</td></tr>
+      <tr><td>7</td><td>Fill business profile</td><td>Name, owner, phone, services, hours, service area, pricing, description</td><td>☐</td></tr>
+      <tr><td>8</td><td>Set AI agent config</td><td>Tone, FAQs, never-say rules, max AI turns, handoff message</td><td>☐</td></tr>
+      <tr><td>9</td><td>Set Twilio number on business</td><td>Ensure <code>twilio_number</code> field matches the number from step 5</td><td>☐</td></tr>
+      <tr><td>10</td><td>Customize auto-reply message</td><td>Default works, but personalize if the owner wants</td><td>☐</td></tr>
+      <tr><td>11</td><td>Add Google review link</td><td>Ask owner for their Google Business URL, add to profile</td><td>☐</td></tr>
+    </table>
+
+    <h4>Phase 3 — Owner Setup</h4>
+    <table>
+      <tr><th>#</th><th>Step</th><th>How</th><th>✓</th></tr>
+      <tr><td>12</td><td>Detect owner's carrier</td><td>Ask them, or use <a href="https://freecarrierlookup.com" target="_blank">freecarrierlookup.com</a></td><td>☐</td></tr>
+      <tr><td>13</td><td>Send forwarding code</td><td>Text them the exact code: <code>*61*[Swoop Number]#</code> (or Verizon variant)</td><td>☐</td></tr>
+      <tr><td>14</td><td>Owner dials forwarding code</td><td>Confirm they hear the carrier confirmation tone/message</td><td>☐</td></tr>
+      <tr><td>15</td><td>Share dashboard link</td><td>Send them the dashboard URL (once auth is in place)</td><td>☐</td></tr>
+    </table>
+
+    <h4>Phase 4 — Verify</h4>
+    <table>
+      <tr><th>#</th><th>Step</th><th>How</th><th>✓</th></tr>
+      <tr><td>16</td><td>Test call → miss → text arrives</td><td>Call their number, let it ring to voicemail/forward, confirm text arrives in &lt;5s</td><td>☐</td></tr>
+      <tr><td>17</td><td>Reply to the text</td><td>Respond as a customer, verify AI agent replies correctly with business context</td><td>☐</td></tr>
+      <tr><td>18</td><td>Check lead on dashboard</td><td>Confirm lead appears with correct status, messages, and AI turn count</td><td>☐</td></tr>
+      <tr><td>19</td><td>Verify follow-up scheduled</td><td>Check <code>follow_ups</code> table — Day 1, 3, 7 should be queued</td><td>☐</td></tr>
+      <tr><td>20</td><td>🎉 Live!</td><td>Tell the owner they're live. Send them the undo code (##61#) for peace of mind.</td><td>☐</td></tr>
+    </table>
+
+    <div class="callout" style="margin-top:16px;">
+      <strong>Estimated time:</strong> ~10 minutes per business (once you've done it twice).<br>
+      <strong>Automate when:</strong> 5+ customers, or when step repetition becomes painful.
+    </div>
+  </div>
+</div>
 <div id="ai-agent" class="tab-content">
   <h2>AI Reply Agent Design</h2>
 

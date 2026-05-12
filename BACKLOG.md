@@ -106,6 +106,18 @@
 
 ## 📋 v0.4 — Insights & Team
 
+### Provisioning Service (Phased)
+> Guided onboarding flow to stand up a new business — from Twilio number to first test call.
+
+- [ ] 🟡 Admin-guided provisioning wizard in `/admin` with step tracker (Twilio setup → business record → owner setup → verify)
+- [ ] 🟡 Auto-provision Twilio number via API (select area code, buy, configure webhooks)
+- [ ] 🟡 Pre-fill business record from intake form/questionnaire
+- [ ] 🟢 Auto-detect owner's carrier and generate correct forwarding code
+- [ ] 🟢 Built-in test call verification step (dial, confirm text arrived, check lead)
+- [ ] 🔵 Self-service signup (Stripe → auto-provision → guided profile → test → live) — _v0.5+_
+
+> **Manual checklist for v0.1–v0.3:** See PLAYBOOK.html → Business Onboarding → Operator Provisioning Checklist
+
 ### Insights Dashboard
 - [ ] Leads this week/month trend
 - [ ] Conversion rate (leads → converted)
