@@ -442,6 +442,43 @@ TWILIO_PHONE_NUMBER=+1xxxxxxxxxx</code></pre>
   </div>
 
   <div class="card" style="border-left: 4px solid #e67e22;">
+    <h3>🏢 Business Foundation Checklist</h3>
+    <p style="color:#666; margin-bottom:16px;">Complete these before your first paying customer. Not needed for demos — but must be done before charging anyone.</p>
+
+    <h4>LLC Registration</h4>
+    <table>
+      <tr><th>#</th><th>Step</th><th>How</th><th>Cost</th><th>✓</th></tr>
+      <tr><td>1</td><td>Choose LLC name</td><td>"Swoop LLC" or "Swoop Technologies LLC" — check availability on your state's SOS website</td><td>Free</td><td>☐</td></tr>
+      <tr><td>2</td><td>File LLC with state</td><td>WA State: <a href="https://www.sos.wa.gov/corps/" target="_blank">sos.wa.gov</a> → Online Filing → LLC. Takes ~15 min.</td><td>~$200</td><td>☐</td></tr>
+      <tr><td>3</td><td>Get an EIN (Tax ID)</td><td><a href="https://www.irs.gov/businesses/small-businesses-self-employed/apply-for-an-employer-identification-number-ein-online" target="_blank">IRS.gov</a> → Apply Online → Instant. Use "Single-Member LLC"</td><td>Free</td><td>☐</td></tr>
+      <tr><td>4</td><td>Open business bank account</td><td>Bring LLC docs + EIN letter to any bank. Keeps business $ separate from personal.</td><td>Free</td><td>☐</td></tr>
+      <tr><td>5</td><td>Optional: Registered Agent</td><td>If you don't want your home address public on the LLC filing. Services like Northwest RA.</td><td>~$50-100/yr</td><td>☐</td></tr>
+    </table>
+
+    <h4>Twilio Account Upgrade (Trial → Paid)</h4>
+    <table>
+      <tr><th>#</th><th>Step</th><th>How</th><th>✓</th></tr>
+      <tr><td>6</td><td>Create customer profile</td><td>Twilio Console → Billing → Upgrade → Step 1. Upload valid ID (driver's license or passport).</td><td>☐</td></tr>
+      <tr><td>7</td><td>Add tax information</td><td>Step 2. Use SSN (sole prop) or EIN (if LLC is done). Address must match.</td><td>☐</td></tr>
+      <tr><td>8</td><td>Add starting balance</td><td>Step 3. Minimum $20 prepaid credit. This is your usage balance, not a fee.</td><td>☐</td></tr>
+      <tr><td>9</td><td>Add payment details</td><td>Step 4. Credit card for ongoing charges. Auto-reloads when balance is low.</td><td>☐</td></tr>
+      <tr><td>10</td><td>Verify upgrade complete</td><td>Trial banner should disappear. Test by sending SMS to any (non-verified) number.</td><td>☐</td></tr>
+    </table>
+
+    <h4>Toll-Free Verification</h4>
+    <table>
+      <tr><th>#</th><th>Step</th><th>How</th><th>✓</th></tr>
+      <tr><td>11</td><td>Submit toll-free verification</td><td>Console → Phone Numbers → Toll-Free Verification. Business name, use case, sample messages.</td><td>☐</td></tr>
+      <tr><td>12</td><td>Wait for approval</td><td>Typically 3-7 business days. You'll get an email when approved.</td><td>☐</td></tr>
+      <tr><td>13</td><td>Test SMS delivery</td><td>Call your Twilio number → miss it → confirm auto-text arrives without "trial" prefix.</td><td>☐</td></tr>
+    </table>
+
+    <div class="callout blue" style="margin-top:16px;">
+      <strong>Order of operations:</strong> You can demo without any of this. Do the Twilio upgrade first (fastest). LLC before first paying customer. The toll-free verification is already submitted — just waiting.
+    </div>
+  </div>
+
+  <div class="card">
     <h3>🔧 Operator Provisioning Checklist (Manual — v0.1)</h3>
     <p style="color:#666; margin-bottom:16px;">Follow this sequence for every new business. Don't skip steps. Copy this into a note and check off as you go.</p>
 
