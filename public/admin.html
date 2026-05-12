@@ -388,7 +388,7 @@
                         const isActive = b.phone === TWILIO_NUMBER;
                         const label = isActive
                             ? `⚡ ${b.name} — ACTIVE`
-                            : `${b.name} (${b.phone})`;
+                            : b.name;
                         return `<option value="${b.id}">${esc(label)}</option>`;
                     }).join('') + '<option value="__new">➕ Add New Business...</option>';
 
