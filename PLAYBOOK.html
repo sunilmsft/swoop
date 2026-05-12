@@ -4,13 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Swoop — Playbook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@600;700&display=swap" rel="stylesheet">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #1a1a2e; background: #f5f6fa; }
 
   /* ── Header ── */
   header { background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); color: #fff; padding: 40px 24px 20px; text-align: center; }
-  header h1 { font-size: 2.4rem; }
+  header h1 { font-family: 'Quicksand', sans-serif; font-size: 2.4rem; font-weight: 700; }
   header h1 span { color: #ffd700; }
   header p { opacity: 0.8; margin-top: 6px; font-size: 1rem; }
 
@@ -94,7 +97,7 @@
 <body>
 
 <header>
-  <h1>🦅 <span>Swoop</span> Playbook</h1>
+  <h1><span>Swoop</span> Playbook</h1>
   <p>Everything you need to know — architecture, setup, onboarding, GTM, and roadmap</p>
 </header>
 
@@ -108,6 +111,7 @@
   <button onclick="showTab('gtm')">Go-To-Market</button>
   <button onclick="showTab('backlog')">Backlog</button>
   <button onclick="showTab('runbook')">Dev Runbook</button>
+  <button onclick="showTab('competitors')">Competitors</button>
   <button onclick="showTab('accounts')">Accounts &amp; Keys</button>
 </div>
 
@@ -984,6 +988,181 @@ curl -X POST http://localhost:3000/webhooks/sms \
       <tr><td>Render</td><td>$0 (not deployed)</td><td>$7/mo (persistent disk)</td></tr>
       <tr style="font-weight:bold;"><td>Total</td><td>~$5 one-time</td><td>~$10-15/mo</td></tr>
     </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ COMPETITORS ═══════════════════════════ -->
+<div id="competitors" class="tab-content">
+  <h2>Competitor Analysis</h2>
+
+  <div class="callout blue">
+    <strong>Swoop's positioning:</strong> The cheapest, simplest missed-call text-back for solo/small-crew home-service businesses. No CRM needed. No app to install. $29/mo. Competitors target mid-market and enterprise at 5–20x the price.
+  </div>
+
+  <!-- ── Landscape Overview ── -->
+  <div class="card">
+    <h3>Competitive Landscape</h3>
+    <table>
+      <tr><th>Competitor</th><th>Target</th><th>Est. Price</th><th>Key Feature</th><th>Threat to Swoop</th></tr>
+      <tr><td><strong>Avoca.ai</strong></td><td>Mid–Enterprise ($2M–$100M+ rev)</td><td>$500–2,000+/mo</td><td>AI voice agent + coaching + CRM booking</td><td>🟡 Medium — different segment, but sets expectations</td></tr>
+      <tr><td><strong>Podium</strong></td><td>Broad SMB (all industries)</td><td>$249–599/mo</td><td>AI Employee (reviews, SMS, payments, scheduling)</td><td>🟡 Medium — overlaps on "missed call text-back" but 10x price</td></tr>
+      <tr><td><strong>GoHighLevel</strong></td><td>Agencies & multi-location</td><td>$97–497/mo</td><td>White-label CRM + missed call text-back feature</td><td>🟢 Low — complex, agency-focused, requires training</td></tr>
+      <tr><td><strong>Hatch.co</strong></td><td>Home services (mid-market)</td><td>$200+/mo</td><td>AI-powered lead nurture + outbound campaigns</td><td>🟢 Low — focuses on nurture, not missed-call capture</td></tr>
+      <tr><td><strong>Callin.io</strong></td><td>Enterprise / White-label</td><td>Custom pricing</td><td>AI voice agents, white-label platform for SaaS founders</td><td>🟢 Low — enterprise play, not SMB</td></tr>
+      <tr><td><strong>Broccoli (YC W25)</strong></td><td>Enterprise ($2M–$50M+ rev)</td><td>$500–2,000+/mo</td><td>AI voice CSR + ServiceTitan booking</td><td>🟡 Medium — same vertical, but premium tier only</td></tr>
+    </table>
+  </div>
+
+  <!-- ── Avoca Deep Dive ── -->
+  <div class="card">
+    <h3>🔍 Avoca.ai — "The AI Front Office for Home Services"</h3>
+    <p><strong>Funding:</strong> $125M Series B at $1B valuation (2025). YC alum.</p>
+    <p><strong>Customers:</strong> 1,000+ service leaders — Call Dad, HL Bowman, My Plumber Plus, Sila Services, 1-800-GOT-JUNK?</p>
+    <p><strong>Key integration:</strong> ServiceTitan Gold Partner (deep CRM booking)</p>
+
+    <h4>Products</h4>
+    <table>
+      <tr><th>Product</th><th>What It Does</th><th>Key Metric</th></tr>
+      <tr><td>Inbound</td><td>AI answers calls, books jobs 24/7, escalates emergencies</td><td>78% calls handled by AI, 85% booking rate</td></tr>
+      <tr><td>Outbound / Nurture</td><td>Multi-channel drip campaigns (SMS + calls) to re-engage</td><td>Speed to Lead: respond &lt;15s</td></tr>
+      <tr><td>Speed to Lead</td><td>Instantly calls/texts new form fills & Google LSA leads</td><td>—</td></tr>
+      <tr><td>Coach / Analytics</td><td>Scores every call, surfaces missed opportunities</td><td>Reduction in QA time</td></tr>
+      <tr><td>Web Chat</td><td>AI chat widget on customer website</td><td>—</td></tr>
+      <tr><td>Simple Scheduler</td><td>Calendar booking without full CRM integration</td><td>—</td></tr>
+    </table>
+
+    <h4>Why They're Not a Direct Threat (Yet)</h4>
+    <ul>
+      <li>Target: $2M–$100M+ revenue businesses with call centers (9+ CSRs)</li>
+      <li>Requires ServiceTitan or FieldRoutes integration</li>
+      <li>"Book a Demo" model — not self-serve</li>
+      <li>Price point: enterprise (estimated $500–2,000+/mo based on case study sizes)</li>
+    </ul>
+
+    <h4>What to Watch/Steal</h4>
+    <ul>
+      <li>✅ <strong>Speed to Lead concept</strong> — respond to form fills instantly (future Swoop feature?)</li>
+      <li>✅ <strong>Call quality scoring</strong> — could offer basic "AI reviewed this conversation" insights</li>
+      <li>✅ <strong>"Always-on" positioning</strong> — Swoop does this too, own the messaging</li>
+      <li>✅ <strong>Case study format</strong> — specific metrics (78% AI-handled, 85% booking rate)</li>
+      <li>⚠️ If Avoca launches a "lite" tier for smaller shops, they could eat Swoop's market</li>
+    </ul>
+  </div>
+
+  <!-- ── Podium Deep Dive ── -->
+  <div class="card">
+    <h3>🔍 Podium — "AI That Converts Leads and Makes You Money"</h3>
+    <p><strong>Scale:</strong> 100,000+ businesses. Multi-industry (auto, home services, medspa, retail, dental).</p>
+    <p><strong>Key claim:</strong> 30% revenue increase, 72% response time reduction, responds in &lt;1 min.</p>
+
+    <h4>AI Employee Roles</h4>
+    <table>
+      <tr><th>Role</th><th>What It Does</th></tr>
+      <tr><td>AI Salesperson</td><td>Responds to leads via text, qualifies, books appointments</td></tr>
+      <tr><td>AI Scheduler</td><td>Handles booking/rescheduling via SMS</td></tr>
+      <tr><td>AI Marketer</td><td>Sends review requests + text marketing campaigns</td></tr>
+      <tr><td>AI Concierge</td><td>Answers customer questions (hours, services, pricing)</td></tr>
+      <tr><td>AI Reputation Specialist</td><td>Manages Google reviews, responds to reviews</td></tr>
+    </table>
+
+    <h4>Full Product Suite</h4>
+    <p>Reviews, Phones (VoIP), SMS, Website Chat, Payments, Automations, Text Marketing, Scheduling</p>
+
+    <h4>Why They're Not a Direct Threat</h4>
+    <ul>
+      <li>$249–599/mo — 10x Swoop's price</li>
+      <li>Requires onboarding, training, app download</li>
+      <li>"Platform" play — overwhelming for a solo plumber</li>
+      <li>No missed-call-specific focus (it's one feature among many)</li>
+    </ul>
+
+    <h4>What to Watch/Steal</h4>
+    <ul>
+      <li>✅ <strong>"AI Employee" framing</strong> — people get it instantly. Swoop could say "Your AI receptionist"</li>
+      <li>✅ <strong>Review request automation</strong> — Swoop already has this, market it harder</li>
+      <li>✅ <strong>Speed metrics</strong> — "responds in 3 seconds" (Swoop is faster than Podium's &lt;1 min)</li>
+      <li>✅ <strong>Multi-industry pages</strong> — could create landing pages per trade (plumber, HVAC, etc.)</li>
+      <li>⚠️ If Podium launches a $49/mo "lite" plan, direct competition</li>
+    </ul>
+  </div>
+
+  <!-- ── GoHighLevel ── -->
+  <div class="card">
+    <h3>🔍 GoHighLevel — White-Label CRM Platform</h3>
+    <p><strong>Model:</strong> Platform for marketing agencies to resell. $97/mo (Starter) to $497/mo (SaaS Pro).</p>
+    <p><strong>Missed call text-back:</strong> One feature buried in a massive CRM. Requires configuration.</p>
+
+    <h4>Why Not a Direct Threat</h4>
+    <ul>
+      <li>Designed for agencies to white-label, not for end-user SMBs</li>
+      <li>Massive learning curve (CRM, funnels, automations, pipelines...)</li>
+      <li>Business owner would never find/configure the missed-call feature alone</li>
+      <li>$297/mo minimum for the plan that includes it</li>
+    </ul>
+
+    <h4>What to Watch/Steal</h4>
+    <ul>
+      <li>✅ <strong>Agency partnership model</strong> — local SEO agencies could resell Swoop</li>
+      <li>✅ <strong>Automation workflows</strong> — their trigger→action model for follow-ups is clean</li>
+      <li>⚠️ Agencies already using GHL might pitch missed-call text-back to their clients</li>
+    </ul>
+  </div>
+
+  <!-- ── Broccoli ── -->
+  <div class="card">
+    <h3>🔍 Broccoli (YC W25) — AI Voice CSR</h3>
+    <p><strong>Funding:</strong> Y Combinator W25 batch. Early-stage.</p>
+    <p><strong>Focus:</strong> AI that answers the actual phone call (voice), books into ServiceTitan.</p>
+    <p><strong>Target:</strong> Multi-location home services with $2M–$50M+ revenue.</p>
+
+    <h4>Why Not a Direct Threat</h4>
+    <ul>
+      <li>Requires ServiceTitan (expensive CRM that solo owners don't have)</li>
+      <li>Enterprise pricing model (demo required)</li>
+      <li>Voice AI — different product category than text-back</li>
+    </ul>
+
+    <h4>What to Watch/Steal</h4>
+    <ul>
+      <li>✅ <strong>YC validation</strong> — confirms the market is hot and VC money is flowing in</li>
+      <li>✅ <strong>"Never miss a call" messaging</strong> — Swoop owns this for the low end</li>
+      <li>⚠️ If they build a downmarket text-only tier, overlap risk</li>
+    </ul>
+  </div>
+
+  <!-- ── Swoop's Moat ── -->
+  <div class="highlight">
+    <h3 style="color:#ffd700; margin-top:0;">🏰 Swoop's Moat</h3>
+    <table style="color:#fff;">
+      <tr><th style="background:rgba(255,255,255,0.1); color:#ffd700;">Advantage</th><th style="background:rgba(255,255,255,0.1); color:#ffd700;">Why It Matters</th></tr>
+      <tr><td><strong>Price: $29/mo</strong></td><td>5-20x cheaper than any competitor with AI. Below the "ask my wife" threshold.</td></tr>
+      <tr><td><strong>60-second setup</strong></td><td>Dial one forwarding code. No app, no login, no CRM needed.</td></tr>
+      <tr><td><strong>Zero-risk trial</strong></td><td>Dial ##61# to undo. No contracts, no cancellation call.</td></tr>
+      <tr><td><strong>Text-first (not voice)</strong></td><td>Cheaper to deliver, higher response rate than voicemail, no voice AI latency issues.</td></tr>
+      <tr><td><strong>SMB DNA</strong></td><td>Built for 1-5 person businesses. Not a dumbed-down enterprise tool.</td></tr>
+      <tr><td><strong>No CRM dependency</strong></td><td>Works standalone. Avoca/Broccoli require ServiceTitan ($200+/mo extra).</td></tr>
+    </table>
+  </div>
+
+  <!-- ── Watch List ── -->
+  <div class="card">
+    <h3>📡 Watch List — Features to Consider Stealing</h3>
+    <table>
+      <tr><th>#</th><th>Feature</th><th>From</th><th>Priority</th><th>When</th></tr>
+      <tr><td>1</td><td>Speed to Lead (instant response to web form fills)</td><td>Avoca</td><td>🟡 High</td><td>v0.5+ (needs integrations)</td></tr>
+      <tr><td>2</td><td>"AI Employee" branding / persona naming</td><td>Podium</td><td>🟢 Nice</td><td>Marketing site launch</td></tr>
+      <tr><td>3</td><td>Per-industry landing pages ("Swoop for Plumbers")</td><td>Podium/Avoca</td><td>🟡 High</td><td>Marketing site launch</td></tr>
+      <tr><td>4</td><td>Call quality/conversation scoring</td><td>Avoca</td><td>🟢 Nice</td><td>v0.4+ (needs data)</td></tr>
+      <tr><td>5</td><td>Agency/reseller partnership program</td><td>GoHighLevel</td><td>🟡 High</td><td>After 10+ direct customers</td></tr>
+      <tr><td>6</td><td>ROI dashboard ("Swoop saved you $X this month")</td><td>Podium/Avoca</td><td>🟡 High</td><td>v0.4 Insights</td></tr>
+      <tr><td>7</td><td>Google review automation (respond to reviews)</td><td>Podium</td><td>🟢 Nice</td><td>v0.5+</td></tr>
+      <tr><td>8</td><td>AI voice answer (pick up the actual call)</td><td>Avoca/Broccoli</td><td>🔵 Future</td><td>Only if market demands it</td></tr>
+    </table>
+  </div>
+
+  <!-- ── Key Insight ── -->
+  <div class="callout green">
+    <strong>Key Insight:</strong> Every competitor is racing <em>upmarket</em> (enterprise, multi-location, voice AI, deep CRM). Nobody owns the solo tradesperson making $80K–$300K who just wants their phone to stop losing jobs. That's Swoop's lane. Stay there until it's full.
   </div>
 </div>
 

@@ -168,7 +168,22 @@
 
 ---
 
-## 🔵 By Design (Consciously Deferred)
+## � v0.5+ — Competitor-Inspired Features
+
+> Items sourced from competitor analysis (Avoca, Podium, GoHighLevel, Broccoli). See PLAYBOOK.html → Competitors tab for full breakdown.
+
+- [ ] 🟡 Speed to Lead — instant SMS to web form fills (inspired by Avoca)
+- [ ] 🟡 Per-industry landing pages ("Swoop for Plumbers", "Swoop for HVAC") — Podium/Avoca do this
+- [ ] 🟡 Agency/reseller partnership program — GoHighLevel model
+- [ ] 🟡 ROI dashboard: "Swoop saved you $X this month" — _Jordan: "Competitors all show ROI metrics"_
+- [ ] 🟢 "AI Employee" persona naming/branding — Podium's framing resonates
+- [ ] 🟢 Conversation quality scoring — Avoca's Coach product (lite version)
+- [ ] 🟢 Google review response automation — Podium does this beyond just requesting reviews
+- [ ] 🔵 AI voice answer (pick up the actual call) — Avoca/Broccoli territory. Only if market demands.
+
+---
+
+## �🔵 By Design (Consciously Deferred)
 
 _Items the Squad flagged that we've decided NOT to address now, with rationale._
 
