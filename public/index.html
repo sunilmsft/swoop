@@ -308,7 +308,7 @@
 
     <!-- Mock Mode banner (shown only when TWILIO_MOCK_MODE=true) -->
     <div id="mock-banner" style="display:none; background:#fef3c7; border-bottom:1px solid #fcd34d; padding:0.6rem 1rem; text-align:center; font-size:0.9rem; color:#92400e;">
-        🧪 <strong>MOCK MODE ACTIVE</strong> — No real texts are being sent. Set <code>localStorage.swoop_dev_mode = 'true'</code> in DevTools to reveal the Test Console tab.
+        🧪 <strong>MOCK MODE ACTIVE</strong> — No real texts are being sent. Append <code>?dev=1</code> to the URL to reveal the Test Console tab (<code>?dev=0</code> to hide it again).
     </div>
 
     <div class="container">
@@ -946,9 +946,14 @@
                 // Gate the Test Console tab behind an explicit dev-mode flag so it
                 // never appears in production unless the operator opts in via:
                 //   localStorage.setItem('swoop_dev_mode', 'true')
+                // or via URL flag: ?dev=1 (persists), ?dev=0 (clears)
                 const devMode = (() => {
-                    try { return localStorage.getItem('swoop_dev_mode') === 'true'; }
-                    catch (e) { return false; }
+                    try {
+                        const params = new URLSearchParams(window.location.search);
+                        if (params.get('dev') === '1') localStorage.setItem('swoop_dev_mode', 'true');
+                        if (params.get('dev') === '0') localStorage.removeItem('swoop_dev_mode');
+                        return localStorage.getItem('swoop_dev_mode') === 'true';
+                    } catch (e) { return false; }
                 })();
                 if (mockModeActive && devMode) {
                     document.getElementById('test-console').style.display = 'block';
