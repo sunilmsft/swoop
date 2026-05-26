@@ -1526,10 +1526,35 @@ curl -X POST http://localhost:3000/webhooks/sms \
   <h3>Help Message Sample</h3>
   <div class="callout">[Business Name]: Reply HELP for help or call [business phone]. Reply STOP to opt out. Msg&amp;data rates may apply.</div>
 
+  <h3>Fallback Copy Variant A (Stricter)</h3>
+  <div class="callout"><strong>Use case description:</strong> This phone number is used only for customer-care messages related to a customer's inbound inquiry with the business. Messages are limited to missed-call follow-up, estimate follow-up, appointment coordination, and service support requested by the customer. No marketing, no promotions, no cold outreach, no purchased lists, and no third-party lead generation. Customers can reply STOP to opt out and HELP for help.</div>
+  <div class="callout"><strong>Sample message:</strong> Hi [Customer Name], this is [Business Name] following up on your recent service inquiry. What time works best for a quick call? Reply STOP to opt out, HELP for help. Msg&amp;data rates may apply.</div>
+
+  <h3>Fallback Copy Variant B (Most Conservative)</h3>
+  <div class="callout"><strong>Use case description:</strong> This number is used only to send customer-care text messages after a customer has contacted the business and provided verbal consent. Messages are only about that customer's own inquiry, estimate, appointment, or service follow-up. No marketing or promotional campaigns are sent. Customers can reply STOP to opt out and HELP for help.</div>
+  <div class="callout"><strong>Sample message:</strong> [Business Name]: We are following up on your service request. Reply with a preferred callback time. Reply STOP to opt out, HELP for help. Msg&amp;data rates may apply.</div>
+
+  <h3>Twilio Resubmission Checklist</h3>
+  <ul>
+    <li>Set both Privacy Policy URL and Terms &amp; Conditions URL to https://sunilmsft.github.io/swoop/consent.html.</li>
+    <li>Confirm use case category is Customer Care and copy contains no marketing language.</li>
+    <li>Confirm verbal consent script includes explicit yes/no and STOP/HELP disclosures.</li>
+    <li>Keep opt-in keywords as Y, Yes, YES unless Twilio requests otherwise.</li>
+    <li>Run smoke checks: consent=no sends nothing, STOP suppresses, HELP returns support text.</li>
+    <li>Update submission date and status badge in this tab before and after submit.</li>
+  </ul>
+
+  <h3>Rejection Response Pack (Copy/Paste)</h3>
+  <div class="callout">
+    <p><strong>Subject:</strong> Toll-Free Verification Resubmission - Customer Care Only</p>
+    <p><strong>Message:</strong> We have updated the campaign submission to reflect a strict customer-care-only use case with explicit verbal consent. SMS is sent only after a customer contacts the business and verbally agrees to receive service-related texts. No marketing, promotions, purchased lists, cold outreach, or third-party lead generation are used. STOP and HELP instructions are included in all required fields and sample messages. Privacy and Terms URLs both point to our always-available consent page: https://sunilmsft.github.io/swoop/consent.html. Please review this resubmission using the updated wording in the form.</p>
+  </div>
+
   <h3>Future Onboarding Checklist</h3>
   <ul>
-    <li>Use the static consent URL (GitHub Pages), not Render — avoids cold-start validation failures.</li>
+    <li>Use the static consent URL (GitHub Pages), not Render - avoids cold-start validation failures.</li>
     <li>Reuse the same opt-in language and STOP/HELP phrasing above.</li>
+    <li>If rejected, swap to Fallback Variant A first, then Variant B if needed.</li>
     <li>Update this tab with the new submission date and status when re-submitting.</li>
   </ul>
 </div>
