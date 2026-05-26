@@ -132,6 +132,7 @@
   <div class="sidebar-label">Operations</div>
   <button onclick="showTab('runbook', this)"><span class="icon">🔧</span> Dev Runbook</button>
   <button onclick="showTab('accounts', this)"><span class="icon">🔑</span> Accounts &amp; Keys</button>
+  <button onclick="showTab('compliance', this)"><span class="icon">📜</span> Compliance</button>
 </nav>
 
 <div class="content-area">
@@ -1482,6 +1483,51 @@ curl -X POST http://localhost:3000/webhooks/sms \
   <div class="callout green">
     <strong>Key Insight:</strong> Every competitor is racing <em>upmarket</em> (enterprise, multi-location, voice AI, deep CRM). Nobody owns the solo tradesperson making $80K–$300K who just wants their phone to stop losing jobs. That's Swoop's lane. Stay there until it's full.
   </div>
+</div>
+
+<!-- ══════════════════════════ COMPLIANCE TAB ══════════════════════════ -->
+<div id="compliance" class="tab-content">
+  <h2>Twilio Compliance Evidence</h2>
+  <p style="margin-bottom:12px;">
+    <span style="background:#fef9c3;color:#713f12;padding:4px 12px;border-radius:999px;font-size:0.85rem;font-weight:600;">Based on submission filed May 26, 2026 — pending Twilio review</span>
+  </p>
+  <p style="color:#64748b;font-size:0.9rem;margin-bottom:24px;">If you need the original screenshots, log in to the Twilio console → Phone Numbers → Manage → Regulatory Compliance.</p>
+
+  <h3>Submission Details</h3>
+  <table>
+    <tr><th>Field</th><th>Value</th></tr>
+    <tr><td>Estimated monthly volume</td><td>100</td></tr>
+    <tr><td>Opt-in type</td><td>Verbal</td></tr>
+    <tr><td>Messaging use case category</td><td>Customer Care</td></tr>
+    <tr><td>Proof of consent URL</td><td>https://sunilmsft.github.io/swoop/consent.html</td></tr>
+    <tr><td>Notification e-mail</td><td>sunil1308@gmail.com</td></tr>
+    <tr><td>Opt-in keywords</td><td>Y, Yes, YES</td></tr>
+    <tr><td>Contains age-gated content</td><td>No</td></tr>
+    <tr><td>Privacy Policy URL</td><td>https://sunilmsft.github.io/swoop/consent.html</td></tr>
+    <tr><td>Terms &amp; Conditions URL</td><td>https://sunilmsft.github.io/swoop/consent.html</td></tr>
+  </table>
+
+  <h3>Use Case Description</h3>
+  <div class="callout">This number is used by a local service business for customer-care texts after a customer contacts the business and gives consent. Messages are for service-request follow-up, appointments, estimates, missed-call follow-up, and support related to the customer's own inquiry. No marketing, cold outreach, purchased lists, or third-party lead generation. Customers can reply STOP to opt out or HELP for help.</div>
+
+  <h3>Sample Message</h3>
+  <div class="callout">Hi [Customer Name], this is [Business Name]. Following up on your service request. What day works best for a quick call? Reply STOP to opt out, HELP for help. Msg&amp;data rates may apply.</div>
+
+  <h3>Additional Information — Verbal Consent Script</h3>
+  <div class="callout">Verbal consent is collected by phone before SMS is sent. Business says: "We can send service-related texts about your inquiry, estimate, appointment, or follow-up. Msg&amp;data rates may apply. Reply STOP to opt out or HELP for help. Do you agree?" Customer must verbally say "Yes." If no, no SMS is sent. Consent record includes phone number, date/time, and inquiry context. Customer care only; no marketing or cold outreach.</div>
+
+  <h3>Opt-In Confirmation Message</h3>
+  <div class="callout">You are opted in to receive service-related text messages from [Business Name] about your inquiry, estimate, appointment, or follow-up. Reply STOP to opt out, HELP for help. Msg&amp;data rates may apply.</div>
+
+  <h3>Help Message Sample</h3>
+  <div class="callout">[Business Name]: Reply HELP for help or call [business phone]. Reply STOP to opt out. Msg&amp;data rates may apply.</div>
+
+  <h3>Future Onboarding Checklist</h3>
+  <ul>
+    <li>Use the static consent URL (GitHub Pages), not Render — avoids cold-start validation failures.</li>
+    <li>Reuse the same opt-in language and STOP/HELP phrasing above.</li>
+    <li>Update this tab with the new submission date and status when re-submitting.</li>
+  </ul>
 </div>
 </div> <!-- end content-area -->
 </div> <!-- end app-layout -->
