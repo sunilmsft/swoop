@@ -5,9 +5,15 @@ services:
     plan: free
     buildCommand: npm install && npm run seed
     startCommand: npm start
+    disk:
+      name: swoop-data
+      mountPath: /var/data
+      sizeGB: 1
     envVars:
       - key: NODE_ENV
         value: production
+      - key: DB_PATH
+        value: /var/data/swoop.db
       - key: TWILIO_ACCOUNT_SID
         sync: false
       - key: TWILIO_AUTH_TOKEN

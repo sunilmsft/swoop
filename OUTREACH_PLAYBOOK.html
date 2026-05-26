@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Swoop Outreach Playbook</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #475569;
+      --brand: #0b3a67;
+      --accent: #ef8f1a;
+      --ok: #2e7d32;
+      --line: #dbe3ef;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    .wrap {
+      max-width: 1000px;
+      margin: 24px auto;
+      padding: 0 16px 32px;
+    }
+    .hero {
+      background: linear-gradient(120deg, #0b3a67, #114f89);
+      color: #fff;
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .hero h1 {
+      margin: 0 0 6px;
+      font-size: 30px;
+    }
+    .hero p {
+      margin: 0;
+      opacity: 0.95;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+    h2 {
+      margin: 0 0 8px;
+      font-size: 20px;
+      color: var(--brand);
+    }
+    h3 {
+      margin: 14px 0 6px;
+      font-size: 16px;
+      color: var(--brand);
+    }
+    p, li { color: var(--text); }
+    .muted { color: var(--muted); }
+    ul { margin: 8px 0 0 18px; }
+    .msg {
+      border-left: 4px solid var(--accent);
+      background: #fff9f1;
+      padding: 10px 12px;
+      border-radius: 8px;
+      white-space: pre-wrap;
+      margin-top: 6px;
+    }
+    .row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    @media (min-width: 900px) {
+      .row {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+    .badge {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 700;
+      color: #fff;
+      background: var(--ok);
+      border-radius: 999px;
+      padding: 4px 10px;
+      margin-bottom: 8px;
+    }
+    .img-box {
+      border: 1px dashed var(--line);
+      border-radius: 10px;
+      padding: 10px;
+      background: #fff;
+    }
+    .img-box img {
+      width: 100%;
+      border-radius: 8px;
+      display: block;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    @media (min-width: 820px) {
+      .grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+    .field label {
+      display: block;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 4px;
+      font-weight: 600;
+    }
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      font: inherit;
+      color: var(--text);
+      background: #fff;
+    }
+    .actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+    .btn {
+      border: 1px solid var(--brand);
+      background: var(--brand);
+      color: #fff;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn.alt {
+      background: #fff;
+      color: var(--brand);
+    }
+    details {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 8px 10px;
+      background: #fbfcff;
+      margin-top: 8px;
+    }
+    summary {
+      cursor: pointer;
+      font-weight: 700;
+      color: var(--brand);
+      list-style: none;
+    }
+    summary::-webkit-details-marker {
+      display: none;
+    }
+    summary::before {
+      content: "+ ";
+      font-weight: 700;
+    }
+    details[open] summary::before {
+      content: "- ";
+    }
+    code {
+      background: #eff4fb;
+      border: 1px solid #d9e4f2;
+      border-radius: 6px;
+      padding: 1px 6px;
+      font-family: Consolas, monospace;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <h1>Swoop Outreach Playbook</h1>
+      <p>Reusable, low-pressure outreach templates for local service businesses.</p>
+    </section>
+
+    <section class="card">
+      <h2>Quick Start</h2>
+      <ol>
+        <li>Open <strong>Message Generator</strong> below.</li>
+        <li>Pick <strong>FB Group Post - Any Small Business</strong>.</li>
+        <li>Click <strong>Generate</strong>, then <strong>Copy Message</strong>.</li>
+      </ol>
+      <p class="muted">Everything else is still here, but collapsed so the page stays clean.</p>
+    </section>
+
+    <section class="card">
+      <h2>Graphic Preview</h2>
+      <p class="muted">Save your approved image at <code>public/images/outreach-missed-call.png</code> to render it here.</p>
+      <div class="img-box">
+        <img src="public/images/outreach-missed-call.png" alt="Missed call outreach graphic" />
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Core Positioning</h2>
+      <ul>
+        <li>Problem: Missed calls turn into lost jobs.</li>
+        <li>Outcome: Customer still gets a text, owner gets lead details for follow-up.</li>
+        <li>Risk removal: Early tester pilot, no cost, no commitment, easy to pause.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <details>
+        <summary>Personalization Tokens</summary>
+        <ul>
+          <li><code>[FirstName]</code> - person name</li>
+          <li><code>[Trade]</code> - business type (plumbing, HVAC, electrical, etc.)</li>
+          <li><code>[Issue]</code> - pain they mentioned (missed calls, busy line, after-hours)</li>
+          <li><code>[YourName]</code> - your name</li>
+          <li><code>[OptionalContext]</code> - where you saw them (FB post/group comment)</li>
+        </ul>
+      </details>
+
+      <details>
+        <summary>Dan Version (Already Sent)</summary>
+        <h3>First Message</h3>
+        <div class="msg">Hi Dan, sharing this in case it helps while your line issues are getting fixed. I built a simple missed-call backup for local service businesses. If a call is missed or busy, the customer still gets a text and you get the lead for follow-up. We can run it as an early tester pilot at no cost, no commitment, and you can turn it off anytime. If now is not a good time, no worries.</div>
+        <h3>Short First-Touch</h3>
+        <div class="msg">Hi Dan, saw your post and wanted to share something practical: a simple missed-call backup so customers still get a text and you do not lose the lead. Happy to show a quick example. No cost pilot, no commitment, and easy to turn off anytime.</div>
+      </details>
+
+      <details>
+        <summary>FB Comment + DM Sequence (Dan)</summary>
+        <span class="badge">Copy/Paste Workflow</span>
+        <h3>Step 1: Public FB Comment</h3>
+        <div class="msg">Dan, sorry you are dealing with this. I built a simple missed-call backup for local service businesses so customers still get a text response and leads do not fall through the cracks. Happy to share details if useful.</div>
+        <h3>Step 2: Private DM</h3>
+        <div class="msg">Hi Dan, saw your post and wanted to share something practical. I built a simple missed-call backup for local service businesses. If a call is missed or busy, the customer still gets a text and you get the lead for follow-up. We can run it as an early tester pilot at no cost, no commitment, and you can turn it off anytime. If now is not a good time, no worries.</div>
+        <h3>Step 3: If They Reply "Interested"</h3>
+        <div class="msg">Great, happy to keep this simple. I can do a quick 10-minute walkthrough and set up a small pilot first. No commitment, and you can turn it off anytime.</div>
+        <h3>Step 4: If They Reply "Maybe Later"</h3>
+        <div class="msg">Totally understand. I will leave this with you. If call issues continue, I can spin up a short pilot quickly and you can pause anytime.</div>
+      </details>
+
+      <details>
+        <summary>Template Library (Expand)</summary>
+
+      <h3>First DM (Low-Pressure)</h3>
+      <div class="msg">Hi [FirstName], sharing this in case it helps. I built a simple missed-call backup for local [Trade] businesses. If a call is missed or busy, the customer still gets a text and you get the lead for follow-up. We can run a short early-tester pilot at no cost, no commitment, and you can turn it off anytime. If now is not a good time, no worries.</div>
+
+      <h3>Short First-Touch</h3>
+      <div class="msg">Hi [FirstName], saw your note about [Issue] and wanted to share something practical: a simple missed-call backup so customers still get a text and you do not lose the lead. Happy to send a quick example. No cost pilot, no commitment, and easy to turn off anytime.</div>
+
+      <h3>Public Comment</h3>
+      <div class="msg">[FirstName], sorry you are dealing with [Issue]. I built a simple missed-call backup for local [Trade] businesses so customers still get a text response and leads do not fall through the cracks. Happy to share details if useful.</div>
+
+      <h3>Private DM After Comment</h3>
+      <div class="msg">Hi [FirstName], saw your post and wanted to share something practical. I built a simple missed-call backup for local [Trade] businesses. If a call is missed or busy, the customer still gets a text and you get the lead for follow-up. We can run a short pilot at no cost, no commitment, and you can turn it off anytime. If now is not a good time, no worries.</div>
+
+      <h3>If They Reply "Interested"</h3>
+      <div class="msg">Great, happy to keep this simple. I can do a quick 10-minute walkthrough and set up a small pilot first. No commitment, and you can turn it off anytime.</div>
+
+      <h3>If They Reply "Maybe Later"</h3>
+      <div class="msg">Totally understand. I will leave this with you. If [Issue] continues, I can spin up a short pilot quickly and you can pause anytime.</div>
+
+      <h3>One-Line Soft Bump (Day 2)</h3>
+      <div class="msg">Hi [FirstName], quick bump in case this helps with [Issue]. Happy to send a 1-minute example.</div>
+
+      <h3>Final Close-the-Loop (Day 5)</h3>
+      <div class="msg">Closing the loop here, [FirstName]. If you want to test a no-pressure pilot later, I can set it up quickly.</div>
+
+      <h3>FB Group Post: Early Tester</h3>
+      <div class="msg">Hi everyone, I am looking for a few local service businesses to try something I built. It is a simple missed-call backup: if you miss a call or your line is busy, the customer still gets a text right away, and you still get the lead details to follow up. I am looking for early testers right now: no cost, no commitment, no risk, and easy to turn off anytime. If you run a [Trade] business and want to test it, comment "interested" or DM me.</div>
+
+      <h3>FB Group Post: Question Style</h3>
+      <div class="msg">Quick question for local [Trade] owners: Have you ever been on a job, missed a call, and then never heard back from that customer? I built a simple backup for that exact problem. If a call is missed or busy, the customer still gets a text and you still get the lead info for follow-up. I am looking for a small group of early testers: no cost, no commitment, and can stop anytime. If you want to try it, comment here or send me a DM.</div>
+
+      <h3>FB Group Post: Short</h3>
+      <div class="msg">Looking for a few early testers (local service businesses). I built a missed-call text-back backup so missed or busy calls still get an instant text and lead capture. No cost, no commitment, no risk, and easy to turn off anytime. Comment "interested" or DM me.</div>
+
+      <h3>FB Group Post: Any Small Business</h3>
+      <div class="msg">Hi everyone, I am looking for a few local small businesses to test a simple missed-call backup. If a customer calls and you miss it (or your line is busy), they still get a text right away and you still capture their details so you can follow up. This early tester phase is no cost, no commitment, no risk, and easy to turn off anytime. If this could help your business, comment "interested" or DM me.</div>
+
+      <h3>FB Group Post: Any Small Business (Short)</h3>
+      <div class="msg">Looking for a few local small businesses to test a missed-call text-back backup. Missed or busy calls still get an instant text and lead capture. No cost, no commitment, no risk, easy to turn off anytime. Comment "interested" or DM me.</div>
+      </details>
+    </section>
+
+    <section class="card">
+      <h2>Message Generator (1-Click Copy)</h2>
+      <p class="muted">Use the simple fields first. Tone is fixed to Neighborly for an easy first run. Open advanced options only if needed.</p>
+      <div class="grid">
+        <div class="field">
+          <label for="templateType">Template</label>
+          <select id="templateType">
+            <option value="firstDm">First DM (Low-Pressure)</option>
+            <option value="shortTouch">Short First-Touch</option>
+            <option value="publicComment">Public Comment</option>
+            <option value="privateAfterComment">Private DM After Comment</option>
+            <option value="interested">If Interested</option>
+            <option value="maybeLater">If Maybe Later</option>
+            <option value="softBump">Soft Bump (Day 2)</option>
+            <option value="closeLoop">Close-the-Loop (Day 5)</option>
+            <option value="groupPostEarly">FB Group Post - Early Tester</option>
+            <option value="groupPostQuestion">FB Group Post - Question Style</option>
+            <option value="groupPostShort">FB Group Post - Short</option>
+            <option value="groupPostSmb" selected>FB Group Post - Any Small Business</option>
+            <option value="groupPostSmbShort">FB Group Post - Any Small Business (Short)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="firstName">First Name</label>
+          <input id="firstName" type="text" placeholder="Maria" />
+        </div>
+        <div class="field">
+          <label for="trade">Trade</label>
+          <input id="trade" type="text" placeholder="plumbing" />
+        </div>
+        <div class="field">
+          <label for="issue">Issue</label>
+          <input id="issue" type="text" placeholder="missed calls" />
+        </div>
+      </div>
+      <details>
+        <summary>Advanced Generator Options</summary>
+        <div class="grid" style="margin-top: 8px;">
+          <div class="field">
+            <label for="businessName">Business Name (optional)</label>
+            <input id="businessName" type="text" placeholder="Rapid Rooter" />
+          </div>
+          <div class="field">
+            <label for="localArea">Local Area (optional)</label>
+            <input id="localArea" type="text" placeholder="Sammamish" />
+          </div>
+          <div class="field">
+            <label for="optionalContext">Context (optional)</label>
+            <input id="optionalContext" type="text" placeholder="your FB post today" />
+          </div>
+          <div class="field">
+            <label for="yourName">Your Name (optional sign-off)</label>
+            <input id="yourName" type="text" placeholder="Sunil" />
+          </div>
+          <div class="field">
+            <label for="ctaType">CTA</label>
+            <select id="ctaType">
+              <option value="quickExample">Want me to send a quick example?</option>
+              <option value="tenMin">Open to a quick 10-minute walkthrough?</option>
+              <option value="leaveIt">No rush - I can leave this with you for later.</option>
+            </select>
+          </div>
+        </div>
+      </details>
+      <div class="actions">
+        <button id="generateBtn" class="btn" type="button">Generate</button>
+        <button id="copyBtn" class="btn alt" type="button">Copy Message</button>
+      </div>
+      <div class="field" style="margin-top: 10px;">
+        <label for="generatedMessage">Generated Message</label>
+        <textarea id="generatedMessage" rows="7" placeholder="Your message will appear here"></textarea>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Recommended Cadence</h2>
+      <ol>
+        <li>Day 0: Public comment + DM</li>
+        <li>Day 2: Soft bump (one sentence)</li>
+        <li>Day 5: Final close-the-loop note</li>
+      </ol>
+    </section>
+
+    <section class="card">
+      <h2>Quick Personalization Checklist</h2>
+      <ol>
+        <li>Replace all tokens: <code>[FirstName]</code>, <code>[Trade]</code>, <code>[Issue]</code>, <code>[YourName]</code>.</li>
+        <li>Keep one CTA only (do not stack asks).</li>
+        <li>Keep first-touch under 4 lines.</li>
+        <li>Remove anything that sounds pushy or urgent.</li>
+      </ol>
+    </section>
+
+    <section class="card">
+      <h2>Plan B If Twilio Is Pending</h2>
+      <ol>
+        <li>Run a concierge pilot for first prospects.</li>
+        <li>Keep voice/callback capture active so no lead is lost.</li>
+        <li>Parallel-evaluate alternate providers (Telnyx or Bandwidth).</li>
+        <li>Keep external positioning: no-cost pilot, no commitment, easy on/off.</li>
+      </ol>
+    </section>
+  </div>
+  <script>
+    const templates = {
+      neighborly: {
+        firstDm: "Hi [FirstName], sharing this in case it helps. I built a simple missed-call backup for local [Trade] businesses [InArea]. If a call is missed or busy, the customer still gets a text and you still capture the lead for follow-up. We can run a short early-tester pilot at no cost, no commitment, and you can turn it off anytime. [CTA]",
+        shortTouch: "Hi [FirstName], saw your note about [Issue] [WithContext] and wanted to share something practical: a simple missed-call backup so customers still get a text and you do not lose the lead. [CTA]",
+        publicComment: "[FirstName], sorry you are dealing with [Issue]. I built a simple missed-call backup for local [Trade] businesses so customers still get a text response and leads do not fall through the cracks. Happy to share details if useful.",
+        privateAfterComment: "Hi [FirstName], saw your post [WithContext] and wanted to share something practical. I built a simple missed-call backup for local [Trade] businesses. If a call is missed or busy, the customer still gets a text and you get the lead for follow-up. We can run a short pilot at no cost, no commitment, and you can turn it off anytime. [CTA]",
+        interested: "Great, happy to keep this simple. I can do a quick 10-minute walkthrough and set up a small pilot first. No commitment, and you can turn it off anytime.",
+        maybeLater: "Totally understand. I will leave this with you. If [Issue] continues, I can spin up a short pilot quickly and you can pause anytime.",
+        softBump: "Hi [FirstName], quick bump in case this helps with [Issue]. [CTA]",
+        closeLoop: "Closing the loop here, [FirstName]. If you want to test a no-pressure pilot later, I can set it up quickly.",
+        groupPostEarly: "Hi everyone, I am looking for a few local service businesses to try something I built. It is a simple missed-call backup: if you miss a call or your line is busy, the customer still gets a text right away, and you still get the lead details to follow up. I am looking for early testers right now: no cost, no commitment, no risk, and easy to turn off anytime. If you run a [Trade] business and want to test it, comment \"interested\" or DM me.",
+        groupPostQuestion: "Quick question for local [Trade] owners: Have you ever been on a job, missed a call, and then never heard back from that customer? I built a simple backup for that exact problem. If a call is missed or busy, the customer still gets a text and you still get the lead info for follow-up. I am looking for a small group of early testers: no cost, no commitment, and can stop anytime. If you want to try it, comment here or send me a DM.",
+        groupPostShort: "Looking for a few early testers (local service businesses). I built a missed-call text-back backup so missed or busy calls still get an instant text and lead capture. No cost, no commitment, no risk, and easy to turn off anytime. Comment \"interested\" or DM me.",
+        groupPostSmb: "Hi everyone, I am looking for a few local small businesses to test a simple missed-call backup. If a customer calls and you miss it (or your line is busy), they still get a text right away and you still capture their details so you can follow up. This early tester phase is no cost, no commitment, no risk, and easy to turn off anytime. If this could help your business, comment \"interested\" or DM me.",
+        groupPostSmbShort: "Looking for a few local small businesses to test a missed-call text-back backup. Missed or busy calls still get an instant text and lead capture. No cost, no commitment, no risk, easy to turn off anytime. Comment \"interested\" or DM me."
+      },
+      direct: {
+        firstDm: "Hi [FirstName], quick one: I built a missed-call backup for [Trade] businesses [InArea]. Missed or busy calls trigger an instant text and capture the lead so you can follow up fast. No-cost pilot, no commitment, easy to pause. [CTA]",
+        shortTouch: "Hi [FirstName], saw your note about [Issue] [WithContext]. I built a simple missed-call backup so customers still get a text and you keep the lead. [CTA]",
+        publicComment: "[FirstName], I built a missed-call backup for local [Trade] businesses. Missed/busy calls still get an instant text so leads do not drop.",
+        privateAfterComment: "Hi [FirstName], sharing this because of [Issue] [WithContext]. Missed or busy calls can still trigger an instant text and capture the lead. No-cost pilot, no commitment. [CTA]",
+        interested: "Perfect. I can do a 10-minute walkthrough and set up a small pilot first. No commitment and easy to pause.",
+        maybeLater: "All good. If [Issue] keeps happening, I can turn on a short pilot quickly.",
+        softBump: "Hi [FirstName], quick follow-up on [Issue]. [CTA]",
+        closeLoop: "Closing this out for now, [FirstName]. If helpful later, I can set up a quick pilot.",
+        groupPostEarly: "Local [Trade] owners: I am looking for a few early testers. I built a missed-call backup so missed or busy calls still trigger an instant text and lead capture. No cost, no commitment, no risk, and easy to turn off anytime. Comment \"interested\" or DM me.",
+        groupPostQuestion: "Quick check for local [Trade] businesses: are missed calls turning into lost jobs? I built a simple backup where missed or busy calls still get an instant text and lead capture. Looking for a few early testers: no cost, no commitment, and stop anytime. Comment or DM if you want to test.",
+        groupPostShort: "Looking for early testers: missed-call text-back backup for local [Trade] businesses. No cost, no commitment, no risk. Comment \"interested\" or DM me.",
+        groupPostSmb: "Local small businesses: I am looking for a few early testers. Missed or busy calls can still trigger an instant text and lead capture. No cost, no commitment, no risk, and easy to turn off anytime. Comment \"interested\" or DM me.",
+        groupPostSmbShort: "Looking for early testers: missed-call text-back backup for local small businesses. No cost, no commitment, no risk. Comment \"interested\" or DM me."
+      },
+      formal: {
+        firstDm: "Hello [FirstName], sharing this in case it is useful. I built a missed-call backup for local [Trade] businesses [InArea]. When a call is missed or busy, the customer receives an immediate text and the lead is captured for follow-up. We can run a short no-cost pilot with no commitment, and you can pause it anytime. [CTA]",
+        shortTouch: "Hello [FirstName], I saw your note regarding [Issue] [WithContext]. I wanted to share a practical option: a missed-call backup that sends an immediate text so the lead is not lost. [CTA]",
+        publicComment: "[FirstName], sorry to hear you are dealing with [Issue]. I built a simple missed-call backup for local [Trade] businesses so customers still receive a text response and leads are captured for follow-up.",
+        privateAfterComment: "Hello [FirstName], following up on your post [WithContext]. I built a missed-call backup for local [Trade] businesses. If a call is missed or busy, the customer still receives a text and the lead is captured for follow-up. We can run a short no-cost pilot with no commitment. [CTA]",
+        interested: "Glad to hear it. I can arrange a brief 10-minute walkthrough and set up a small pilot first. No commitment required.",
+        maybeLater: "Completely understood. If [Issue] continues, I can set up a short pilot quickly whenever helpful.",
+        softBump: "Hello [FirstName], quick follow-up in case this is still relevant for [Issue]. [CTA]",
+        closeLoop: "Closing the loop for now, [FirstName]. If useful later, I can set up a no-pressure pilot quickly.",
+        groupPostEarly: "Hello everyone, I am currently looking for a small group of local [Trade] businesses to join an early tester pilot. The solution is a missed-call backup: when a call is missed or busy, the customer still receives an immediate text and the lead is captured for follow-up. There is no cost, no commitment, no risk, and it can be turned off anytime. If interested, please comment or DM me.",
+        groupPostQuestion: "Question for local [Trade] owners: have missed or busy calls ever resulted in lost opportunities? I built a simple backup to address this by sending an immediate text and capturing lead details for follow-up. I am inviting a few early testers at no cost and no commitment. Please comment or DM if you would like to try it.",
+        groupPostShort: "Seeking a few early testers: missed-call text-back backup for local [Trade] businesses. No cost, no commitment, no risk, and easy to disable at any time. Comment or DM if interested.",
+        groupPostSmb: "Hello everyone, I am currently looking for a small group of local small businesses to join an early tester pilot. The solution is a missed-call backup: when a call is missed or busy, the customer still receives an immediate text and the lead is captured for follow-up. There is no cost, no commitment, no risk, and it can be turned off anytime. If interested, please comment or DM me.",
+        groupPostSmbShort: "Seeking a few early testers: missed-call text-back backup for local small businesses. No cost, no commitment, no risk, and easy to disable at any time. Comment or DM if interested."
+      }
+    };
+
+    const ctas = {
+      quickExample: "Want me to send a quick example?",
+      tenMin: "Open to a quick 10-minute walkthrough?",
+      leaveIt: "No rush - I can leave this with you for later."
+    };
+
+    function fillTokens(text, values) {
+      let output = text
+        .replaceAll("[FirstName]", values.firstName || "there")
+        .replaceAll("[Trade]", values.trade || "service")
+        .replaceAll("[Issue]", values.issue || "missed calls")
+        .replaceAll("[BusinessName]", values.businessName || "your business")
+        .replaceAll("[YourName]", values.yourName || "")
+        .replaceAll("[CTA]", values.cta || "")
+        .replaceAll("[InArea]", values.localArea ? `in ${values.localArea}` : "")
+        .replaceAll("[WithContext]", values.optionalContext ? `from ${values.optionalContext}` : "");
+
+      output = output.replace(/\s+/g, " ").trim();
+      output = output.replace(/\s+([.,!?;:])/g, "$1");
+      return output;
+    }
+
+    function addOptionalSignoff(text, yourName) {
+      if (!yourName) {
+        return text;
+      }
+      return `${text}\n\n- ${yourName}`;
+    }
+
+    function generateMessage() {
+      const toneType = "neighborly";
+      const templateType = document.getElementById("templateType").value;
+      const values = {
+        firstName: document.getElementById("firstName").value.trim(),
+        trade: document.getElementById("trade").value.trim(),
+        issue: document.getElementById("issue").value.trim(),
+        businessName: document.getElementById("businessName").value.trim(),
+        localArea: document.getElementById("localArea").value.trim(),
+        optionalContext: document.getElementById("optionalContext").value.trim(),
+        yourName: document.getElementById("yourName").value.trim(),
+        cta: ctas[document.getElementById("ctaType").value] || ""
+      };
+      const bank = templates[toneType] || templates.neighborly;
+      const base = bank[templateType] || "";
+      const output = addOptionalSignoff(fillTokens(base, values), values.yourName);
+      document.getElementById("generatedMessage").value = output;
+    }
+
+    async function copyMessage() {
+      const output = document.getElementById("generatedMessage");
+      if (!output.value.trim()) {
+        generateMessage();
+      }
+      try {
+        await navigator.clipboard.writeText(output.value);
+      } catch {
+        output.focus();
+        output.select();
+        document.execCommand("copy");
+      }
+    }
+
+    document.getElementById("generateBtn").addEventListener("click", generateMessage);
+    document.getElementById("copyBtn").addEventListener("click", copyMessage);
+    document.getElementById("templateType").addEventListener("change", generateMessage);
+    document.getElementById("ctaType").addEventListener("change", generateMessage);
+
+    generateMessage();
+  </script>
+</body>
+</html>

@@ -44,7 +44,26 @@
 
 ---
 
-## 🔜 Next Up (v0.3) — Auth, Settings & Deploy
+## ✅ Done (v0.2.6) — Test Console
+- [x] `/api/test/simulate` endpoint with scenarios: missed_call, inbound_sms, fire_followups, send_review, reset
+- [x] Scenario picker in dashboard with 6 named scenarios (Happy Path, Ghosting, Opt-Out, Emergency, Opt-Out → Back-In, Busy Tuesday)
+- [x] SMS-bubble conversation panel (customer left/white, AI right/green, per-persona thread headers)
+- [x] Rich Handoff Brief card — owner name, customer name+phone, business, SLA, last 3 inbound quotes, urgency chip, AI summary from `lead.notes`
+- [x] Time-shifted system banners with relative labels ("Later that day…", "A few days later…") — no misleading wall-clock timestamps
+- [x] Happy Path extended to 4 customer turns to trigger real backend handoff (max_ai_turns=3)
+- [x] `/api/leads/:id` now returns `business_owner_name` + `business_handoff_minutes` for the brief
+- [x] **Dashboard / Test Console split into tabs** — production view never shows scenario picker bleed-through
+- [x] **Persistent disk on Render + `DB_PATH` env var** — SQLite survives deploys (`/var/data/swoop.db`); local dev untouched (falls back to `server/db/swoop.db`)
+
+---
+
+## 🟡 Test Console — Squad Review Follow-ups (May 26)
+- [x] 🟡 **Tag test data** — `is_test` column on `leads` + `messages`; every row written by `/api/test/simulate` is flagged. Dashboard stats, lead list, and `/api/admin/overview` + `/api/admin/businesses` metrics exclude test rows. `reset` scenario now wipes only test-tagged rows. — _Morgan: "Real and fake leads must be distinguishable in an audit."_
+- [x] 🟡 **Gate Test Console behind dev mode** — Hidden unless `localStorage.swoop_dev_mode === 'true'`; mock banner now tells operator how to reveal it. Default off for real owners. — _Priya: "Owners will click 'Run scenario' and panic."_
+- [ ] 🟢 **Editable scenario steps** — Let user edit each step's customer message before running. — _Jordan: "Canned scripts only goes so far."_
+- [ ] 🟢 **Replay-from-real-lead mode** — Pick an existing lead, feed its inbound messages back through the AI to test new prompt versions. — _Jordan_
+
+
 
 > **Priority labels:** 🔴 Blocker — can't ship without it | 🟡 High — should do before first customer | 🟢 Nice — improves product but not urgent | 🔵 By Design — consciously deferred
 
@@ -52,6 +71,7 @@
 - [x] 🟡 Deploy to Render (render.yaml ready)
 - [x] 🟡 Set environment variables on Render
 - [x] 🟡 Update Twilio webhooks to Render URL
+- [x] 🟢 Local test mode: `TWILIO_MOCK_MODE` to simulate SMS flows while toll-free approval is pending
 - [ ] 🟡 Complete Twilio toll-free SMS verification (submitted, pending approval)
 - [ ] 🟡 Switch Twilio consent/terms URL to always-on GitHub Pages page (`/consent.html`) to avoid Render cold-start validation failures
 
@@ -60,12 +80,17 @@
 - [ ] 🔴 Business owner dashboard filtered to their leads only
 - [ ] 🟡 Rate limiting on webhook and API endpoints
 - [ ] 🟡 Sanitize/validate phone number format (E.164)
+- [ ] 🔴 Add automated compliance tests for STOP/START/HELP and outbound blocking (manual/review/follow-up paths) — _Morgan: "Trust controls must be provable, not just implemented."_
 
 ### Owner Dashboard — Leads
 - [x] 🟡 Send manual SMS from dashboard — _Jordan: "After AI hands off, owner can't reply through Swoop"_
 - [x] 🟡 Mobile-responsive polish — _Ray: "I'm on my phone. Always."_
+- [x] 🟡 Compliance guardrail: block outbound sends when lead has opted out (STOP) and show warning in lead modal
+- [x] 🟡 Smart "Open Next Priority Lead" routing using urgency scoring (status + age + incomplete profile)
+- [x] 🟢 Funnel metric fix: conversion denominator aligned with "engaged" label
 - [ ] 🟢 Search/filter leads (by status, phone, name)
 - [ ] 🟢 Pagination for leads list (currently capped at 50)
+- [ ] 🟡 Add explicit "Opted out" chip + list filter for faster owner triage — _Priya: "I need to see compliance state before I click in."_
 - [x] 🟢 Wire logo into dashboard header
 - [x] 🟢 Outreach playbook created for FB comment + DM follow-up sequence
 - [x] 🟢 Outreach templates generalized for future copy/paste while preserving Dan-specific version

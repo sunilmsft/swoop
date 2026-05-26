@@ -6,11 +6,29 @@ const client = twilio(
 );
 
 const FROM_NUMBER = process.env.TWILIO_PHONE_NUMBER;
+const MOCK_MODE = ['1', 'true', 'yes', 'on'].includes((process.env.TWILIO_MOCK_MODE || '').toLowerCase());
+
+function makeMockSid() {
+  return `SM_MOCK_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+}
 
 /**
  * Send an SMS message via Twilio
  */
 async function sendSMS(to, body) {
+  if (MOCK_MODE) {
+    const mockMessage = {
+      sid: makeMockSid(),
+      from: FROM_NUMBER || '+10000000000',
+      to,
+      body,
+      status: 'queued',
+      mock: true,
+    };
+    console.log(`🧪 [MOCK SMS] ${mockMessage.from} -> ${to}: ${body}`);
+    return mockMessage;
+  }
+
   const message = await client.messages.create({
     body,
     from: FROM_NUMBER,
@@ -44,4 +62,4 @@ function validateTwilioRequest(req, res, next) {
   }
 }
 
-module.exports = { sendSMS, validateTwilioRequest };
+module.exports = { sendSMS, validateTwilioRequest, MOCK_MODE };

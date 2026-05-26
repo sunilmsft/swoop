@@ -130,6 +130,12 @@
 
         /* Lead List */
         .section-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+        .tabs { display: flex; gap: 0.25rem; border-bottom: 1px solid #e5e7eb; margin-bottom: 1.25rem; }
+        .tab-btn { background: transparent; border: none; padding: 0.7rem 1rem; font-size: 0.9rem; font-weight: 600; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+        .tab-btn:hover { color: var(--text); }
+        .tab-btn.active { color: var(--blue); border-bottom-color: var(--blue); }
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
         .lead-list { display: flex; flex-direction: column; gap: 0.75rem; }
         .lead-card {
             background: var(--card-bg);
@@ -300,7 +306,20 @@
         </div>
     </div>
 
+    <!-- Mock Mode banner (shown only when TWILIO_MOCK_MODE=true) -->
+    <div id="mock-banner" style="display:none; background:#fef3c7; border-bottom:1px solid #fcd34d; padding:0.6rem 1rem; text-align:center; font-size:0.9rem; color:#92400e;">
+        🧪 <strong>MOCK MODE ACTIVE</strong> — No real texts are being sent. Set <code>localStorage.swoop_dev_mode = 'true'</code> in DevTools to reveal the Test Console tab.
+    </div>
+
     <div class="container">
+        <!-- Tabs -->
+        <div class="tabs" id="main-tabs">
+            <button class="tab-btn active" data-tab="prod" onclick="switchTab('prod')">📋 Dashboard</button>
+            <button class="tab-btn" data-tab="test" id="tab-btn-test" style="display:none;" onclick="switchTab('test')">🧪 Test Console</button>
+        </div>
+
+        <!-- Production tab -->
+        <div class="tab-panel active" data-panel="prod">
         <!-- Stats -->
         <div class="stats" id="stats">
             <div class="stat-card"><div class="label">Total Leads</div><div class="value blue" id="stat-total">—</div></div>
@@ -339,6 +358,42 @@
                 </div>
             </div>
         </div>
+
+        <!-- 🧪 Test Console (mock mode only) -->
+        </div> <!-- /tab-prod -->
+
+        <!-- Test Console tab -->
+        <div class="tab-panel" data-panel="test">
+        <div id="test-console" class="module-card" style="display:none; margin-bottom:1.5rem; border:2px dashed #fcd34d; background:#fffbeb;">
+            <div class="module-title">🧪 Test Console <span style="font-size:0.75rem; font-weight:normal; color:#92400e;">— pick a scenario, watch it run end-to-end</span></div>
+            <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:0.75rem;">
+                Choose a realistic customer story below. Each step fires with a short delay so you can watch the dashboard react in real time. No real texts are sent.
+            </p>
+            <div style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:stretch; margin-bottom:0.75rem;">
+                <select id="scenario-picker" style="flex:1; min-width:280px; padding:0.55rem 0.75rem; border:1px solid #d1d5db; border-radius:6px; background:#fff; font-size:0.9rem;">
+                    <!-- options injected by JS -->
+                </select>
+                <button class="btn" id="scenario-run-btn" onclick="runScenario()" style="background:#10b981; color:#fff; border-color:#10b981; font-weight:600;">▶ Run scenario</button>
+                <button class="btn" onclick="if(confirm('Clear all test leads and messages? (Businesses are kept.)')) simulate('reset')" style="border-color:#fca5a5; color:#b91c1c;">🧹 Reset</button>
+            </div>
+            <div id="scenario-description" style="font-size:0.8rem; color:#475569; background:#fff; border:1px solid #e5e7eb; border-radius:6px; padding:0.55rem 0.75rem; margin-bottom:0.75rem;">
+                Pick a scenario to see what will happen.
+            </div>
+            <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:0.4rem;">� Live conversation</div>
+            <div id="test-conversation" style="background:#f1f5f9; border:1px solid #e2e8f0; border-radius:10px; padding:0.75rem; max-height:420px; overflow-y:auto; display:flex; flex-direction:column; gap:0.5rem;">
+                <div style="color:#94a3b8; text-align:center; font-size:0.85rem; padding:1rem;">Pick a scenario and click <strong style="color:#10b981;">▶ Run scenario</strong> to watch the conversation unfold here.</div>
+            </div>
+            <details style="margin-top:0.6rem;">
+                <summary style="font-size:0.75rem; color:#64748b; cursor:pointer;">🛠 Show technical log (for debugging / compliance audit)</summary>
+                <div id="test-log" style="background:#1f2937; color:#e5e7eb; font-family:ui-monospace,monospace; font-size:0.75rem; border-radius:6px; padding:0.6rem; max-height:180px; overflow-y:auto; line-height:1.5; margin-top:0.4rem;">
+                    <div style="color:#9ca3af;">(empty)</div>
+                </div>
+            </details>
+        </div>
+        </div> <!-- /tab-test -->
+
+        <!-- Production tab continued (setup + leads) -->
+        <div class="tab-panel active" data-panel="prod">
 
         <!-- Setup Banner (shown when no businesses exist) -->
         <div class="setup-banner" id="setup-banner" style="display:none;">
@@ -382,6 +437,16 @@
     <script>
         const API = '';
         let latestLeads = [];
+
+        // ---- Tabs ----
+        function switchTab(name) {
+            document.querySelectorAll('#main-tabs .tab-btn').forEach((btn) => {
+                btn.classList.toggle('active', btn.dataset.tab === name);
+            });
+            document.querySelectorAll('.tab-panel').forEach((panel) => {
+                panel.classList.toggle('active', panel.dataset.panel === name);
+            });
+        }
 
         // ---- Dashboard Data ----
         async function loadDashboard() {
@@ -444,7 +509,8 @@
             nodes.forEach((n, i) => { n.textContent = values[i]; });
 
             const replyRate = autoSent > 0 ? Math.round((replied / autoSent) * 100) : 0;
-            const conversionRate = replied > 0 ? Math.round(((stats.convertedLeads || 0) / replied) * 100) : 0;
+            const engagedBase = stats.engagedLeads || 0;
+            const conversionRate = engagedBase > 0 ? Math.round(((stats.convertedLeads || 0) / engagedBase) * 100) : 0;
             document.getElementById('journey-note').textContent = `Reply rate ${replyRate}% · Conversion from engaged ${conversionRate}%`;
         }
 
@@ -459,8 +525,27 @@
         function openNextAttentionLead() {
             if (!latestLeads || latestLeads.length === 0) return;
 
-            const next = latestLeads.find(l => l.lead_status === 'needs_attention')
-                || latestLeads.find(l => l.lead_status === 'new')
+            const statusScore = {
+                needs_attention: 100,
+                new: 70,
+                engaged: 50,
+                converted: 10,
+                review_sent: 5,
+            };
+
+            const now = Date.now();
+            const next = latestLeads
+                .filter(l => !l.sms_opt_out)
+                .map((lead) => {
+                    const updatedMs = new Date(`${lead.updated_at}Z`).getTime();
+                    const ageMinutes = Number.isFinite(updatedMs) ? Math.max(0, (now - updatedMs) / 60000) : 0;
+                    const ageScore = Math.min(40, Math.floor(ageMinutes / 30));
+                    const missingNameScore = lead.caller_name ? 0 : 6;
+                    const outreachGapScore = (lead.message_count || 0) <= 1 ? 8 : 0;
+                    const score = (statusScore[lead.lead_status] || 0) + ageScore + missingNameScore + outreachGapScore;
+                    return { lead, score };
+                })
+                .sort((a, b) => b.score - a.score)[0]?.lead
                 || latestLeads[0];
 
             if (next) openLead(next.id);
@@ -508,6 +593,14 @@
                 <div class="message-thread">
             `;
 
+            if (lead.sms_opt_out) {
+                html = `
+                    <div style="margin-bottom:0.8rem;padding:0.65rem 0.9rem;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;color:#991b1b;font-size:0.85rem;">
+                        SMS opt-out is active for this lead. Manual sends, review requests, and follow-ups are blocked until they text START.
+                    </div>
+                ` + html;
+            }
+
             for (const msg of lead.messages) {
                 html += `
                     <div class="msg ${msg.direction}">
@@ -538,14 +631,15 @@
             }
 
             // Action buttons
+            const disableMessaging = !!lead.sms_opt_out;
             html += `
                 <div class="sms-compose">
-                    <input type="text" id="sms-input" placeholder="Type a message..." onkeydown="if(event.key==='Enter'){sendManualSMS(${lead.id})}">
-                    <button class="btn btn-primary" onclick="sendManualSMS(${lead.id})">Send</button>
+                    <input type="text" id="sms-input" placeholder="Type a message..." onkeydown="if(event.key==='Enter'){sendManualSMS(${lead.id})}" ${disableMessaging ? 'disabled' : ''}>
+                    <button class="btn btn-primary" onclick="sendManualSMS(${lead.id})" ${disableMessaging ? 'disabled' : ''}>Send</button>
                 </div>
                 <div class="action-bar">
                     ${lead.lead_status !== 'converted' ? `<button class="btn btn-green" onclick="updateLead(${lead.id}, 'converted')">✅ Mark Converted</button>` : ''}
-                    ${lead.lead_status !== 'review_sent' ? `<button class="btn" onclick="requestReview(${lead.id})">⭐ Request Review</button>` : ''}
+                    ${lead.lead_status !== 'review_sent' ? `<button class="btn" onclick="requestReview(${lead.id})" ${disableMessaging ? 'disabled' : ''}>⭐ Request Review</button>` : ''}
                 </div>
             `;
 
@@ -743,7 +837,423 @@
             return Math.floor(seconds / 86400) + 'd ago';
         }
 
+        // ---- Test Console (mock mode) ----
+        let mockModeActive = false;
+
+        // Per-persona lead IDs captured during a scenario run, so subsequent
+        // SMS steps land on the correct lead/thread.
+        const personaLeads = {};
+
+        // Scenario library — each scenario is a friendly story the owner can
+        // watch unfold in the dashboard. Steps run with delays so the UI has
+        // time to update between events.
+        const SCENARIOS = [
+            {
+                id: 'happy_path',
+                label: '🎬 Happy path — Maria books a job',
+                description: 'Maria calls, gets the auto-reply, asks about pricing, confirms, AI hands the lead off to the owner with a clean brief, and a review request goes out after the job.',
+                steps: [
+                    { label: '📞 Maria calls and hangs up', action: 'missed_call', persona: 'maria', name: 'Maria Garcia' },
+                    { label: '💬 Maria texts back asking for help', action: 'inbound_sms', persona: 'maria', body: 'Hi! I have a leaking faucet in my kitchen. Can you come today?' },
+                    { label: '💬 Maria shares her location', action: 'inbound_sms', persona: 'maria', body: 'I\'m in Bellevue near downtown' },
+                    { label: '💬 Maria asks about pricing (triggers owner handoff)', action: 'inbound_sms', persona: 'maria', body: 'How much does a faucet repair usually cost?' },
+                    { label: '⭐ Owner sends review request after the job', action: 'send_review', persona: 'maria' },
+                ],
+            },
+            {
+                id: 'ghosting',
+                label: '👻 Ghosting — customer never replies',
+                description: 'Carlos calls and gets the auto-reply, but never writes back. Swoop\'s 1-hour follow-up nudges him.',
+                steps: [
+                    { label: '📞 Carlos calls and hangs up', action: 'missed_call', persona: 'carlos', name: 'Carlos Mendez' },
+                    { label: '⏰ Fast-forward 1 hour — follow-up fires automatically', action: 'fire_followups', persona: 'carlos' },
+                ],
+            },
+            {
+                id: 'opt_out',
+                label: '🛑 Compliance — customer texts STOP',
+                description: 'Linda calls, gets the auto-reply, then texts STOP. Swoop must record the opt-out and stop messaging her.',
+                steps: [
+                    { label: '📞 Linda calls and hangs up', action: 'missed_call', persona: 'linda', name: 'Linda Park' },
+                    { label: '🛑 Linda texts STOP', action: 'inbound_sms', persona: 'linda', body: 'STOP' },
+                ],
+            },
+            {
+                id: 'emergency',
+                label: '🚨 Emergency — urgent handoff to owner',
+                description: 'James has an active emergency. The AI should recognize urgency and flag the lead for the owner to take over.',
+                steps: [
+                    { label: '📞 James calls and hangs up', action: 'missed_call', persona: 'james', name: 'James Whitman' },
+                    { label: '🚨 James texts urgent emergency', action: 'inbound_sms', persona: 'james', body: 'URGENT! Water is flooding my basement RIGHT NOW, I need someone immediately!!' },
+                ],
+            },
+            {
+                id: 'opt_out_back_in',
+                label: '🔄 Opt-out then opt-in (STOP → START)',
+                description: 'Patricia opts out, changes her mind, opts back in, and then books a job.',
+                steps: [
+                    { label: '📞 Patricia calls and hangs up', action: 'missed_call', persona: 'patricia', name: 'Patricia Long' },
+                    { label: '🛑 Patricia texts STOP', action: 'inbound_sms', persona: 'patricia', body: 'STOP' },
+                    { label: '▶️ Patricia changes her mind, texts START', action: 'inbound_sms', persona: 'patricia', body: 'START' },
+                    { label: '💬 Patricia asks for a quote', action: 'inbound_sms', persona: 'patricia', body: 'Ok I\'m back — can you come tomorrow to fix my water heater?' },
+                ],
+            },
+            {
+                id: 'busy_day',
+                label: '🧑‍🤝‍🧑 Busy Tuesday — 3 customers, mixed outcomes',
+                description: 'Three missed calls in a row: one books, one ghosts, one opts out. Mirrors a real day for a small business.',
+                steps: [
+                    { label: '📞 Maria calls', action: 'missed_call', persona: 'maria', name: 'Maria Garcia' },
+                    { label: '📞 Linda calls', action: 'missed_call', persona: 'linda', name: 'Linda Park' },
+                    { label: '📞 Carlos calls', action: 'missed_call', persona: 'carlos', name: 'Carlos Mendez' },
+                    { label: '💬 Maria books the job', action: 'inbound_sms', persona: 'maria', body: 'Yes please book me for tomorrow morning!' },
+                    { label: '🛑 Linda opts out', action: 'inbound_sms', persona: 'linda', body: 'STOP' },
+                    { label: '⏰ Carlos never replies — 1hr follow-up fires', action: 'fire_followups', persona: 'carlos' },
+                ],
+            },
+        ];
+
+        const STEP_DELAY_MS = 1800; // gap between steps so the UI can keep up
+
+        function initScenarioPicker() {
+            const picker = document.getElementById('scenario-picker');
+            if (!picker) return;
+            picker.innerHTML = SCENARIOS.map((s, i) =>
+                `<option value="${s.id}"${i === 0 ? ' selected' : ''}>${s.label}</option>`
+            ).join('');
+            picker.addEventListener('change', updateScenarioDescription);
+            updateScenarioDescription();
+        }
+
+        function updateScenarioDescription() {
+            const picker = document.getElementById('scenario-picker');
+            const desc = document.getElementById('scenario-description');
+            if (!picker || !desc) return;
+            const s = SCENARIOS.find(x => x.id === picker.value);
+            if (!s) return;
+            desc.innerHTML = `<strong>${s.label}</strong><br>${s.description}<br><span style="color:#64748b;">${s.steps.length} steps · ~${Math.round((s.steps.length * STEP_DELAY_MS) / 1000)}s</span>`;
+        }
+
+        async function checkMockMode() {
+            try {
+                const res = await fetch(`${API}/api/test/status`);
+                if (!res.ok) return;
+                const data = await res.json();
+                mockModeActive = !!data.mockMode;
+                if (mockModeActive) {
+                    document.getElementById('mock-banner').style.display = 'block';
+                }
+                // Gate the Test Console tab behind an explicit dev-mode flag so it
+                // never appears in production unless the operator opts in via:
+                //   localStorage.setItem('swoop_dev_mode', 'true')
+                const devMode = (() => {
+                    try { return localStorage.getItem('swoop_dev_mode') === 'true'; }
+                    catch (e) { return false; }
+                })();
+                if (mockModeActive && devMode) {
+                    document.getElementById('test-console').style.display = 'block';
+                    const tabBtn = document.getElementById('tab-btn-test');
+                    if (tabBtn) tabBtn.style.display = '';
+                    initScenarioPicker();
+                }
+            } catch (err) { /* test routes not mounted — ignore */ }
+        }
+
+        function logTestEvent(text, kind) {
+            const log = document.getElementById('test-log');
+            if (!log) return;
+            const color = kind === 'error' ? '#fca5a5' : kind === 'ok' ? '#86efac' : kind === 'header' ? '#fcd34d' : '#e5e7eb';
+            const ts = new Date().toLocaleTimeString();
+            const line = document.createElement('div');
+            line.innerHTML = `<span style="color:#6b7280;">${ts}</span> <span style="color:${color};">${escapeHtml(text)}</span>`;
+            log.insertBefore(line, log.firstChild);
+            while (log.childNodes.length > 80) log.removeChild(log.lastChild);
+        }
+
+        // ---- Conversation panel (SMS-style bubbles) ----
+        const personaState = {}; // persona -> { leadId, lastSeenMsgId, lastHandoff, lastOptOut, businessName, displayName }
+
+        function clearConversation() {
+            const c = document.getElementById('test-conversation');
+            if (c) c.innerHTML = '';
+        }
+
+        function fmtTime(sentAt) {
+            // sent_at is SQLite UTC string ("YYYY-MM-DD HH:MM:SS")
+            const d = sentAt ? new Date(sentAt.replace(' ', 'T') + 'Z') : new Date();
+            return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function convAppend(html) {
+            const c = document.getElementById('test-conversation');
+            if (!c) return;
+            const wrap = document.createElement('div');
+            wrap.innerHTML = html;
+            while (wrap.firstChild) c.appendChild(wrap.firstChild);
+            c.scrollTop = c.scrollHeight;
+        }
+
+        function renderPersonaHeader(persona, displayName, phone, businessName) {
+            convAppend(`
+                <div style="margin-top:0.6rem; padding:0.45rem 0.7rem; background:#fff; border:1px solid #e2e8f0; border-radius:8px; font-size:0.8rem; color:#475569;">
+                    <strong style="color:#0f172a;">📞 New thread:</strong> ${escapeHtml(displayName)} <span style="color:#94a3b8;">(${escapeHtml(phone || '')})</span>
+                    <span style="float:right; color:#94a3b8;">${escapeHtml(businessName || '')} · ${fmtTime()}</span>
+                </div>
+            `);
+        }
+
+        function renderSystemBanner(text, color, opts) {
+            const bg = color === 'red' ? '#fee2e2' : color === 'amber' ? '#fef3c7' : color === 'green' ? '#dcfce7' : '#e0e7ff';
+            const fg = color === 'red' ? '#991b1b' : color === 'amber' ? '#92400e' : color === 'green' ? '#166534' : '#3730a3';
+            const omitTime = opts && opts.omitTime;
+            const suffix = omitTime ? '' : ` · ${fmtTime()}`;
+            convAppend(`
+                <div style="align-self:center; background:${bg}; color:${fg}; border-radius:999px; padding:0.3rem 0.85rem; font-size:0.75rem; font-weight:600; margin:0.25rem 0;">
+                    ${escapeHtml(text)}${suffix}
+                </div>
+            `);
+        }
+
+        function renderBubble(msg, businessName, timeLabelOverride) {
+            const inbound = msg.direction === 'inbound';
+            const align = inbound ? 'flex-start' : 'flex-end';
+            const bg = inbound ? '#ffffff' : '#10b981';
+            const fg = inbound ? '#0f172a' : '#ffffff';
+            const border = inbound ? '1px solid #e2e8f0' : 'none';
+            const who = inbound ? 'Customer' : `🤖 AI (as ${businessName || 'business'})`;
+            const whoColor = inbound ? '#64748b' : '#065f46';
+            const timeLabel = timeLabelOverride || fmtTime(msg.sent_at);
+            convAppend(`
+                <div style="display:flex; flex-direction:column; align-items:${align}; max-width:88%; ${inbound ? '' : 'align-self:flex-end;'}">
+                    <div style="font-size:0.7rem; color:${whoColor}; margin-bottom:0.15rem; padding:0 0.5rem;">${escapeHtml(who)} · ${escapeHtml(timeLabel)}</div>
+                    <div style="background:${bg}; color:${fg}; border:${border}; border-radius:14px; padding:0.5rem 0.8rem; font-size:0.9rem; line-height:1.35; box-shadow:0 1px 2px rgba(0,0,0,0.04);">
+                        ${escapeHtml(msg.body)}
+                    </div>
+                </div>
+            `);
+        }
+
+        async function fetchLead(leadId) {
+            try {
+                const res = await fetch(`${API}/api/leads/${leadId}`);
+                if (!res.ok) return null;
+                return await res.json();
+            } catch { return null; }
+        }
+
+        async function renderStepUpdate(step, result) {
+            if (!result) return;
+            const persona = step.persona;
+            const lead = result.leadId ? await fetchLead(result.leadId) : null;
+            if (!lead) return;
+
+            // Initialize persona state on first sight
+            if (persona && !personaState[persona]) {
+                personaState[persona] = {
+                    leadId: lead.id,
+                    lastSeenMsgId: 0,
+                    lastHandoff: 0,
+                    lastOptOut: 0,
+                    businessName: lead.business_name,
+                    displayName: lead.caller_name || step.name || lead.caller_phone,
+                };
+                renderPersonaHeader(persona, personaState[persona].displayName, lead.caller_phone, lead.business_name);
+                if (step.action === 'missed_call') {
+                    renderSystemBanner(`📞 Missed call — auto-reply incoming`, 'amber');
+                }
+            } else if (persona && personaState[persona]) {
+                // Keep displayName fresh if it was filled in later
+                if (lead.caller_name) personaState[persona].displayName = lead.caller_name;
+            }
+
+            const state = persona ? personaState[persona] : null;
+
+            // Special pre-banners
+            if (step.action === 'fire_followups') {
+                renderSystemBanner(`⏰ Later that day — 1-hour follow-up fires (customer hadn't replied)`, 'amber', { omitTime: true });
+            }
+            if (step.action === 'send_review') {
+                renderSystemBanner(`⭐ A few days later — review request sent after the job was completed`, 'green', { omitTime: true });
+            }
+
+            // Render any new messages on this lead since last step
+            const newMsgs = (lead.messages || []).filter(m => !state || m.id > state.lastSeenMsgId);
+            // Time-shifted steps don't actually happen at the current wall-clock,
+            // so override the bubble label with a relative description.
+            const timeOverride =
+                step.action === 'send_review' ? 'a few days later'
+                : step.action === 'fire_followups' ? '1 hour later'
+                : null;
+            for (const m of newMsgs) {
+                renderBubble(m, lead.business_name, timeOverride);
+            }
+            if (state && newMsgs.length) {
+                state.lastSeenMsgId = Math.max(state.lastSeenMsgId, ...newMsgs.map(m => m.id));
+            }
+
+            // Opt-out / opt-in banners
+            if (state) {
+                if (lead.sms_opt_out && !state.lastOptOut) {
+                    renderSystemBanner(`🛑 Customer opted out — STOP recorded, no further texts will send`, 'red');
+                    state.lastOptOut = 1;
+                } else if (!lead.sms_opt_out && state.lastOptOut) {
+                    renderSystemBanner(`▶️ Customer opted back in (START)`, 'green');
+                    state.lastOptOut = 0;
+                }
+
+                // Handoff to owner — show a rich brief card so the owner sees
+                // exactly what context they're walking into.
+                if (lead.ai_handoff_done && !state.lastHandoff) {
+                    renderHandoffBrief(lead);
+                    state.lastHandoff = 1;
+                }
+            }
+        }
+
+        function renderHandoffBrief(lead) {
+            const owner = lead.business_owner_name || 'the owner';
+            const biz = lead.business_name || 'business';
+            const customer = lead.caller_name || 'Customer';
+            const phone = lead.caller_phone || '';
+            const slaMins = lead.business_handoff_minutes || 120;
+            const slaText = slaMins >= 60 ? `${Math.round(slaMins / 60)} hour${slaMins >= 120 ? 's' : ''}` : `${slaMins} min`;
+
+            // Pull the AI-built summary (lives in lead.notes after handoff)
+            const summary = lead.notes || 'Customer is waiting for a response.';
+
+            // Last few inbound messages = the "what the customer asked"
+            const inbound = (lead.messages || []).filter(m => m.direction === 'inbound').slice(-3);
+            const customerQuotes = inbound.map(m =>
+                `<div style="background:#f8fafc; border-left:3px solid #94a3b8; padding:0.35rem 0.6rem; font-size:0.82rem; color:#334155; margin:0.2rem 0;">"${escapeHtml(m.body)}"</div>`
+            ).join('');
+
+            // Light heuristic for urgency / topic chip
+            const allBodies = inbound.map(m => m.body.toLowerCase()).join(' ');
+            const isUrgent = /urgent|emergency|asap|flooding|burst|right now|leaking|leak|no heat|no water/.test(allBodies);
+            const urgencyChip = isUrgent
+                ? `<span style="background:#fee2e2; color:#991b1b; border-radius:999px; padding:0.15rem 0.55rem; font-size:0.7rem; font-weight:600;">⚠️ Likely urgent</span>`
+                : `<span style="background:#dbeafe; color:#1e40af; border-radius:999px; padding:0.15rem 0.55rem; font-size:0.7rem; font-weight:600;">📋 Standard lead</span>`;
+
+            convAppend(`
+                <div style="align-self:stretch; background:linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border:2px solid #f59e0b; border-radius:12px; padding:0.85rem 1rem; margin:0.6rem 0; box-shadow:0 2px 6px rgba(245,158,11,0.15);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+                        <div style="font-weight:700; color:#78350f; font-size:0.95rem;">🤝 Handoff to ${escapeHtml(owner)} — AI is stepping back</div>
+                        ${urgencyChip}
+                    </div>
+                    <div style="background:#fff; border-radius:8px; padding:0.65rem 0.8rem; font-size:0.85rem; line-height:1.5; color:#1f2937;">
+                        <div style="margin-bottom:0.35rem;"><strong>📱 Customer:</strong> ${escapeHtml(customer)} <span style="color:#64748b;">(${escapeHtml(phone)})</span></div>
+                        <div style="margin-bottom:0.35rem;"><strong>🏢 For:</strong> ${escapeHtml(biz)}</div>
+                        <div style="margin-bottom:0.35rem;"><strong>⏱ Promised callback:</strong> within ${escapeHtml(slaText)}</div>
+                        <div style="margin-bottom:0.25rem;"><strong>💬 What they need:</strong></div>
+                        ${customerQuotes || '<div style="font-size:0.8rem; color:#64748b;">No customer message captured.</div>'}
+                        <div style="margin-top:0.5rem; padding-top:0.5rem; border-top:1px dashed #e2e8f0; font-size:0.8rem; color:#475569;">
+                            <strong>🤖 AI brief:</strong> ${escapeHtml(summary)}
+                        </div>
+                    </div>
+                    <div style="margin-top:0.5rem; font-size:0.75rem; color:#78350f; text-align:center; font-style:italic;">
+                        ${escapeHtml(owner)} gets this brief on their phone — no scrolling through a transcript.
+                    </div>
+                </div>
+            `);
+        }
+
+        // Low-level: fire a single primitive against /api/test/simulate.
+        // Returns the parsed response (or null on error).
+        async function simulate(scenario, extra) {
+            const payload = Object.assign({ scenario }, extra || {});
+            try {
+                const res = await fetch(`${API}/api/test/simulate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    logTestEvent('✗ ' + (data.error || 'Failed'), 'error');
+                    return null;
+                }
+                if (scenario === 'reset') {
+                    // Wipe in-memory persona tracking so the next scenario starts clean.
+                    Object.keys(personaLeads).forEach(k => delete personaLeads[k]);
+                    Object.keys(personaState).forEach(k => delete personaState[k]);
+                    clearConversation();
+                    convAppend(`<div style="color:#94a3b8; text-align:center; font-size:0.85rem; padding:1rem;">Test data cleared. Pick a scenario to start fresh.</div>`);
+                    logTestEvent(data.message || 'Done.', 'ok');
+                    await loadDashboard();
+                }
+                return data;
+            } catch (err) {
+                logTestEvent('✗ ' + err.message, 'error');
+                return null;
+            }
+        }
+
+        function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+        async function runScenario() {
+            const picker = document.getElementById('scenario-picker');
+            const btn = document.getElementById('scenario-run-btn');
+            if (!picker || !btn) return;
+            const scenario = SCENARIOS.find(s => s.id === picker.value);
+            if (!scenario) return;
+
+            btn.disabled = true;
+            const originalLabel = btn.textContent;
+            // Reset persona tracking + clear conversation for a fresh story
+            Object.keys(personaLeads).forEach(k => delete personaLeads[k]);
+            Object.keys(personaState).forEach(k => delete personaState[k]);
+            clearConversation();
+            convAppend(`
+                <div style="align-self:center; background:#1e293b; color:#fcd34d; border-radius:8px; padding:0.4rem 0.9rem; font-size:0.8rem; font-weight:600;">
+                    ▶ ${escapeHtml(scenario.label)}
+                </div>
+            `);
+            logTestEvent(`━━━ ${scenario.label} ━━━`, 'header');
+
+            for (let i = 0; i < scenario.steps.length; i++) {
+                const step = scenario.steps[i];
+                btn.textContent = `▶ Step ${i + 1}/${scenario.steps.length}…`;
+                logTestEvent(`[${i + 1}/${scenario.steps.length}] ${step.label}`);
+
+                // Build payload from the step + persona's tracked leadId
+                const payload = {};
+                if (step.body) payload.body = step.body;
+                if (step.name) payload.name = step.name;
+                if (step.persona && personaLeads[step.persona]) {
+                    payload.leadId = personaLeads[step.persona];
+                }
+
+                const result = await simulate(step.action, payload);
+                if (result) {
+                    logTestEvent('   ↳ ' + (result.message || 'ok'), 'ok');
+                    if (step.persona && result.leadId) {
+                        personaLeads[step.persona] = result.leadId;
+                    }
+                    await renderStepUpdate(step, result);
+                    await loadDashboard();
+                } else {
+                    logTestEvent('   ↳ Scenario aborted.', 'error');
+                    renderSystemBanner('✗ Scenario aborted', 'red');
+                    break;
+                }
+
+                if (i < scenario.steps.length - 1) {
+                    await sleep(STEP_DELAY_MS);
+                }
+            }
+
+            convAppend(`
+                <div style="align-self:center; background:#0f172a; color:#86efac; border-radius:8px; padding:0.4rem 0.9rem; font-size:0.8rem; font-weight:600; margin-top:0.4rem;">
+                    🏁 Scenario complete
+                </div>
+            `);
+            logTestEvent(`━━━ Scenario complete ━━━`, 'header');
+            btn.disabled = false;
+            btn.textContent = originalLabel;
+        }
+
         // ---- Init ----
+        checkMockMode();
         loadDashboard();
         setInterval(loadDashboard, 30000); // Refresh every 30s
     </script>

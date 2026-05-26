@@ -16,6 +16,7 @@ app.use(express.static(path.join(__dirname, '..', 'public')));
 
 // Routes
 app.use('/webhooks', require('./routes/webhooks'));
+app.use('/api/test', require('./routes/test'));
 app.use('/api', require('./routes/api'));
 
 // Health check

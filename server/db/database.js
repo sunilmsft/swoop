@@ -1,7 +1,8 @@
 const Database = require('better-sqlite3');
 const path = require('path');
 
-const db = new Database(path.join(__dirname, 'swoop.db'));
+const dbPath = process.env.DB_PATH || path.join(__dirname, 'swoop.db');
+const db = new Database(dbPath);
 
 // Enable WAL mode for better concurrent read performance
 db.pragma('journal_mode = WAL');
@@ -73,5 +74,23 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_leads_phone ON leads(caller_phone);
   CREATE INDEX IF NOT EXISTS idx_follow_ups_status ON follow_ups(status, scheduled_for);
 `);
+
+// Lightweight schema migrations for existing local DBs.
+const leadColumns = db.prepare('PRAGMA table_info(leads)').all().map((col) => col.name);
+if (!leadColumns.includes('sms_opt_out')) {
+  db.exec('ALTER TABLE leads ADD COLUMN sms_opt_out INTEGER DEFAULT 0');
+}
+if (!leadColumns.includes('opt_out_at')) {
+  db.exec('ALTER TABLE leads ADD COLUMN opt_out_at TEXT');
+}
+if (!leadColumns.includes('is_test')) {
+  db.exec('ALTER TABLE leads ADD COLUMN is_test INTEGER DEFAULT 0');
+  db.exec('CREATE INDEX IF NOT EXISTS idx_leads_is_test ON leads(is_test)');
+}
+
+const messageColumns = db.prepare('PRAGMA table_info(messages)').all().map((col) => col.name);
+if (!messageColumns.includes('is_test')) {
+  db.exec('ALTER TABLE messages ADD COLUMN is_test INTEGER DEFAULT 0');
+}
 
 module.exports = db;

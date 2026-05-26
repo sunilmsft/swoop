@@ -68,6 +68,26 @@ npm run dev
    - **Voice status callback:** `https://your-app.onrender.com/webhooks/voice-status` (POST)
    - **SMS webhook:** `https://your-app.onrender.com/webhooks/sms` (POST)
 
+## Local Testing While Twilio Approval Is Pending
+
+You can fully test dashboard and workflow behavior without sending real SMS.
+
+1. In `.env`, set `TWILIO_MOCK_MODE=true`
+2. Run `npm run dev`
+3. Trigger sample events:
+
+```bash
+# Simulate a missed call that should auto-text and create/update a lead
+curl -s -X POST http://localhost:3000/webhooks/voice-dial-result -d "DialCallStatus=no-answer&DialCallDuration=0&From=%2B14255551234&To=%2B18337830902"
+
+# Simulate inbound STOP/START/HELP behavior
+curl -s -X POST http://localhost:3000/webhooks/sms -d "From=%2B14255551234&To=%2B18337830902&Body=STOP"
+curl -s -X POST http://localhost:3000/webhooks/sms -d "From=%2B14255551234&To=%2B18337830902&Body=START"
+curl -s -X POST http://localhost:3000/webhooks/sms -d "From=%2B14255551234&To=%2B18337830902&Body=HELP"
+```
+
+All sends are logged as `MOCK SMS` in server logs and still flow through lead/message/follow-up logic.
+
 ## Deploy to Render (Free)
 
 1. Push this repo to GitHub

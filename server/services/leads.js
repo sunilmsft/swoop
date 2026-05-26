@@ -2,6 +2,18 @@ const db = require('../db/database');
 const { sendSMS } = require('./twilio');
 const { generateReply, buildHandoffSummary, extractName } = require('./ai-agent');
 
+const STOP_KEYWORDS = new Set(['stop', 'stopall', 'unsubscribe', 'cancel', 'end', 'quit']);
+const START_KEYWORDS = new Set(['start', 'unstop']);
+const HELP_KEYWORDS = new Set(['help']);
+
+function getKeywordIntent(body) {
+  const token = (body || '').trim().toLowerCase();
+  if (STOP_KEYWORDS.has(token)) return 'stop';
+  if (START_KEYWORDS.has(token)) return 'start';
+  if (HELP_KEYWORDS.has(token)) return 'help';
+  return null;
+}
+
 /**
  * Handle a missed call:
  * 1. Find or create the lead
@@ -26,6 +38,11 @@ async function handleMissedCall(businessId, callerPhone) {
     // Update existing lead with new missed call
     db.prepare('UPDATE leads SET call_status = ?, updated_at = datetime(\'now\') WHERE id = ?')
       .run('missed', lead.id);
+  }
+
+  // Respect opt-out state for repeat callers.
+  if (lead.sms_opt_out) {
+    return lead;
   }
 
   // Send instant auto-reply
@@ -98,6 +115,51 @@ async function handleInboundSMS(businessId, callerPhone, body) {
     'INSERT INTO messages (lead_id, direction, body) VALUES (?, ?, ?)'
   ).run(lead.id, 'inbound', body);
 
+  const intent = getKeywordIntent(body);
+
+  if (intent === 'stop') {
+    db.prepare('UPDATE leads SET sms_opt_out = 1, opt_out_at = datetime(\'now\'), updated_at = datetime(\'now\') WHERE id = ?')
+      .run(lead.id);
+    db.prepare('UPDATE follow_ups SET status = ? WHERE lead_id = ? AND status = ?')
+      .run('cancelled', lead.id, 'pending');
+
+    const confirmation = `You are unsubscribed from ${business.name} texts. Reply START to opt back in.`;
+    const twilioMsg = await sendSMS(callerPhone, confirmation);
+    db.prepare(
+      'INSERT INTO messages (lead_id, direction, body, twilio_sid) VALUES (?, ?, ?, ?)'
+    ).run(lead.id, 'outbound', confirmation, twilioMsg.sid);
+
+    return db.prepare('SELECT * FROM leads WHERE id = ?').get(lead.id);
+  }
+
+  if (intent === 'start') {
+    db.prepare('UPDATE leads SET sms_opt_out = 0, opt_out_at = NULL, updated_at = datetime(\'now\') WHERE id = ?')
+      .run(lead.id);
+
+    const confirmation = `You are re-subscribed to ${business.name} texts.`;
+    const twilioMsg = await sendSMS(callerPhone, confirmation);
+    db.prepare(
+      'INSERT INTO messages (lead_id, direction, body, twilio_sid) VALUES (?, ?, ?, ?)'
+    ).run(lead.id, 'outbound', confirmation, twilioMsg.sid);
+
+    return db.prepare('SELECT * FROM leads WHERE id = ?').get(lead.id);
+  }
+
+  if (intent === 'help') {
+    const help = `${business.name}: reply STOP to unsubscribe, START to re-subscribe. Call us for urgent help.`;
+    const twilioMsg = await sendSMS(callerPhone, help);
+    db.prepare(
+      'INSERT INTO messages (lead_id, direction, body, twilio_sid) VALUES (?, ?, ?, ?)'
+    ).run(lead.id, 'outbound', help, twilioMsg.sid);
+    db.prepare('UPDATE leads SET updated_at = datetime(\'now\') WHERE id = ?').run(lead.id);
+    return db.prepare('SELECT * FROM leads WHERE id = ?').get(lead.id);
+  }
+
+  if (lead.sms_opt_out) {
+    db.prepare('UPDATE leads SET updated_at = datetime(\'now\') WHERE id = ?').run(lead.id);
+    return lead;
+  }
+
   // Update lead status — they replied, they're engaged
   db.prepare('UPDATE leads SET lead_status = ?, updated_at = datetime(\'now\') WHERE id = ?')
     .run('engaged', lead.id);
@@ -168,6 +230,7 @@ async function handleInboundSMS(businessId, callerPhone, body) {
 async function sendReviewRequest(leadId) {
   const lead = db.prepare('SELECT * FROM leads WHERE id = ?').get(leadId);
   if (!lead) throw new Error(`Lead ${leadId} not found`);
+  if (lead.sms_opt_out) throw new Error('Lead has opted out of SMS');
 
   const business = db.prepare('SELECT * FROM businesses WHERE id = ?').get(lead.business_id);
 
@@ -193,7 +256,7 @@ async function sendReviewRequest(leadId) {
  */
 async function processDueFollowUps() {
   const dueFollowUps = db.prepare(
-    'SELECT f.*, l.caller_phone, l.lead_status FROM follow_ups f JOIN leads l ON f.lead_id = l.id WHERE f.status = ? AND f.scheduled_for <= datetime(\'now\')'
+    'SELECT f.*, l.caller_phone, l.lead_status, l.sms_opt_out FROM follow_ups f JOIN leads l ON f.lead_id = l.id WHERE f.status = ? AND f.scheduled_for <= datetime(\'now\')'
   ).all('pending');
 
   let sent = 0;
@@ -201,7 +264,7 @@ async function processDueFollowUps() {
 
   for (const fu of dueFollowUps) {
     // Don't follow up if lead already engaged or converted
-    if (['engaged', 'converted', 'review_sent'].includes(fu.lead_status)) {
+    if (fu.sms_opt_out || ['engaged', 'converted', 'review_sent'].includes(fu.lead_status)) {
       db.prepare('UPDATE follow_ups SET status = ? WHERE id = ?').run('cancelled', fu.id);
       skipped++;
       continue;

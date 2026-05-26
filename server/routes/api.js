@@ -10,15 +10,15 @@ const router = express.Router();
  */
 router.get('/dashboard', (req, res) => {
   const stats = {
-    totalLeads: db.prepare('SELECT COUNT(*) as count FROM leads').get().count,
-    newLeads: db.prepare('SELECT COUNT(*) as count FROM leads WHERE lead_status = ?').get('new').count,
-    engagedLeads: db.prepare('SELECT COUNT(*) as count FROM leads WHERE lead_status = ?').get('engaged').count,
-    convertedLeads: db.prepare('SELECT COUNT(*) as count FROM leads WHERE lead_status = ?').get('converted').count,
-    needsAttention: db.prepare('SELECT COUNT(*) as count FROM leads WHERE lead_status = ?').get('needs_attention').count,
-    reviewsSent: db.prepare('SELECT COUNT(*) as count FROM leads WHERE lead_status = ?').get('review_sent').count,
-    messagesSent: db.prepare('SELECT COUNT(*) as count FROM messages WHERE direction = ?').get('outbound').count,
-    messagesReceived: db.prepare('SELECT COUNT(*) as count FROM messages WHERE direction = ?').get('inbound').count,
-    pendingFollowUps: db.prepare('SELECT COUNT(*) as count FROM follow_ups WHERE status = ?').get('pending').count,
+    totalLeads: db.prepare('SELECT COUNT(*) as count FROM leads WHERE is_test = 0').get().count,
+    newLeads: db.prepare('SELECT COUNT(*) as count FROM leads WHERE is_test = 0 AND lead_status = ?').get('new').count,
+    engagedLeads: db.prepare('SELECT COUNT(*) as count FROM leads WHERE is_test = 0 AND lead_status = ?').get('engaged').count,
+    convertedLeads: db.prepare('SELECT COUNT(*) as count FROM leads WHERE is_test = 0 AND lead_status = ?').get('converted').count,
+    needsAttention: db.prepare('SELECT COUNT(*) as count FROM leads WHERE is_test = 0 AND lead_status = ?').get('needs_attention').count,
+    reviewsSent: db.prepare('SELECT COUNT(*) as count FROM leads WHERE is_test = 0 AND lead_status = ?').get('review_sent').count,
+    messagesSent: db.prepare('SELECT COUNT(*) as count FROM messages WHERE is_test = 0 AND direction = ?').get('outbound').count,
+    messagesReceived: db.prepare('SELECT COUNT(*) as count FROM messages WHERE is_test = 0 AND direction = ?').get('inbound').count,
+    pendingFollowUps: db.prepare('SELECT COUNT(*) as count FROM follow_ups WHERE status = ? AND lead_id NOT IN (SELECT id FROM leads WHERE is_test = 1)').get('pending').count,
   };
 
   res.json(stats);
@@ -28,12 +28,15 @@ router.get('/dashboard', (req, res) => {
  * GET /api/leads — List all leads with latest message
  */
 router.get('/leads', (req, res) => {
+  const includeTest = req.query.includeTest === '1';
+  const where = includeTest ? '' : 'WHERE l.is_test = 0';
   const leads = db.prepare(`
     SELECT l.*, b.name as business_name,
       (SELECT body FROM messages WHERE lead_id = l.id ORDER BY sent_at DESC LIMIT 1) as last_message,
       (SELECT COUNT(*) FROM messages WHERE lead_id = l.id) as message_count
     FROM leads l
     JOIN businesses b ON l.business_id = b.id
+    ${where}
     ORDER BY l.updated_at DESC
     LIMIT 50
   `).all();
@@ -45,7 +48,7 @@ router.get('/leads', (req, res) => {
  * GET /api/leads/:id — Single lead with full message history
  */
 router.get('/leads/:id', (req, res) => {
-  const lead = db.prepare('SELECT l.*, b.name as business_name FROM leads l JOIN businesses b ON l.business_id = b.id WHERE l.id = ?')
+  const lead = db.prepare('SELECT l.*, b.name as business_name, b.owner_name as business_owner_name, b.handoff_minutes as business_handoff_minutes FROM leads l JOIN businesses b ON l.business_id = b.id WHERE l.id = ?')
     .get(req.params.id);
 
   if (!lead) return res.status(404).json({ error: 'Lead not found' });
@@ -88,6 +91,10 @@ router.patch('/leads/:id', (req, res) => {
  * POST /api/leads/:id/review — Send a Google review request
  */
 router.post('/leads/:id/review', async (req, res) => {
+  const lead = db.prepare('SELECT * FROM leads WHERE id = ?').get(req.params.id);
+  if (!lead) return res.status(404).json({ error: 'Lead not found' });
+  if (lead.sms_opt_out) return res.status(409).json({ error: 'Lead has opted out of SMS' });
+
   try {
     await sendReviewRequest(Number(req.params.id));
     res.json({ success: true });
@@ -107,6 +114,7 @@ router.post('/leads/:id/sms', async (req, res) => {
 
   const lead = db.prepare('SELECT * FROM leads WHERE id = ?').get(req.params.id);
   if (!lead) return res.status(404).json({ error: 'Lead not found' });
+  if (lead.sms_opt_out) return res.status(409).json({ error: 'Lead has opted out of SMS' });
 
   try {
     await sendSMS(lead.caller_phone, body.trim());
@@ -222,15 +230,16 @@ router.delete('/businesses/:id/leads', (req, res) => {
 router.get('/admin/overview', (req, res) => {
   const stats = {
     totalBusinesses: db.prepare('SELECT COUNT(*) as c FROM businesses').get().c,
-    totalLeads: db.prepare('SELECT COUNT(*) as c FROM leads').get().c,
-    totalMessages: db.prepare('SELECT COUNT(*) as c FROM messages').get().c,
-    outboundMessages: db.prepare('SELECT COUNT(*) as c FROM messages WHERE direction = ?').get('outbound').c,
-    inboundMessages: db.prepare('SELECT COUNT(*) as c FROM messages WHERE direction = ?').get('inbound').c,
-    aiHandoffs: db.prepare('SELECT COUNT(*) as c FROM leads WHERE ai_handoff_done = 1').get().c,
-    totalAiTurns: db.prepare('SELECT COALESCE(SUM(ai_turn_count), 0) as c FROM leads').get().c,
-    convertedLeads: db.prepare('SELECT COUNT(*) as c FROM leads WHERE lead_status = ?').get('converted').c,
-    needsAttention: db.prepare('SELECT COUNT(*) as c FROM leads WHERE lead_status = ?').get('needs_attention').c,
-    pendingFollowUps: db.prepare('SELECT COUNT(*) as c FROM follow_ups WHERE status = ?').get('pending').c,
+    totalLeads: db.prepare('SELECT COUNT(*) as c FROM leads WHERE is_test = 0').get().c,
+    totalMessages: db.prepare('SELECT COUNT(*) as c FROM messages WHERE is_test = 0').get().c,
+    outboundMessages: db.prepare('SELECT COUNT(*) as c FROM messages WHERE is_test = 0 AND direction = ?').get('outbound').c,
+    inboundMessages: db.prepare('SELECT COUNT(*) as c FROM messages WHERE is_test = 0 AND direction = ?').get('inbound').c,
+    aiHandoffs: db.prepare('SELECT COUNT(*) as c FROM leads WHERE is_test = 0 AND ai_handoff_done = 1').get().c,
+    totalAiTurns: db.prepare('SELECT COALESCE(SUM(ai_turn_count), 0) as c FROM leads WHERE is_test = 0').get().c,
+    convertedLeads: db.prepare('SELECT COUNT(*) as c FROM leads WHERE is_test = 0 AND lead_status = ?').get('converted').c,
+    needsAttention: db.prepare('SELECT COUNT(*) as c FROM leads WHERE is_test = 0 AND lead_status = ?').get('needs_attention').c,
+    pendingFollowUps: db.prepare('SELECT COUNT(*) as c FROM follow_ups WHERE status = ? AND lead_id NOT IN (SELECT id FROM leads WHERE is_test = 1)').get('pending').c,
+    testLeads: db.prepare('SELECT COUNT(*) as c FROM leads WHERE is_test = 1').get().c,
   };
   res.json(stats);
 });
@@ -241,12 +250,12 @@ router.get('/admin/overview', (req, res) => {
 router.get('/admin/businesses', (req, res) => {
   const businesses = db.prepare(`
     SELECT b.*,
-      (SELECT COUNT(*) FROM leads WHERE business_id = b.id) as lead_count,
-      (SELECT COUNT(*) FROM leads WHERE business_id = b.id AND lead_status = 'converted') as converted_count,
-      (SELECT COUNT(*) FROM leads WHERE business_id = b.id AND lead_status = 'needs_attention') as attention_count,
-      (SELECT COUNT(*) FROM messages m JOIN leads l ON m.lead_id = l.id WHERE l.business_id = b.id) as message_count,
-      (SELECT COALESCE(SUM(l.ai_turn_count), 0) FROM leads l WHERE l.business_id = b.id) as ai_turns_used,
-      (SELECT MAX(l.updated_at) FROM leads l WHERE l.business_id = b.id) as last_lead_activity
+      (SELECT COUNT(*) FROM leads WHERE business_id = b.id AND is_test = 0) as lead_count,
+      (SELECT COUNT(*) FROM leads WHERE business_id = b.id AND is_test = 0 AND lead_status = 'converted') as converted_count,
+      (SELECT COUNT(*) FROM leads WHERE business_id = b.id AND is_test = 0 AND lead_status = 'needs_attention') as attention_count,
+      (SELECT COUNT(*) FROM messages m JOIN leads l ON m.lead_id = l.id WHERE l.business_id = b.id AND l.is_test = 0) as message_count,
+      (SELECT COALESCE(SUM(l.ai_turn_count), 0) FROM leads l WHERE l.business_id = b.id AND l.is_test = 0) as ai_turns_used,
+      (SELECT MAX(l.updated_at) FROM leads l WHERE l.business_id = b.id AND l.is_test = 0) as last_lead_activity
     FROM businesses b
     ORDER BY b.created_at DESC
   `).all();
