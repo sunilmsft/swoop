@@ -60,6 +60,74 @@
         .stat-card .value.blue { color: var(--primary); }
         .stat-card .value.yellow { color: var(--yellow); }
 
+        /* Journey + Queue modules */
+        .module-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .module-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            border: 1px solid var(--border);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .module-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+        }
+        .journey-steps {
+            display: grid;
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+            gap: 0.5rem;
+        }
+        .journey-step {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 0.6rem;
+            text-align: center;
+        }
+        .journey-step .step-label {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            margin-bottom: 0.2rem;
+            min-height: 30px;
+        }
+        .journey-step .step-value {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        .journey-note {
+            margin-top: 0.65rem;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+        .queue-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.5rem 0.65rem;
+            margin-bottom: 0.5rem;
+            background: #fff;
+        }
+        .queue-item:last-child { margin-bottom: 0; }
+        .queue-item .name {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+        }
+        .queue-item .count {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
         /* Lead List */
         .section-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
         .lead-list { display: flex; flex-direction: column; gap: 0.75rem; }
@@ -213,6 +281,8 @@
             .action-bar .btn { width: 100%; text-align: center; }
             .sms-compose { flex-direction: column; }
             .sms-compose .btn-primary { width: 100%; text-align: center; }
+            .module-grid { grid-template-columns: 1fr; }
+            .journey-steps { grid-template-columns: repeat(3, minmax(0, 1fr)); }
         }
         @media (max-width: 480px) {
             .stats { grid-template-columns: 1fr 1fr; }
@@ -240,6 +310,34 @@
             <div class="stat-card"><div class="label">Texts Sent</div><div class="value blue" id="stat-sent">—</div></div>
             <div class="stat-card"><div class="label">Pending Follow-ups</div><div class="value yellow" id="stat-followups">—</div></div>
             <div class="stat-card"><div class="label">Reviews Requested</div><div class="value green" id="stat-reviews">—</div></div>
+        </div>
+
+        <!-- End-to-End Demo Modules -->
+        <div class="module-grid">
+            <div class="module-card">
+                <div class="module-title">🧭 Customer Journey Funnel</div>
+                <div class="journey-steps" id="journey-steps">
+                    <div class="journey-step"><div class="step-label">Missed Calls</div><div class="step-value">—</div></div>
+                    <div class="journey-step"><div class="step-label">Auto Text Sent</div><div class="step-value">—</div></div>
+                    <div class="journey-step"><div class="step-label">Customer Replied</div><div class="step-value">—</div></div>
+                    <div class="journey-step"><div class="step-label">AI Handoff</div><div class="step-value">—</div></div>
+                    <div class="journey-step"><div class="step-label">Converted</div><div class="step-value">—</div></div>
+                    <div class="journey-step"><div class="step-label">Review Sent</div><div class="step-value">—</div></div>
+                </div>
+                <div class="journey-note" id="journey-note">Waiting for live data...</div>
+            </div>
+
+            <div class="module-card">
+                <div class="module-title">👤 Owner Action Queue</div>
+                <div id="owner-queue">
+                    <div class="queue-item"><div class="name">Needs attention</div><div class="count">—</div></div>
+                    <div class="queue-item"><div class="name">New leads</div><div class="count">—</div></div>
+                    <div class="queue-item"><div class="name">Pending follow-ups</div><div class="count">—</div></div>
+                </div>
+                <div style="margin-top:0.65rem;">
+                    <button class="btn" style="width:100%;" onclick="openNextAttentionLead()">Open Next Priority Lead</button>
+                </div>
+            </div>
         </div>
 
         <!-- Setup Banner (shown when no businesses exist) -->
@@ -283,6 +381,7 @@
 
     <script>
         const API = '';
+        let latestLeads = [];
 
         // ---- Dashboard Data ----
         async function loadDashboard() {
@@ -292,31 +391,79 @@
                     fetch(`${API}/api/leads`),
                 ]);
 
+                let stats = null;
+                let leads = [];
+
                 if (statsRes.ok) {
-                    const s = await statsRes.json();
-                    document.getElementById('stat-total').textContent = s.totalLeads;
-                    document.getElementById('stat-new').textContent = s.newLeads;
-                    document.getElementById('stat-attention').textContent = s.needsAttention || 0;
-                    document.getElementById('stat-engaged').textContent = s.engagedLeads;
-                    document.getElementById('stat-sent').textContent = s.messagesSent;
-                    document.getElementById('stat-followups').textContent = s.pendingFollowUps;
-                    document.getElementById('stat-reviews').textContent = s.reviewsSent;
+                    stats = await statsRes.json();
+                    document.getElementById('stat-total').textContent = stats.totalLeads;
+                    document.getElementById('stat-new').textContent = stats.newLeads;
+                    document.getElementById('stat-attention').textContent = stats.needsAttention || 0;
+                    document.getElementById('stat-engaged').textContent = stats.engagedLeads;
+                    document.getElementById('stat-sent').textContent = stats.messagesSent;
+                    document.getElementById('stat-followups').textContent = stats.pendingFollowUps;
+                    document.getElementById('stat-reviews').textContent = stats.reviewsSent;
                     document.getElementById('status-text').textContent = 'Live';
 
                     // Show setup banner if no leads yet
-                    if (s.totalLeads === 0) {
+                    if (stats.totalLeads === 0) {
                         document.getElementById('setup-banner').style.display = 'block';
                     }
                 }
 
                 if (leadsRes.ok) {
-                    const leads = await leadsRes.json();
+                    leads = await leadsRes.json();
+                    latestLeads = leads;
                     renderLeads(leads);
+                }
+
+                if (stats) {
+                    renderJourney(stats);
+                    renderOwnerQueue(stats);
                 }
             } catch (err) {
                 document.getElementById('status-text').textContent = 'Offline';
                 console.error('Dashboard load error:', err);
             }
+        }
+
+        function renderJourney(stats) {
+            const replied = (stats.engagedLeads || 0) + (stats.needsAttention || 0) + (stats.convertedLeads || 0) + (stats.reviewsSent || 0);
+            const autoSent = Math.max(stats.totalLeads || 0, 0);
+
+            const values = [
+                stats.totalLeads || 0,
+                autoSent,
+                replied,
+                stats.needsAttention || 0,
+                stats.convertedLeads || 0,
+                stats.reviewsSent || 0,
+            ];
+
+            const nodes = document.querySelectorAll('#journey-steps .step-value');
+            nodes.forEach((n, i) => { n.textContent = values[i]; });
+
+            const replyRate = autoSent > 0 ? Math.round((replied / autoSent) * 100) : 0;
+            const conversionRate = replied > 0 ? Math.round(((stats.convertedLeads || 0) / replied) * 100) : 0;
+            document.getElementById('journey-note').textContent = `Reply rate ${replyRate}% · Conversion from engaged ${conversionRate}%`;
+        }
+
+        function renderOwnerQueue(stats) {
+            document.getElementById('owner-queue').innerHTML = `
+                <div class="queue-item"><div class="name">Needs attention</div><div class="count">${stats.needsAttention || 0}</div></div>
+                <div class="queue-item"><div class="name">New leads</div><div class="count">${stats.newLeads || 0}</div></div>
+                <div class="queue-item"><div class="name">Pending follow-ups</div><div class="count">${stats.pendingFollowUps || 0}</div></div>
+            `;
+        }
+
+        function openNextAttentionLead() {
+            if (!latestLeads || latestLeads.length === 0) return;
+
+            const next = latestLeads.find(l => l.lead_status === 'needs_attention')
+                || latestLeads.find(l => l.lead_status === 'new')
+                || latestLeads[0];
+
+            if (next) openLead(next.id);
         }
 
         function renderLeads(leads) {
