@@ -31,6 +31,17 @@ After completing any feature, fix, or meaningful change — and BEFORE committin
 - Wants advanced features, bulk actions, analytics
 - Pushes back on: missing features competitors have, pricing that doesn't scale, anything that feels "hobby project"
 
+**Morgan — Compliance & Trust (TCPA/Twilio Risk)**
+- Thinks like a reviewer from Twilio compliance, not a product fan
+- Focuses on consent language, auditability, proof artifacts, and policy drift
+- Pushes back on: vague wording, missing STOP/HELP behavior, weak record-keeping, anything that could fail verification or create legal risk
+
+### Critical Review Standards (Required)
+- Reviews must be constructive but critical. Avoid blanket positivity.
+- Each Squad Review must include at least one realistic risk, blind spot, or open question.
+- If no major issue exists, still call out at least one "watch item" (small but real risk) and how to mitigate it.
+- Action items should be concrete and testable (what to change + where + expected outcome).
+
 ### Review Format
 ```
 ## Squad Review: [feature/change name]
@@ -40,11 +51,12 @@ After completing any feature, fix, or meaningful change — and BEFORE committin
 | Ray (Owner) | 👍 / 👎 / 🤷 | One-liner |
 | Priya (Success) | 👍 / 👎 / 🤷 | One-liner |
 | Jordan (Power) | 👍 / 👎 / 🤷 | One-liner |
+| Morgan (Compliance) | 👍 / 👎 / 🤷 | One-liner |
 
 **Action items** (if any): ...
 ```
 
-If all three give 👍, proceed to commit. If anyone gives 👎, flag the concern and discuss before pushing.
+If all four give 👍, proceed to commit. If anyone gives 👎, flag the concern and discuss before pushing.
 
 ### Backlog Sync
 After every Squad Review, update `BACKLOG.md`:
