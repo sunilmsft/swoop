@@ -53,6 +53,7 @@
 - [x] 🟡 Set environment variables on Render
 - [x] 🟡 Update Twilio webhooks to Render URL
 - [ ] 🟡 Complete Twilio toll-free SMS verification (submitted, pending approval)
+- [ ] 🟡 Switch Twilio consent/terms URL to always-on GitHub Pages page (`/consent.html`) to avoid Render cold-start validation failures
 
 ### Security & Auth (🔴 Blocker — Squad Review May 11)
 - [ ] 🔴 Per-business auth (magic link or phone + code) — _Priya: "Anyone with the URL sees ALL businesses' leads"_
@@ -66,6 +67,14 @@
 - [ ] 🟢 Search/filter leads (by status, phone, name)
 - [ ] 🟢 Pagination for leads list (currently capped at 50)
 - [x] 🟢 Wire logo into dashboard header
+- [x] 🟢 Outreach playbook created for FB comment + DM follow-up sequence
+- [x] 🟢 Outreach templates generalized for future copy/paste while preserving Dan-specific version
+- [x] 🟢 Interactive outreach message generator added to playbook HTML (fill fields + one-click copy)
+- [x] 🟢 Advanced personalization controls added (style presets, CTA picker, context and location fields)
+- [x] 🟢 FB group early-tester post templates added to playbook and generator list
+- [x] 🟢 SMB-wide FB group post variants added (any local small business messaging)
+- [x] 🟢 Outreach playbook HTML decluttered (quick-start + collapsed advanced sections)
+- [x] 🟢 Generator simplified further (tone locked to Neighborly for faster first-use flow)
 
 ### Owner Dashboard — Settings Panel
 > One screen, accordion sections, auto-save. Plain language labels. Pre-filled with smart defaults.
