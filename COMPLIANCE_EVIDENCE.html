@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Swoop Compliance Evidence</title>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --ink: #0f172a;
+      --muted: #475569;
+      --line: #dbe3ef;
+      --brand: #0b3a67;
+      --accent: #ef8f1a;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Quicksand', sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.5;
+    }
+
+    header {
+      background: linear-gradient(120deg, #0b3a67, #114f89);
+      color: #fff;
+      padding: 20px;
+    }
+
+    header h1 {
+      font-size: 1.6rem;
+      margin-bottom: 4px;
+    }
+
+    header p {
+      opacity: 0.95;
+    }
+
+    .wrap {
+      max-width: 980px;
+      margin: 20px auto;
+      padding: 0 16px 30px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+
+    h2 {
+      color: var(--brand);
+      font-size: 1.15rem;
+      margin-bottom: 8px;
+    }
+
+    h3 {
+      color: var(--ink);
+      font-size: 1rem;
+      margin: 12px 0 6px;
+    }
+
+    p,
+    li {
+      color: var(--muted);
+    }
+
+    ul,
+    ol {
+      margin-left: 20px;
+    }
+
+    .note {
+      border-left: 4px solid var(--accent);
+      background: #fff7ed;
+      padding: 10px 12px;
+      border-radius: 8px;
+      margin-top: 10px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    @media (min-width: 880px) {
+      .grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .shot {
+      border: 1px dashed var(--line);
+      border-radius: 10px;
+      padding: 10px;
+      background: #fff;
+    }
+
+    .shot img {
+      width: 100%;
+      border-radius: 8px;
+      display: block;
+      background: #f1f5f9;
+      min-height: 180px;
+      object-fit: contain;
+    }
+
+    .caption {
+      font-size: 0.9rem;
+      margin-top: 6px;
+      color: var(--muted);
+    }
+
+    .field {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      margin-top: 8px;
+      background: #f8fbff;
+    }
+
+    code {
+      font-family: Consolas, monospace;
+      background: #eff4fb;
+      border: 1px solid #d9e4f2;
+      border-radius: 6px;
+      padding: 1px 6px;
+      color: #0f172a;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Swoop Compliance Evidence</h1>
+    <p>Twilio verification evidence, approved wording, and screenshot archive.</p>
+  </header>
+
+  <main class="wrap">
+    <section class="card">
+      <h2>How To Use This Page</h2>
+      <ol>
+        <li>Save screenshots into <code>public/images/compliance/</code>.</li>
+        <li>Update each image path in this file.</li>
+        <li>Keep exact submission text synced in the fields below.</li>
+        <li>On future number onboarding, reuse this as the baseline checklist.</li>
+      </ol>
+      <p class="note">This turns one successful submission into a repeatable compliance requirement for future builds.</p>
+    </section>
+
+    <section class="card">
+      <h2>Submission Details (May 26, 2026)</h2>
+      <div class="field"><strong>Estimated monthly volume:</strong> 100</div>
+      <div class="field"><strong>Opt-in type:</strong> Verbal</div>
+      <div class="field"><strong>Messaging use case categories:</strong> Customer Care</div>
+      <div class="field"><strong>Proof of consent (opt-in) collected:</strong> https://sunilmsft.github.io/swoop/consent.html</div>
+      <div class="field"><strong>Notification e-mail:</strong> sunil1308@gmail.com</div>
+      <div class="field"><strong>Opt-in keywords:</strong> Y, Yes, YES</div>
+      <div class="field"><strong>Contains age-gated content:</strong> No</div>
+      <div class="field"><strong>Privacy Policy URL:</strong> https://sunilmsft.github.io/swoop/consent.html</div>
+      <div class="field"><strong>Terms &amp; Conditions URL:</strong> https://sunilmsft.github.io/swoop/consent.html</div>
+    </section>
+
+    <section class="card">
+      <h2>Evidence Screenshots</h2>
+      <p style="margin-bottom:10px;color:#475569;">Drop screenshots into <code>public/images/compliance/</code> using the filenames below.</p>
+      <div class="grid">
+        <article class="shot">
+          <img src="public/images/compliance/01-form-fields.png" alt="Twilio form fields screenshot" />
+          <p class="caption">01. Form fields: volume, opt-in type, use case category, consent URL, use case description, sample message.</p>
+        </article>
+
+        <article class="shot">
+          <img src="public/images/compliance/02-additional-info.png" alt="Additional information and confirmation messages" />
+          <p class="caption">02. Additional info (verbal script), opt-in confirmation message, help message sample.</p>
+        </article>
+
+        <article class="shot">
+          <img src="public/images/compliance/03-urls-keywords-submit.png" alt="Privacy, Terms, keywords and submit" />
+          <p class="caption">03. Privacy/Terms URLs, opt-in keywords (Y/Yes/YES), ToS agreement, and Send button.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Submitted Copy (Exact Text)</h2>
+
+      <h3>Use Case Description</h3>
+      <div class="field">This number is used by a local service business for customer-care texts after a customer contacts the business and gives consent. Messages are for service-request follow-up, appointments, estimates, missed-call follow-up, and support related to the customer's own inquiry. No marketing, cold outreach, purchased lists, or third-party lead generation. Customers can reply STOP to opt out or HELP for help.</div>
+
+      <h3>Sample Message</h3>
+      <div class="field">Hi [Customer Name], this is [Business Name]. Following up on your service request. What day works best for a quick call? Reply STOP to opt out, HELP for help. Msg&amp;data rates may apply.</div>
+
+      <h3>Additional Information (Verbal Consent Script)</h3>
+      <div class="field">Verbal consent is collected by phone before SMS is sent. Business says: "We can send service-related texts about your inquiry, estimate, appointment, or follow-up. Msg&amp;data rates may apply. Reply STOP to opt out or HELP for help. Do you agree?" Customer must verbally say "Yes." If no, no SMS is sent. Consent record includes phone number, date/time, and inquiry context. Customer care only; no marketing or cold outreach.</div>
+
+      <h3>Opt-In Confirmation Message</h3>
+      <div class="field">You are opted in to receive service-related text messages from [Business Name] about your inquiry, estimate, appointment, or follow-up. Reply STOP to opt out, HELP for help. Msg&amp;data rates may apply.</div>
+
+      <h3>Help Message Sample</h3>
+      <div class="field">[Business Name]: Reply HELP for help or call [business phone]. Reply STOP to opt out. Msg&amp;data rates may apply.</div>
+    </section>
+
+    <section class="card">
+      <h2>Future Onboarding Checklist</h2>
+      <ul>
+        <li>Use static consent URL (GitHub Pages), not sleeping endpoints.</li>
+        <li>Reuse the same opt-in language and STOP/HELP phrasing.</li>
+        <li>Capture screenshots for each form step and confirmation page.</li>
+        <li>Store screenshots in <code>public/images/compliance/</code>.</li>
+        <li>Update this page with submission date and status.</li>
+      </ul>
+    </section>
+  </main>
+</body>
+</html>
