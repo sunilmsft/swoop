@@ -34,7 +34,7 @@ const biz1 = db.prepare(`
   'Mon-Fri 7am-6pm, Sat 8am-2pm, closed Sunday',
   '24/7 emergency service available. $150 after-hours surcharge.',
   'friendly',
-  'Do you offer free estimates? → Yes for jobs over $200\nAre you licensed and insured? → Yes, WA license #MIKEP1234\nDo you work weekends? → Saturdays 8am-2pm\nHow fast can you come out? → Usually same-day or next-day for non-emergencies\nDo you do commercial work? → Residential only',
+  'Do you offer free estimates? → Yes for jobs over $200\nAre you licensed and insured? → Yes — owner will share license # on request\nDo you work weekends? → Saturdays 8am-2pm\nHow fast can you come out? → Usually same-day or next-day for non-emergencies\nDo you do commercial work? → Residential only',
   3
 );
 

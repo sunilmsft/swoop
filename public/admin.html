@@ -171,6 +171,76 @@
         }
         .btn-secondary:hover { background: #eff6ff; }
         .btn-sm { padding: 7px 14px; font-size: 0.82rem; }
+
+        /* Grounding section */
+        .grounding-toggle {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: #fff; border: 1px dashed var(--primary); color: var(--primary);
+            padding: 8px 14px; border-radius: 8px; font-size: 0.85rem; font-weight: 600;
+            cursor: pointer; margin-bottom: 1rem;
+        }
+        .grounding-toggle:hover { background: #eff6ff; }
+        .grounding-section {
+            display: none;
+            background: #fff; border: 1px solid var(--border); border-radius: 8px;
+            padding: 1rem; margin-bottom: 1rem;
+        }
+        .grounding-section.show { display: block; }
+        .grounding-section h4 {
+            font-size: 0.9rem; margin-bottom: 0.75rem; color: var(--text);
+            display: flex; align-items: center; gap: 6px;
+        }
+        .demo-field select {
+            width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px;
+            font-size: 0.9rem; background: #fff; cursor: pointer;
+        }
+        .template-row {
+            display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+            background: #fff; border: 1px solid var(--border); border-radius: 8px;
+            padding: 10px 14px; margin-bottom: 1rem;
+        }
+        .template-row label {
+            font-size: 0.8rem; font-weight: 700; color: var(--text);
+            text-transform: uppercase; letter-spacing: 0.3px;
+        }
+        .template-row select { flex: 1; min-width: 200px; }
+        .template-hint { font-size: 0.78rem; color: var(--text-muted); }
+        .template-warning {
+            display: none;
+            background: #fef3c7; border: 1px solid #f59e0b; color: #78350f;
+            padding: 10px 14px; border-radius: 8px; font-size: 0.85rem;
+            margin-bottom: 1rem; font-weight: 500;
+        }
+        .template-warning.show { display: block; }
+        .template-warning strong { display: block; margin-bottom: 2px; }
+
+        /* Modal */
+        .modal-overlay {
+            display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.6);
+            z-index: 1000; align-items: center; justify-content: center; padding: 1rem;
+        }
+        .modal-overlay.show { display: flex; }
+        .modal {
+            background: #fff; border-radius: 12px; max-width: 720px; width: 100%;
+            max-height: 85vh; display: flex; flex-direction: column; overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+        }
+        .modal-header {
+            padding: 1rem 1.25rem; border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .modal-header h3 { font-size: 1rem; }
+        .modal-close {
+            background: none; border: none; font-size: 1.5rem; cursor: pointer;
+            color: var(--text-muted); line-height: 1;
+        }
+        .modal-body { padding: 1.25rem; overflow-y: auto; }
+        .modal-body pre {
+            background: #0f172a; color: #e2e8f0; padding: 1rem; border-radius: 8px;
+            font-size: 0.82rem; line-height: 1.5; white-space: pre-wrap; word-wrap: break-word;
+            font-family: 'SFMono-Regular', Consolas, monospace;
+        }
+        .modal-body .hint { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.75rem; }
     </style>
 </head>
 <body>
@@ -206,6 +276,28 @@
             </div>
 
             <div id="edit-biz-form">
+            <!-- Quick demo template -->
+            <div class="template-row">
+                <label>🎬 Demo Template:</label>
+                <select id="demo-template" onchange="applyTemplate()">
+                    <option value="">— Start fresh / use current data —</option>
+                    <option value="plumber">Plumber (residential)</option>
+                    <option value="hvac">HVAC contractor</option>
+                    <option value="electrician">Electrician</option>
+                    <option value="landscaper">Landscaper / lawn care</option>
+                    <option value="cleaner">House cleaning service</option>
+                    <option value="roofer">Roofer</option>
+                    <option value="handyman">Handyman</option>
+                    <option value="pestcontrol">Pest control</option>
+                </select>
+                <span class="template-hint">Fills form with realistic grounding. Tweak name/owner, then Save.</span>
+            </div>
+
+            <div class="template-warning" id="template-warning">
+                <strong>⚠️ Demo data loaded — review before saving</strong>
+                Pricing, hours, and service area are illustrative. <strong>Replace license #s, insurance limits, financing terms, warranty years, and brand certifications with values verified by the business owner.</strong> Never tell a real customer something the owner hasn't confirmed.
+            </div>
+
             <div class="demo-grid">
                 <div class="demo-field">
                     <label>Business Name</label>
@@ -229,8 +321,57 @@
                 <textarea id="demo-reply" placeholder="Hey! Sorry we missed your call. What do you need help with?"></textarea>
             </div>
 
+            <!-- Grounding (what the AI actually knows) -->
+            <button type="button" class="grounding-toggle" onclick="toggleGrounding()">
+                <span id="grounding-caret">▶</span> 🧠 Grounding — what the AI knows about this business
+            </button>
+            <div class="grounding-section" id="grounding-section">
+                <h4>📚 This data is injected into every AI reply. Fill it in and the AI will sound like a real employee of this business.</h4>
+                <div class="demo-grid">
+                    <div class="demo-field">
+                        <label>Services Offered</label>
+                        <textarea id="demo-services" placeholder="Drain cleaning, leak repair, water heater install/repair, fixture replacement…"></textarea>
+                    </div>
+                    <div class="demo-field">
+                        <label>Pricing</label>
+                        <textarea id="demo-pricing" placeholder="$75 service call. Drain cleaning $150-300. Water heater $1,200-2,500 installed."></textarea>
+                    </div>
+                    <div class="demo-field">
+                        <label>Service Area</label>
+                        <input type="text" id="demo-area" placeholder="Seattle metro, 25-mile radius from downtown">
+                    </div>
+                    <div class="demo-field">
+                        <label>Hours</label>
+                        <input type="text" id="demo-hours" placeholder="Mon-Fri 7am-6pm, Sat 8am-2pm">
+                    </div>
+                    <div class="demo-field">
+                        <label>Emergency / After-Hours Policy</label>
+                        <textarea id="demo-emergency" placeholder="24/7 emergency service. $150 after-hours surcharge."></textarea>
+                    </div>
+                    <div class="demo-field">
+                        <label>Tone</label>
+                        <select id="demo-tone">
+                            <option value="friendly">Friendly (warm, casual)</option>
+                            <option value="professional">Professional (polished)</option>
+                            <option value="direct">Direct (no fluff)</option>
+                            <option value="enthusiastic">Enthusiastic (upbeat)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="demo-field" style="margin-bottom: 0.75rem;">
+                    <label>FAQs (one per line, format: Q: ... | A: ...)</label>
+                    <textarea id="demo-faqs" style="min-height: 100px;" placeholder="Q: Do you offer free estimates? | A: Yes, free over the phone or text. On-site estimates are $75 (credited if you book).
+Q: Are you licensed? | A: Yes — WA license #XXXXXX, bonded and insured."></textarea>
+                </div>
+                <div class="demo-field" style="margin-bottom: 0.75rem;">
+                    <label>Never Say / Hard Rules</label>
+                    <textarea id="demo-never" placeholder="Never quote firm prices without seeing the job. Never promise same-day service after 2pm."></textarea>
+                </div>
+            </div>
+
             <div class="demo-actions">
                 <button class="btn btn-primary" onclick="saveDemoBusiness()">💾 Save & Update</button>
+                <button class="btn btn-secondary" onclick="previewSystemPrompt()">👁 Preview AI System Prompt</button>
                 <button class="btn btn-danger" onclick="clearDemoLeads()">🗑️ Clear Leads</button>
                 <span class="demo-status" id="demo-status"></span>
             </div>
@@ -281,6 +422,20 @@
             </thead>
             <tbody id="biz-table"></tbody>
         </table>
+    </div>
+
+    <!-- System Prompt Preview Modal -->
+    <div class="modal-overlay" id="prompt-modal" onclick="if(event.target===this)closePromptModal()">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>🧠 AI System Prompt — <span id="prompt-modal-biz"></span></h3>
+                <button class="modal-close" onclick="closePromptModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="hint">This is the exact instruction the AI sees before every reply. Edit the grounding fields and re-open to see it change.</div>
+                <pre id="prompt-modal-content">Loading…</pre>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -435,6 +590,19 @@
             document.getElementById('demo-forward').value = biz.forward_phone || '';
             document.getElementById('demo-desc').value = biz.description || '';
             document.getElementById('demo-reply').value = biz.auto_reply_message || '';
+            // Grounding fields
+            document.getElementById('demo-services').value = biz.services || '';
+            document.getElementById('demo-pricing').value = biz.pricing || '';
+            document.getElementById('demo-area').value = biz.service_area || '';
+            document.getElementById('demo-hours').value = biz.hours || '';
+            document.getElementById('demo-emergency').value = biz.emergency_policy || '';
+            document.getElementById('demo-tone').value = biz.tone || 'friendly';
+            document.getElementById('demo-faqs').value = biz.faqs || '';
+            document.getElementById('demo-never').value = biz.never_say || '';
+            document.getElementById('demo-template').value = '';
+            document.getElementById('template-warning').classList.remove('show');
+            // Share the active demo business with the dashboard Test Console
+            try { localStorage.setItem('swoop_demo_business_id', String(biz.id)); } catch (e) { /* ignore */ }
         }
 
         function toggleNewBizForm(show) {
@@ -484,6 +652,14 @@
                 forward_phone: document.getElementById('demo-forward').value,
                 description: document.getElementById('demo-desc').value,
                 auto_reply_message: document.getElementById('demo-reply').value,
+                services: document.getElementById('demo-services').value,
+                pricing: document.getElementById('demo-pricing').value,
+                service_area: document.getElementById('demo-area').value,
+                hours: document.getElementById('demo-hours').value,
+                emergency_policy: document.getElementById('demo-emergency').value,
+                tone: document.getElementById('demo-tone').value,
+                faqs: document.getElementById('demo-faqs').value,
+                never_say: document.getElementById('demo-never').value,
             };
             try {
                 const res = await fetch(`/api/businesses/${id}`, {
@@ -492,9 +668,10 @@
                     body: JSON.stringify(body),
                 });
                 if (res.ok) {
-                    showDemoStatus('✅ Business updated!');
+                    showDemoStatus('✅ Business updated — AI grounding refreshed!');
+                    document.getElementById('template-warning').classList.remove('show');
                     loadAdmin();
-                    loadDemoBusinesses();
+                    loadDemoBusinesses(id);
                 } else {
                     showDemoStatus('❌ Update failed', true);
                 }
@@ -524,6 +701,180 @@
             el.style.color = isError ? 'var(--red)' : 'var(--green)';
             el.classList.add('show');
             setTimeout(() => el.classList.remove('show'), 3000);
+        }
+
+        // ── Demo Templates — pre-built grounding profiles ──
+        const DEMO_TEMPLATES = {
+            plumber: {
+                name: "Mike's Plumbing",
+                owner_name: "Mike",
+                description: "Residential plumbing — repairs, installs, and emergencies. Family-owned, licensed and insured.",
+                auto_reply_message: "Hey! Sorry we missed your call — what's going on with the plumbing?",
+                services: "Leak repair, drain cleaning, water heater install/repair, toilet repair/install, faucet & fixture replacement, garbage disposals, sump pumps, repiping.",
+                pricing: "$75 service call (waived if you book). Drain cleaning $150-300. Water heater install $1,200-2,500. Most repairs $150-800.",
+                service_area: "Seattle metro area, 25-mile radius from downtown",
+                hours: "Mon-Fri 7am-6pm, Sat 8am-2pm",
+                emergency_policy: "24/7 emergency service available. $150 after-hours surcharge on weekends and after 6pm weekdays.",
+                tone: "friendly",
+                faqs: "Q: Do you offer free estimates? | A: Yes — free over the phone or text. On-site is $75 (credited if you book).\nQ: Are you licensed? | A: Yes, fully licensed, bonded, and insured. [Add your license # here]\nQ: Same-day service? | A: Usually yes if you call before noon. Emergencies always.\nQ: Do you do commercial? | A: Residential only.",
+                never_say: "Never quote firm prices without seeing the job. Never promise exact arrival times — give a 2-hour window. Never state a license number unless verified."
+            },
+            hvac: {
+                name: "Cool Breeze HVAC",
+                owner_name: "Dave",
+                description: "Residential heating & air conditioning — repairs, installs, and seasonal tune-ups. Family-owned for 12 years.",
+                auto_reply_message: "Hey! Sorry we missed your call — is your AC or furnace acting up?",
+                services: "AC repair & install, furnace repair & install, heat pump service, ductwork, seasonal tune-ups, indoor air quality, smart thermostat install.",
+                pricing: "$89 diagnostic fee (waived with repair). AC tune-up $129. Full AC install $4,500-8,000. Furnace install $3,500-6,500.",
+                service_area: "Dallas-Fort Worth metroplex, within 30 miles of downtown Dallas",
+                hours: "Mon-Fri 7am-7pm, Sat 8am-4pm",
+                emergency_policy: "24/7 emergency repair for no-AC in summer, no-heat in winter. $175 after-hours fee.",
+                tone: "friendly",
+                faqs: "Q: Do you offer financing? | A: Financing options available on installs — [add your financing partner/terms].\nQ: Is the diagnostic fee waived? | A: Yes if you approve the repair.\nQ: Do you do duct cleaning? | A: Yes, [add your pricing].\nQ: Brands you carry? | A: [Add the brands you actually carry].",
+                never_say: "Never promise a same-day install. Never quote a system size without a load calc. Never claim financing terms or brand certifications unless verified."
+            },
+            electrician: {
+                name: "Spark Right Electric",
+                owner_name: "Tony",
+                description: "Licensed residential electrician — repairs, panel upgrades, EV chargers, lighting, and code work.",
+                auto_reply_message: "Hey! Sorry we missed your call — what electrical issue can we help with?",
+                services: "Panel upgrades, EV charger install, outlet/switch repair, ceiling fans, recessed lighting, troubleshooting, generator hookups, code corrections, smoke detectors.",
+                pricing: "$95 service call. Outlet replacement $125-200. EV charger install $700-1,500. Panel upgrade $2,000-4,500.",
+                service_area: "Phoenix metro, including Scottsdale, Tempe, Mesa, Chandler",
+                hours: "Mon-Fri 8am-5pm",
+                emergency_policy: "After-hours for power outages and burning smells only. $200 surcharge.",
+                tone: "professional",
+                faqs: "Q: Are you licensed? | A: Yes, fully licensed, bonded, and insured. [Add your license # here]\nQ: Do you pull permits? | A: Yes, included in the quote for any work that requires one.\nQ: EV charger install? | A: Yes — [note any certifications you actually hold].\nQ: Do you do solar tie-ins? | A: Service panel side only, not the panels themselves.",
+                never_say: "Never advise customers to bypass breakers or 'just flip it back on' for repeat trips. Never claim a license number or manufacturer certification unless verified."
+            },
+            landscaper: {
+                name: "GreenScape Lawn & Landscape",
+                owner_name: "Carlos",
+                description: "Full-service residential lawn care and landscape design. Weekly mowing, cleanups, install, and seasonal services.",
+                auto_reply_message: "Hey! Sorry we missed your call — looking for weekly service or a one-time project?",
+                services: "Weekly mowing, edging & blowing, shrub trimming, mulching, leaf cleanup, sod install, sprinkler repair, landscape design & install, snow removal (winter).",
+                pricing: "Weekly mowing $45-75 depending on lot size. One-time cleanup $250-600. Mulch install $85/yard installed.",
+                service_area: "Northern Virginia — Arlington, Alexandria, Fairfax, Vienna",
+                hours: "Mon-Fri 7am-6pm, Sat 8am-3pm (weather permitting)",
+                emergency_policy: "Storm cleanup priority for existing clients. No after-hours emergencies otherwise.",
+                tone: "friendly",
+                faqs: "Q: Do you do one-time mows? | A: Yes, $85 minimum for non-recurring.\nQ: Do you bring your own gas/equipment? | A: Yes, fully self-contained.\nQ: Contract required? | A: No contracts — month-to-month.\nQ: Bagging or mulching? | A: Mulching standard, bagging $10 extra per visit.",
+                never_say: "Never promise a specific day of the week — we route by neighborhood. Never claim insurance or licensing unless verified."
+            },
+            cleaner: {
+                name: "Sparkle Home Cleaning",
+                owner_name: "Maria",
+                description: "Residential cleaning service — recurring, deep cleans, and move-in/out. Bonded, insured, and background-checked staff.",
+                auto_reply_message: "Hi! Sorry we missed your call — looking for a recurring clean or a one-time deep clean?",
+                services: "Weekly/bi-weekly/monthly cleaning, deep cleans, move-in/move-out, post-construction, Airbnb turnovers, eco-friendly products on request.",
+                pricing: "Standard clean $130-220 depending on size. Deep clean $250-450. Move-out $350-600.",
+                service_area: "Austin and surrounding (Round Rock, Cedar Park, Pflugerville, Lakeway)",
+                hours: "Mon-Fri 8am-5pm",
+                emergency_policy: "No after-hours service. Same-week scheduling possible for existing clients.",
+                tone: "friendly",
+                faqs: "Q: Are you bonded and insured? | A: Yes, fully — and every cleaner is background-checked.\nQ: Bring own supplies? | A: Yes, included. Eco-friendly available on request.\nQ: Same cleaner every time? | A: Yes for recurring clients whenever possible.\nQ: Pet friendly? | A: Absolutely, just let us know.",
+                never_say: "Never give a firm quote without knowing square footage and bed/bath count. Never confirm bonding/insurance specifics unless verified."
+            },
+            roofer: {
+                name: "Summit Roofing",
+                owner_name: "Jake",
+                description: "Residential roofing — repairs, replacements, inspections, and storm damage. Insurance claim specialists.",
+                auto_reply_message: "Hey! Sorry we missed your call — is this a leak, storm damage, or a planned roof replacement?",
+                services: "Roof repair, full replacement, leak detection, gutter install, inspections, storm damage assessment, insurance claim assistance, skylights.",
+                pricing: "Free inspection. Repairs $300-1,500. Full replacement $8,000-22,000 depending on size & material.",
+                service_area: "Denver metro and the Front Range",
+                hours: "Mon-Fri 7am-5pm, Sat by appointment",
+                emergency_policy: "24/7 emergency tarp service for active leaks. $350 emergency tarp fee.",
+                tone: "professional",
+                faqs: "Q: Do you work with insurance? | A: Yes, we help with the claim process.\nQ: Free inspection? | A: Yes, no obligation.\nQ: Warranty? | A: Workmanship and manufacturer material warranties available — [add your specific terms].\nQ: Financing? | A: Financing options available — [add your terms].",
+                never_say: "Never promise insurance will cover the claim before an adjuster looks at it. Never quote warranty years or financing terms unless verified."
+            },
+            handyman: {
+                name: "Honest Handyman Services",
+                owner_name: "Ron",
+                description: "One-call handyman — small repairs, installs, and odd jobs around the house. No job too small.",
+                auto_reply_message: "Hey! Sorry I missed your call — what's the project? I'll text you back a rough estimate.",
+                services: "Drywall patching, paint touch-ups, TV mounting, furniture assembly, door/window repair, caulking, minor plumbing/electrical, deck repair, picture hanging.",
+                pricing: "$85/hour, 1-hour minimum. Most small jobs $85-250. Materials separate.",
+                service_area: "Tampa Bay area — Tampa, St. Pete, Clearwater",
+                hours: "Mon-Sat 8am-5pm",
+                emergency_policy: "No after-hours unless it's an existing client.",
+                tone: "direct",
+                faqs: "Q: Insured? | A: Yes, general liability insurance — [add your coverage details].\nQ: Free estimates? | A: Quick text/phone estimates free. On-site $50 if you don't book.\nQ: Major plumbing/electrical? | A: Small stuff yes — anything requiring a permit, I refer out.\nQ: Do you haul trash? | A: Small loads yes, dump fee at cost.",
+                never_say: "Never take on permit-required work. Refer out to a licensed pro. Never state insurance coverage amounts unless verified."
+            },
+            pestcontrol: {
+                name: "Bug Off Pest Control",
+                owner_name: "Sam",
+                description: "Residential pest control — quarterly service, one-time treatments, termite, and rodent control.",
+                auto_reply_message: "Hey! Sorry we missed your call — what kind of pest are you dealing with?",
+                services: "Quarterly pest service, ant/roach/spider, mosquito treatments, termite inspection & treatment, rodent removal, wasp/hornet nests, bed bug treatment.",
+                pricing: "Quarterly service $99-149/visit. One-time treatment $175-350. Termite treatment $800-2,500.",
+                service_area: "Atlanta metro and suburbs",
+                hours: "Mon-Fri 8am-5pm, Sat 9am-2pm",
+                emergency_policy: "Same-day service for wasps/hornets and rodents inside the home when possible.",
+                tone: "friendly",
+                faqs: "Q: Pet & kid safe? | A: Yes — we use EPA-registered products applied per label.\nQ: Contracts? | A: Quarterly plan is month-to-month, cancel anytime.\nQ: Guarantee? | A: Free re-treatments between visits if pests return.\nQ: Termite warranty? | A: Annual renewable bond after treatment — [add your specific terms].",
+                never_say: "Never spray inside without confirming pets and small kids are out of the room. Never quote warranty/bond terms unless verified."
+            }
+        };
+
+        function applyTemplate() {
+            const key = document.getElementById('demo-template').value;
+            if (!key) return;
+            const t = DEMO_TEMPLATES[key];
+            if (!t) return;
+            document.getElementById('demo-name').value = t.name;
+            document.getElementById('demo-owner').value = t.owner_name;
+            document.getElementById('demo-desc').value = t.description;
+            document.getElementById('demo-reply').value = t.auto_reply_message;
+            document.getElementById('demo-services').value = t.services;
+            document.getElementById('demo-pricing').value = t.pricing;
+            document.getElementById('demo-area').value = t.service_area;
+            document.getElementById('demo-hours').value = t.hours;
+            document.getElementById('demo-emergency').value = t.emergency_policy;
+            document.getElementById('demo-tone').value = t.tone;
+            document.getElementById('demo-faqs').value = t.faqs;
+            document.getElementById('demo-never').value = t.never_say;
+            // Auto-open grounding section so user sees what got filled
+            document.getElementById('grounding-section').classList.add('show');
+            document.getElementById('grounding-caret').textContent = '▼';
+            document.getElementById('template-warning').classList.add('show');
+            showDemoStatus(`📋 ${t.name} template loaded — review and click Save`);
+        }
+
+        function toggleGrounding() {
+            const section = document.getElementById('grounding-section');
+            const caret = document.getElementById('grounding-caret');
+            section.classList.toggle('show');
+            caret.textContent = section.classList.contains('show') ? '▼' : '▶';
+        }
+
+        async function previewSystemPrompt() {
+            const id = document.getElementById('demo-biz-select').value;
+            if (!id || id === '__new') {
+                showDemoStatus('Save the business first to preview the AI prompt', true);
+                return;
+            }
+            const name = document.getElementById('demo-name').value || 'this business';
+            document.getElementById('prompt-modal-biz').textContent = name;
+            document.getElementById('prompt-modal-content').textContent = 'Loading…';
+            document.getElementById('prompt-modal').classList.add('show');
+            try {
+                const res = await fetch(`/api/businesses/${id}/system-prompt`);
+                if (res.ok) {
+                    const data = await res.json();
+                    document.getElementById('prompt-modal-content').textContent = data.prompt;
+                } else {
+                    document.getElementById('prompt-modal-content').textContent = 'Failed to load system prompt.';
+                }
+            } catch (err) {
+                document.getElementById('prompt-modal-content').textContent = 'Error: ' + err.message;
+            }
+        }
+
+        function closePromptModal() {
+            document.getElementById('prompt-modal').classList.remove('show');
         }
 
         loadDemoBusinesses();

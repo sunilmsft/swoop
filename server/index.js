@@ -19,6 +19,14 @@ app.use('/webhooks', require('./routes/webhooks'));
 app.use('/api/test', require('./routes/test'));
 app.use('/api', require('./routes/api'));
 
+// Pretty routes for static pages
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'public', 'admin.html'));
+});
+app.get('/consent', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'public', 'consent.html'));
+});
+
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

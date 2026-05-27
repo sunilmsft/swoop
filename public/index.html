@@ -376,6 +376,13 @@
                 <button class="btn" id="scenario-run-btn" onclick="runScenario()" style="background:#10b981; color:#fff; border-color:#10b981; font-weight:600;">▶ Run scenario</button>
                 <button class="btn" onclick="if(confirm('Clear all test leads and messages? (Businesses are kept.)')) simulate('reset')" style="border-color:#fca5a5; color:#b91c1c;">🧹 Reset</button>
             </div>
+            <div style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center; margin-bottom:0.75rem; padding:0.55rem 0.75rem; background:#fff; border:1px solid #e5e7eb; border-radius:6px; font-size:0.85rem;">
+                <label for="test-biz-picker" style="font-weight:600; color:#475569;">🏢 Run as business:</label>
+                <select id="test-biz-picker" style="flex:1; min-width:200px; padding:0.4rem 0.6rem; border:1px solid #d1d5db; border-radius:6px; background:#fff; font-size:0.85rem;">
+                    <option value="">Loading…</option>
+                </select>
+                <a href="/admin" target="_blank" style="font-size:0.75rem; color:#2563eb; text-decoration:none;">Edit in admin →</a>
+            </div>
             <div id="scenario-description" style="font-size:0.8rem; color:#475569; background:#fff; border:1px solid #e5e7eb; border-radius:6px; padding:0.55rem 0.75rem; margin-bottom:0.75rem;">
                 Pick a scenario to see what will happen.
             </div>
@@ -925,6 +932,43 @@
             updateScenarioDescription();
         }
 
+        // Load businesses into the Test Console picker. Default selection comes
+        // from the admin's "Active business" choice (saved in localStorage), so
+        // demoing a contractor in admin auto-routes the test scenarios to them.
+        async function initTestBusinessPicker() {
+            const picker = document.getElementById('test-biz-picker');
+            if (!picker) return;
+            try {
+                const res = await fetch(`${API}/api/businesses`);
+                const list = await res.json();
+                if (!Array.isArray(list) || list.length === 0) {
+                    picker.innerHTML = '<option value="">No businesses — add one in admin</option>';
+                    return;
+                }
+                const saved = (() => { try { return localStorage.getItem('swoop_demo_business_id'); } catch (e) { return null; } })();
+                const defaultId = saved && list.find(b => String(b.id) === saved) ? saved : String(list[0].id);
+                picker.innerHTML = list.map(b =>
+                    `<option value="${b.id}"${String(b.id) === defaultId ? ' selected' : ''}>${escapeHtml(b.name)}</option>`
+                ).join('');
+                try { localStorage.setItem('swoop_demo_business_id', defaultId); } catch (e) { /* ignore */ }
+                picker.addEventListener('change', () => {
+                    try { localStorage.setItem('swoop_demo_business_id', picker.value); } catch (e) { /* ignore */ }
+                });
+            } catch (err) {
+                picker.innerHTML = '<option value="">Failed to load</option>';
+            }
+        }
+
+        function getTestBusinessId() {
+            const picker = document.getElementById('test-biz-picker');
+            if (picker && picker.value) return Number(picker.value);
+            try {
+                const saved = localStorage.getItem('swoop_demo_business_id');
+                if (saved) return Number(saved);
+            } catch (e) { /* ignore */ }
+            return null;
+        }
+
         function updateScenarioDescription() {
             const picker = document.getElementById('scenario-picker');
             const desc = document.getElementById('scenario-description');
@@ -960,6 +1004,7 @@
                     const tabBtn = document.getElementById('tab-btn-test');
                     if (tabBtn) tabBtn.style.display = '';
                     initScenarioPicker();
+                    initTestBusinessPicker();
                 }
             } catch (err) { /* test routes not mounted — ignore */ }
         }
@@ -1166,6 +1211,13 @@
         // Returns the parsed response (or null on error).
         async function simulate(scenario, extra) {
             const payload = Object.assign({ scenario }, extra || {});
+            // Always route the scenario to the business selected in the Test
+            // Console (or the admin's last pick), so demos don't silently fall
+            // back to the first row in the DB.
+            if (payload.businessId == null) {
+                const bizId = getTestBusinessId();
+                if (bizId) payload.businessId = bizId;
+            }
             try {
                 const res = await fetch(`${API}/api/test/simulate`, {
                     method: 'POST',

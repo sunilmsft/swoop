@@ -2,6 +2,7 @@ const express = require('express');
 const db = require('../db/database');
 const { sendReviewRequest } = require('../services/leads');
 const { sendSMS } = require('../services/twilio');
+const { buildSystemPrompt } = require('../services/ai-agent');
 
 const router = express.Router();
 
@@ -137,6 +138,17 @@ router.post('/leads/:id/sms', async (req, res) => {
 router.get('/businesses', (req, res) => {
   const businesses = db.prepare('SELECT * FROM businesses ORDER BY created_at DESC').all();
   res.json(businesses);
+});
+
+/**
+ * GET /api/businesses/:id/system-prompt — Return the live system prompt the AI will see.
+ * Useful as a "look under the hood" moment during demos.
+ */
+router.get('/businesses/:id/system-prompt', (req, res) => {
+  const business = db.prepare('SELECT * FROM businesses WHERE id = ?').get(req.params.id);
+  if (!business) return res.status(404).json({ error: 'Business not found' });
+  const prompt = buildSystemPrompt(business);
+  res.json({ businessId: business.id, name: business.name, prompt });
 });
 
 /**
