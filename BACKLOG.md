@@ -57,6 +57,25 @@
 
 ---
 
+## ✅ Done (v0.2.7) — Twilio TFV Branded Opt-In Compliance (May 29)
+- [x] 🔴 **Default `auto_reply_message` rewritten to carrier-compliant template** — includes branded sender ID (`{business_name}`), `Msg&data rates may apply`, and STOP/HELP keywords on the very first message (`server/db/database.js`, `server/seed.js`). — _Morgan: "This is the single biggest carrier-rejection fix."_
+- [x] 🔴 **HELP keyword response now points to live privacy URL** at `welcomematdigital.com/swoop/privacy.html` (`server/services/leads.js`).
+- [x] 🔴 **AI agent system prompt: explicit anti-marketing rule** — "Never sign up the customer for marketing, newsletters, or anything they didn't ask for. They consented to a service reply only." (`server/services/ai-agent.js`).
+- [x] 🔴 **`public/consent.html` fully rewritten** — removed incorrect "verbal consent during call" claim, replaced with FCC prior-express-invitation + CTIA call-back-exception basis. Shows exact branded SMS template, names WelcomeMat Digital LLC, includes reviewer note explaining the toll-free (test) + 10DLC (prod) dual-track. Mirrored to `frontdesk-ai/public/swoop/consent.html` so it's live at welcomematdigital.com.
+- [x] 🟡 **Holdco restructure shipped** — welcomematdigital.com now hosts the parent brand + `/swoop` product subpages (privacy, terms, consent). Subpage nav + footers link back to WelcomeMat Digital home so Twilio reviewers can verify business identity.
+- [x] 🟡 **WA LLC "WelcomeMat Digital LLC" filed** at ccfs.sos.wa.gov ($200, single-member, sunil1308@gmail.com on file). Status: Review Ready, 2–7 business day approval window.
+
+---
+
+## 🟡 v0.2.7 — Follow-up Watch Items
+- [ ] 🟡 **Zoho Mail setup for hello@ + privacy@welcomematdigital.com** — both addresses are referenced in privacy.html / consent.html / HELP response but not yet receiving. Blocked on confirming DNS provider (Namecheap vs Cloudflare). — _Morgan: "A contact email that bounces fails Twilio review on its own."_
+- [ ] 🟡 **Twilio TFV resubmission** — wait for LLC approval + EIN + working hello@ before resubmitting to reviewer Ignacio. Updated URLs: `/swoop`, `/swoop/privacy.html`, `/swoop/terms.html`, `/swoop/consent.html` on welcomematdigital.com.
+- [ ] 🟡 **WA Business License + EIN** — file at business.wa.gov ($90) and irs.gov/EIN (free, instant) once SOS LLC approval arrives. Save EIN PDF immediately (cannot re-download).
+- [ ] 🟢 **Per-business `auto_reply_message` validator** — when an owner edits the template in `admin.html`, warn if it's missing branded ID, STOP/HELP, or Msg&data disclosure. Today's compliance only holds if the default isn't overwritten with something non-compliant. — _Morgan: "Defaults drift. Validate at the boundary."_
+- [ ] 🟢 **Existing demo/seed businesses re-seeded with new template** — confirm Mike's Plumbing + Sara's Electric records in any persisted Render DB still use the new template (seed only runs on empty DB).
+
+---
+
 ## 🟡 Test Console — Squad Review Follow-ups (May 26)
 - [x] 🟡 **Tag test data** — `is_test` column on `leads` + `messages`; every row written by `/api/test/simulate` is flagged. Dashboard stats, lead list, and `/api/admin/overview` + `/api/admin/businesses` metrics exclude test rows. `reset` scenario now wipes only test-tagged rows. — _Morgan: "Real and fake leads must be distinguishable in an audit."_
 - [x] 🟡 **Gate Test Console behind dev mode** — Hidden unless `localStorage.swoop_dev_mode === 'true'`; mock banner now tells operator how to reveal it. Default off for real owners. — _Priya: "Owners will click 'Run scenario' and panic."_
