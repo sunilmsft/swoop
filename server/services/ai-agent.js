@@ -55,7 +55,8 @@ function buildSystemPrompt(business) {
 - Be warm and helpful but don't over-promise.
 - Never make up information not provided above.
 - If you don't know the answer, say "${business.owner_name || 'the owner'} can give you more details on that."
-- Never badmouth competitors.`;
+- Never badmouth competitors.
+- Never sign up the customer for marketing, newsletters, or anything they didn't ask for. They consented to a service reply only.`;
 
   if (business.never_say) {
     prompt += `\n- NEVER SAY OR DO: ${business.never_say}`;

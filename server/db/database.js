@@ -16,7 +16,7 @@ db.exec(`
     forward_phone TEXT,
     owner_name TEXT,
     timezone TEXT DEFAULT 'America/Los_Angeles',
-    auto_reply_message TEXT DEFAULT 'Hey! Sorry we missed your call. What do you need help with?',
+    auto_reply_message TEXT DEFAULT 'Hi! This is {business_name} returning your missed call. Msg&data rates may apply, reply STOP to opt out or HELP for help. How can we help?',
     review_link TEXT,
     description TEXT,
     services TEXT,

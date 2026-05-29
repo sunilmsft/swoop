@@ -127,7 +127,28 @@
 - [ ] 🟢 Quiet hours — batch notifications instead of real-time
 
 ### Messaging Infrastructure
+
+> **Numbering strategy (read this first — easy to forget):**
+> Swoop runs on **two parallel number types**, not one. Don't conflate them.
+> - **Toll-free `+18337830902` (TFV in progress with Twilio, contact: Ignacio)** → Swoop's permanent **sandbox / demo / internal test line**. Single number, owned by us, used for our own dev + showing the product to prospects. Cheap (~$2/mo). TFV is the verification path.
+> - **Local 10DLC numbers (one per paying customer)** → the **production** path. Each customer gets their own local number in their area code (a plumber in Sammamish needs a 425 number, not an 833). Rides on Swoop's shared A2P 10DLC Brand + Campaign — register the brand/campaign once, every new customer's number gets attached automatically. This is what real customers will text from.
+>
+> **Why both:** TFV is needed before we can do realistic end-to-end testing on a real number. 10DLC is needed before customer #1 goes live. Foundation work (LLC, EIN, branded opt-in, welcomematdigital.com showing Swoop as a real product) is identical for both — do it once, satisfies both regimes.
+>
+> **Sequencing:** finish TFV first (already 80% done, warm contact at Twilio) → use it to test the full flow → register 10DLC Brand + Campaign when first customer signs up.
+
 - [ ] 🟢 Message delivery status tracking (Twilio status callbacks)
+- [ ] 🟡 **A2P 10DLC brand + campaign registration for Swoop** — register Swoop as the brand and one "missed-call response" campaign. Once approved, every new customer's local number gets assigned to this shared campaign — no per-customer paperwork wait. Unblocks fast onboarding for real customers. (~$4 brand vetting + ~$10/mo campaign.)
+- [ ] 🟢 **Local number provisioning per customer** — once 10DLC approved, buy local Twilio number in customer's area code on signup. Keep current toll-free as permanent test/demo line.
+- [ ] 🟢 **Plan B SMS provider notes** — Bandwidth.com or Telnyx as Twilio alternates if verification continues to drag. Same A2P rails, often faster brand approval. (Evaluated Sent.dm + Sendblue May 27 — both passed: Sent.dm still needs A2P; Sendblue is iMessage-only and breaks for Android callers.)
+
+### Go-to-Market — Founding Cohort
+> Plan to land first real customers once Twilio toll-free + A2P 10DLC are both approved.
+
+- [ ] 🟡 **Founding 5 cohort** — "First 5 free for 30 days, $19/mo lifetime if they stay" — recruit via NextDoor + local FB trade groups. Cap at 5 concurrent onboardings (Priya: solo founder can't safely onboard 10 at once; run a waitlist for the rest). — _Jordan: "Make it a 'Founding' badge — exclusivity sells."_
+- [ ] 🟡 **Marketing copy guardrails (Morgan)** — All outbound pitch posts must say "we text people who already called you" — never "we'll text your customers." Avoid Twilio compliance flags and NextDoor spam reports.
+- [ ] 🟢 **Capture customer stories** — Lightweight intake form after week 2 of each founding cohort customer: missed calls recovered, jobs booked, revenue attributed. Becomes the case study library.
+- [ ] 🟢 **Competitive watch: Handraiser.ai** — GoHighLevel reseller bundling missed-call text-back + AI website + AI receptionist at $297/$497. Direct overlap with Swoop + FrontDesk AI combined. Strategic options when pricing decisions come up: (a) stay narrow + cheap ($29–49 owner-operator focus), (b) bundle Swoop + FrontDesk AI at $99–149 to undercut, (c) niche down to one trade with deeper grounding. Revisit during pricing milestone.
 
 ---
 

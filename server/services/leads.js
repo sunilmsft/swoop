@@ -146,7 +146,7 @@ async function handleInboundSMS(businessId, callerPhone, body) {
   }
 
   if (intent === 'help') {
-    const help = `${business.name}: reply STOP to unsubscribe, START to re-subscribe. Call us for urgent help.`;
+    const help = `${business.name}: text-back service. Reply STOP to unsubscribe, START to re-subscribe. Privacy: welcomematdigital.com/swoop/privacy.html. Call us for urgent help.`;
     const twilioMsg = await sendSMS(callerPhone, help);
     db.prepare(
       'INSERT INTO messages (lead_id, direction, body, twilio_sid) VALUES (?, ?, ?, ?)'
