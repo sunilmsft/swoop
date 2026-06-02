@@ -68,11 +68,30 @@
 ---
 
 ## 🟡 v0.2.7 — Follow-up Watch Items
-- [ ] 🟡 **Zoho Mail setup for hello@ + privacy@welcomematdigital.com** — both addresses are referenced in privacy.html / consent.html / HELP response but not yet receiving. Blocked on confirming DNS provider (Namecheap vs Cloudflare). — _Morgan: "A contact email that bounces fails Twilio review on its own."_
-- [ ] 🟡 **Twilio TFV resubmission** — wait for LLC approval + EIN + working hello@ before resubmitting to reviewer Ignacio. Updated URLs: `/swoop`, `/swoop/privacy.html`, `/swoop/terms.html`, `/swoop/consent.html` on welcomematdigital.com.
-- [ ] 🟡 **WA Business License + EIN** — file at business.wa.gov ($90) and irs.gov/EIN (free, instant) once SOS LLC approval arrives. Save EIN PDF immediately (cannot re-download).
-- [ ] 🟢 **Per-business `auto_reply_message` validator** — when an owner edits the template in `admin.html`, warn if it's missing branded ID, STOP/HELP, or Msg&data disclosure. Today's compliance only holds if the default isn't overwritten with something non-compliant. — _Morgan: "Defaults drift. Validate at the boundary."_
+- [x] 🟡 **Zoho Mail setup for hello@ + privacy@welcomematdigital.com** ✅ Done June 1 — Zoho Mail Lite ($12/yr), both addresses live, all DNS records (MX/SPF/DKIM/DMARC) in Cloudflare, inbound+outbound verified to Gmail Inbox.
+- [x] 🟡 **WA LLC approved** ✅ Done June 1 — UBI 606238837, Cert of Formation PDF saved.
+- [x] 🟡 **EIN issued** ✅ Done June 1 — EIN 42-2903620, CP 575 PDF saved to OneDrive/WelcomeMat Digital/.
+- [x] 🟡 **Twilio account upgraded** ✅ Done June 1 — Trial → Paid ($20 starting balance, $10→$50 auto-recharge), Business use / Direct Customer / Technology / LLC profile submitted.
+- [ ] 🟡 **Twilio Compliance Profile in manual review** ⏳ ~2 business days (EIN sync lag triggered manual review path; status email to hello@welcomematdigital.com).
+- [ ] 🟡 **WA Business License** ⏳ Blocked on SOS→DOR sync (~2 business days). Retry at business.wa.gov Wed June 3 morning. $90.
+- [ ] 🟡 **Twilio TFV resubmission to reviewer Ignacio** — waits on Compliance Profile approval. Updated URLs: `/swoop`, `/swoop/privacy.html`, `/swoop/terms.html`, `/swoop/consent.html` on welcomematdigital.com. Include EIN 42-2903620 + LLC name + hello@ contact.
+- [ ] 🟡 **Open Mercury business bank account** — has all needed docs (EIN PDF + WA Cert of Formation). 15 min online.
+- [ ] 🟢 **Per-business `auto_reply_message` validator** — when an owner edits the template in `admin.html`, warn if it's missing branded ID, STOP/HELP, or Msg&data disclosure. Today's compliance only holds if the default isn't overwritten with something non-compliant. — _Morgan: "Defaults drift. Validate at the boundary."_ (~30 min build)
 - [ ] 🟢 **Existing demo/seed businesses re-seeded with new template** — confirm Mike's Plumbing + Sara's Electric records in any persisted Render DB still use the new template (seed only runs on empty DB).
+- [ ] 🟢 **Re-verify Zoho DKIM** in mailadmin.zoho.com (should be green by June 2 — public DNS already verified via MxToolbox, only Zoho's verifier is lagging).
+- [ ] 🟢 **Update subscription tracker** — add Zoho Mail Lite ($12/yr, renews 05/29/27) and WelcomeMat Digital LLC entity (UBI 606238837, annual report ~$70 due 06/30/2027).
+- [ ] 🟢 **Calendar reminders** — May 29 2027 (Zoho renewal), June 1 2027 (30-day Annual Report warning), **June 30 2027 (HARD deadline WA Annual Report)**.
+
+---
+
+## ✅ Done (June 1, 2026) — Launch Identity Day
+- [x] 🔴 **WA LLC approved** in 3 days (vs 2-7 day estimate). UBI 606238837, effective 06/01/2026.
+- [x] 🔴 **Federal EIN issued** — 42-2903620. CP 575 PDF saved to OneDrive/WelcomeMat Digital/.
+- [x] 🔴 **Zoho Mail Lite live** — hello@ + privacy@welcomematdigital.com, full DNS stack (10 records) in Cloudflare, send+receive verified.
+- [x] 🔴 **Twilio account upgraded** — Trial → Paid, business profile (LLC + EIN) submitted, $20 starting balance + auto-recharge.
+- [x] 🟡 **6 frontdesk-ai commits pushed** and live at welcomematdigital.com — consent.html mirrored to /swoop/, topnav + footer links, hero copy polish, homepage hero widened to 1080/920px, "branded text" Step 2 rewrite, 30-day free trial line on /swoop and homepage, headache card retitled.
+- [x] 🟡 **All Swoop TFV compliance code pushed** (swoop @ 8f3c7c9) — branded SMS template, STOP/HELP, Msg&data disclosure, HELP→privacy URL, AI anti-marketing rule, consent.html FCC+CTIA rewrite.
+- [x] 🟢 **Identity Snapshot HTML** saved to `C:\Users\sunilve\OneDrive\WelcomeMat Digital\Identity-Snapshot-June-2026.html` for future reference.
 
 ---
 
