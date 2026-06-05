@@ -68,19 +68,30 @@
 ---
 
 ## 🟡 v0.2.7 — Follow-up Watch Items
-- [x] 🟡 **Zoho Mail setup for hello@ + privacy@welcomematdigital.com** ✅ Done June 1 — Zoho Mail Lite ($12/yr), both addresses live, all DNS records (MX/SPF/DKIM/DMARC) in Cloudflare, inbound+outbound verified to Gmail Inbox.
-- [x] 🟡 **WA LLC approved** ✅ Done June 1 — UBI 606238837, Cert of Formation PDF saved.
-- [x] 🟡 **EIN issued** ✅ Done June 1 — EIN 42-2903620, CP 575 PDF saved to OneDrive/WelcomeMat Digital/.
-- [x] 🟡 **Twilio account upgraded** ✅ Done June 1 — Trial → Paid ($20 starting balance, $10→$50 auto-recharge), Business use / Direct Customer / Technology / LLC profile submitted.
-- [ ] 🟡 **Twilio Compliance Profile in manual review** ⏳ ~2 business days (EIN sync lag triggered manual review path; status email to hello@welcomematdigital.com).
-- [ ] 🟡 **WA Business License** ⏳ Blocked on SOS→DOR sync (~2 business days). Retry at business.wa.gov Wed June 3 morning. $90.
-- [ ] 🟡 **Twilio TFV resubmission to reviewer Ignacio** — waits on Compliance Profile approval. Updated URLs: `/swoop`, `/swoop/privacy.html`, `/swoop/terms.html`, `/swoop/consent.html` on welcomematdigital.com. Include EIN 42-2903620 + LLC name + hello@ contact.
-- [ ] 🟡 **Open Mercury business bank account** — has all needed docs (EIN PDF + WA Cert of Formation). 15 min online.
-- [ ] 🟢 **Per-business `auto_reply_message` validator** — when an owner edits the template in `admin.html`, warn if it's missing branded ID, STOP/HELP, or Msg&data disclosure. Today's compliance only holds if the default isn't overwritten with something non-compliant. — _Morgan: "Defaults drift. Validate at the boundary."_ (~30 min build)
-- [ ] 🟢 **Existing demo/seed businesses re-seeded with new template** — confirm Mike's Plumbing + Sara's Electric records in any persisted Render DB still use the new template (seed only runs on empty DB).
-- [ ] 🟢 **Re-verify Zoho DKIM** in mailadmin.zoho.com (should be green by June 2 — public DNS already verified via MxToolbox, only Zoho's verifier is lagging).
-- [ ] 🟢 **Update subscription tracker** — add Zoho Mail Lite ($12/yr, renews 05/29/27) and WelcomeMat Digital LLC entity (UBI 606238837, annual report ~$70 due 06/30/2027).
-- [ ] 🟢 **Calendar reminders** — May 29 2027 (Zoho renewal), June 1 2027 (30-day Annual Report warning), **June 30 2027 (HARD deadline WA Annual Report)**.
+- [x] 🟡 **Zoho Mail setup for hello@ + privacy@welcomematdigital.com** ✅ Done June 1.
+- [x] 🟡 **WA LLC approved** ✅ Done June 1 — UBI 606238837.
+- [x] 🟡 **EIN issued** ✅ Done June 1 — 42-2903620.
+- [x] 🟡 **Twilio account upgraded** ✅ Done June 1 — Paid, auto-recharge.
+- [x] 🟡 **WA Business License filed & paid** ✅ Done June 2 — Confirmation #0-052-653-982, $66.92 (incl. $15 Sammamish home occupation endorsement). Processing ~10 business days.
+- [x] 🟡 **Twilio Business Profile resubmitted** ✅ Done June 2 — Status "In Review," ~24h. EIN sync now verified via DOR FEIN validation.
+- [x] 🟡 **Mercury business bank account submitted** ✅ Done June 2 — **APPROVED SAME DAY** (vs 2-4 day estimate). Mercury IO credit card pre-approved.
+- [x] 🟡 **Gmail ↔ Zoho mail forwarding** ✅ Done June 2 — Gmail POP fetch + Send-As (smtppro.zoho.com), label `Hello @ WelcomeMat`. Zoho Lite forwarding silently broken — POP workaround used.
+- [ ] � **Twilio TFV resubmission to reviewer Ignacio (ticket 27236005)** — waits on Business Profile approval (expected June 3-4). When Console → Phone Numbers → Regulatory Compliance → TFV, edit existing rejected submission and fill:
+  - **BRN field:** `606238837` (WA UBI)
+  - **Additional Information field:** paste Google Drive public link to WA Certificate of Formation PDF (sent to Ignacio June 3) **AND** the standalone opt-in flow permalink: https://welcomematdigital.com/swoop/consent.html#opt-in-flow
+  - **Contact email:** hello@welcomematdigital.com
+  - **Legal name:** WELCOMEMAT DIGITAL LLC | **EIN:** 42-2903620
+  - **URLs:** `/swoop`, `/swoop/privacy.html`, `/swoop/terms.html`, `/swoop/consent.html` on welcomematdigital.com
+  - **Use case:** Customer Care | **Opt-in:** Verbal / call-back consent (point to #opt-in-flow section for the standalone-step proof Huvi flagged)
+- [ ] 🟡 **Mercury approval** ✅ Done June 2 — approved same day. Next: get routing/account numbers, reimburse personal card.
+- [ ] 🟡 **WA Business License email delivery** ⏳ ~10 business days (by ~June 16). Sammamish endorsement ~3 weeks (~June 23).
+- [ ] 🟡 **Gmail POP3 deprecation watch** ⚠️ Google deprecating "Check mail from other accounts (POP3)" feature. Banner shown June 2. Backup plan: install Zoho Mail mobile app, or upgrade to Google Workspace ($6/mo) if/when POP cutoff hits. — _Priya: "Single-inbox flow will break — have a backup ready."_
+- [ ] 🟢 **Per-business `auto_reply_message` validator** — when owner edits the template, warn if missing branded ID, STOP/HELP, Msg&data. — _Morgan_ (~30 min build)
+- [ ] 🟢 **Existing demo/seed businesses re-seeded with new template** — confirm Mike's + Sara's records.
+- [ ] 🟢 **Update subscription tracker** — add Zoho Mail Lite ($12/yr), Mercury (free), WelcomeMat Digital LLC entity (UBI 606238837, annual report ~$70 due 06/30/2027).
+- [x] 🟢 **Calendar reminders (5 total)** ✅ Done June 2 — June 15 2026 (verify BOI status before India trip), May 29 2027 (Zoho renewal), May 30 2027 (WA + Sammamish license renewal warning), June 1 2027 (30-day Annual Report warning), **June 30 2027 (HARD deadline WA Annual Report)**.
+- [ ] 🔴 **Verify BOI Report status BEFORE India trip (by ~June 15)** — fincen.gov/boi. CTA 30-day rule would mean deadline ~July 1 2026 (during travel). March 2025 FinCEN interim rule may exempt US LLCs. If required, file at boiefiling.fincen.gov (free, EIN + UBI + personal ID).
+- [ ] 🟢 **Voice webhook URL refresh** — Toll-free 833-783-0902 voice webhook still points to `swoop-x79g.onrender.com/webhooks/voice`. Eventually swap to `welcomematdigital.com` for consistency. Non-blocking.
 
 ---
 
@@ -89,9 +100,24 @@
 - [x] 🔴 **Federal EIN issued** — 42-2903620. CP 575 PDF saved to OneDrive/WelcomeMat Digital/.
 - [x] 🔴 **Zoho Mail Lite live** — hello@ + privacy@welcomematdigital.com, full DNS stack (10 records) in Cloudflare, send+receive verified.
 - [x] 🔴 **Twilio account upgraded** — Trial → Paid, business profile (LLC + EIN) submitted, $20 starting balance + auto-recharge.
-- [x] 🟡 **6 frontdesk-ai commits pushed** and live at welcomematdigital.com — consent.html mirrored to /swoop/, topnav + footer links, hero copy polish, homepage hero widened to 1080/920px, "branded text" Step 2 rewrite, 30-day free trial line on /swoop and homepage, headache card retitled.
-- [x] 🟡 **All Swoop TFV compliance code pushed** (swoop @ 8f3c7c9) — branded SMS template, STOP/HELP, Msg&data disclosure, HELP→privacy URL, AI anti-marketing rule, consent.html FCC+CTIA rewrite.
-- [x] 🟢 **Identity Snapshot HTML** saved to `C:\Users\sunilve\OneDrive\WelcomeMat Digital\Identity-Snapshot-June-2026.html` for future reference.
+- [x] 🟡 **6 frontdesk-ai commits pushed** and live at welcomematdigital.com.
+- [x] 🟡 **All Swoop TFV compliance code pushed** (swoop @ 8f3c7c9).
+- [x] 🟢 **Identity Snapshot HTML** saved to `OneDrive/WelcomeMat Digital/`.
+
+---
+
+## ✅ Done (June 2, 2026) — Launch Identity Day 2
+- [x] 🔴 **WA Business License FILED** at business.wa.gov — Confirmation #0-052-653-982, total $66.92 (license $50 + Sammamish endorsement $15 + 2.96% card fee $1.92). Activity: Software SAAS. Sammamish home occupation endorsement (low-revenue partial fee exemption). Email delivery within 10 business days. Confirmation PDF saved to `OneDrive/WelcomeMat Digital/WA-Business-License-Confirmation-2026-06-02.pdf`.
+- [x] 🔴 **SOS→DOR sync confirmed** — UBI 606238837 active in DOR Business Lookup (24h, not 48h as expected).
+- [x] 🔴 **DOR FEIN validation passed** — proves IRS sync of EIN 42-2903620 complete; unblocks Twilio Business Profile resubmit.
+- [x] 🔴 **Twilio Business Profile RESUBMITTED** — Bundle SID `BUf71fa573b0fd6173b0cc31daba2ba41b`, status "In Review." Updates: email → hello@, mobile phone added, website added to rep section. Generic backend errors on per-section saves overcome by going straight to Submit endpoint.
+- [x] 🔴 **Mercury business bank account APPROVED (same day!)** — callsign `welcomemat`, account email hello@. Mercury IO credit card pre-approved (1.5% cashback, no annual fee). 2FA + biometrics + mobile app + push notifications enabled.
+- [x] 🟡 **Gmail ↔ Zoho email forwarding** — Zoho Lite's native forwarding silently fails; replaced with Gmail-pulls-via-POP3 (`poppro.zoho.com:995` SSL) + Send-As (`smtppro.zoho.com:465` SSL). Label `Hello @ WelcomeMat`. Audit copy stays in Zoho.
+- [x] 🟡 **Huvi (Twilio Compliance) follow-up reply sent** — confirmed EIN propagation.
+- [x] 🟡 **Scam SMS identified & ignored** — einapplications.org scraping WA SOS public database.
+- [x] 🟡 **BOI Report status flagged** — standard CTA rule = 30 days from formation (deadline ~July 1 2026, during India trip). March 2025 FinCEN interim rule may exempt US LLCs. Action: verify at fincen.gov/boi before leaving.
+- [x] 🟢 **Identity Snapshot HTML updated** — added WA Business License section, Day 2 completed list, 6 calendar reminders, Twilio status "unblocked."
+- [x] 🟢 **American Family Insurance E&O outreach declined** — premature; revisit when first paying customer.
 
 ---
 
