@@ -14,11 +14,11 @@
 | **Twilio account** | Paid (upgraded from Trial June 1) | |
 | **Twilio Business Profile** | ✅ **Approved June 11, 2026** | Bundle `BUf71fa573b0fd6173b0cc31daba2ba41b`, manual review by Jennifer |
 | **Toll-Free Number** | `+1 (833) 783-0902` | Demo / test line per June 13 decision |
-| **TFV (Toll-Free Verification)** | ⏳ **Resubmitted June 13, 2026 — in prioritized queue** | Ticket `27236005`, reviewer Ignacio L. |
+| **TFV (Toll-Free Verification)** | 🛑 **Rejected June 15, 2026 (round 2, code `30527` again) — escalation email sent to Ignacio June 15 PM** | Ticket `27236005`, TFV Request SID `HH260e95b417689297554480bd502c5e88`, ticket placed on hold by Ignacio |
 | **A2P 10DLC** | ❌ Not started | Production path for customer numbers — see [10_NEXT_STEPS.md](10_NEXT_STEPS.md) N-6 |
 | **BOI (FinCEN)** | ✅ Permanently exempt | March 2025 FinCEN final rule |
 | **Privacy page hardened** | ✅ June 14, 2026 | frontdesk-ai commit `5e3dc3c` — three coverage points of Twilio "magic phrase" |
-| **Open compliance issues** | None right now; awaiting TFV decision | |
+| **Open compliance issues** | TFV escalation pending Ignacio's response (24h SLA = EOD June 16 PDT) | 7-day prioritized resubmit window expires June 22 |
 
 ---
 
@@ -141,9 +141,40 @@ Acknowledgment reply sent to Ignacio June 14 thanking him for the guidance and n
 
 > **🎯 LESSON: When Twilio sends advisory compliance guidance during an active review, strengthen the linked URLs (they get re-fetched by the reviewer) rather than ignoring it. Cheap insurance against next-round rejection.**
 
-### Phase 5 — Awaiting Decision (June 15, 2026 → ?)
+### Phase 5 — TFV Round 2 Rejection + Escalation (June 15, 2026)
 
-**June 15, 2026 (today)** — In prioritized review queue. Decision email expected at `hello@welcomematdigital.com`. India trip departs June 25 — decision may land while traveling.
+**June 15, 2026 ~4:41pm PDT** — Ignacio sent an advisory email saying he was placing the ticket on hold pending follow-up, and asked us to follow up via Console.
+
+**June 15, 2026 ~6:17pm PDT** — `trusthub-verify@twilio.com` sent **rejection** of TFV Request SID `HH260e95b417689297554480bd502c5e88` with reason **`30527`** ("Business Registration Number Is Missing or Invalid") — the SAME code as round 1. 7-day prioritized resubmission window opened (closes **June 22, 2026**).
+
+**Diagnosis:** Same broker-sync lag root cause as the June 10 BP rejection AND the June 13 TFV round 1. Persona's automated KYB still has not picked up the EIN (now ~14 days old). Persona does not read the Additional Information field, so any amount of context written there is ignored on automated re-checks.
+
+**Form-bug recurrence (validates Lesson #4):** Reopened the TFV form to inspect it before deciding next move. Found:
+- **EIN displaying as `422903620` (no dash)** — even though `42-2903620` was submitted on June 13. The form is silently stripping the hyphen on save or display.
+- **Terms URL field blank** — even though `https://welcomematdigital.com/swoop/terms.html` was set on June 13. Same silent-drop bug.
+
+This confirms the form prefill is genuinely buggy and re-corrupts saved values between sessions. **Decided NOT to resubmit on the form** — every re-save risks dropping more fields, and Persona will auto-reject again on `30527` regardless because the broker data hasn't caught up.
+
+**Escalation email sent June 15 PM** — Reply on Ignacio's existing email thread, FROM `hello@welcomematdigital.com`, citing:
+- Round 2 rejection details (request SID, code, timestamp)
+- BP precedent (`BUf71fa573b0fd6173b0cc31daba2ba41b` approved June 11 by Jennifer via manual review on the same broker-sync lag)
+- The form-bug observations (EIN dash strip + Terms blank) as a reason NOT to brute-force resubmit
+- Explicit ask: manual review based on the existing approved BP bundle
+
+Attachments included: EIN.pdf (IRS CP 575) + WA Cert of Formation + WA Business License confirmation + D&B "no record" screenshot + OpenCorporates "found" screenshot. **Excluded** (do not attach to Twilio): personal driver's license, Mercury bank backup codes, internal Identity Snapshot HTML.
+
+> **🎯 LESSON: Lesson #4 ("do not trust the form prefill") is now twice-confirmed. The TFV form re-corrupts saved EIN (strips dash) and silently drops the Terms URL between submissions. After any save, reopen the form before resubmit and visually verify EIN format and every URL field. Better: don't resubmit on the form at all when the rejection is broker-sync — escalate via the reviewer's email thread instead.**
+
+> **🎯 LESSON: When a TFV rejection code repeats with the same root cause (broker-sync lag), a second resubmit on the form is wasted — it will auto-reject again because Persona's automated check does not read the Additional Information field. The only path with a real chance of approval is a manual-review request on the reviewer's email thread, citing the prior BP approval as precedent.**
+
+### Phase 6 — Awaiting Manual Review (June 15, 2026 → ?)
+
+**Watch items:**
+- Expected response from Ignacio: by EOD Tuesday June 16 PDT (1 business day from his on-hold note)
+- If no response by EOD June 16: short "checking in" nudge on the same thread
+- If still no response by Thursday June 18: open a parallel reply on the `trusthub-verify@twilio.com` rejection email (Jennifer's team — same one that approved the BP)
+- Hard deadline: prioritized resubmit window closes June 22; if no manual approval by then, last-resort options are (a) carefully-verified form resubmit, (b) abandon TFV and go 10DLC-only per the June 13 strategic decision
+- India trip departs June 25 — try to land a decision before then
 
 ---
 
@@ -165,7 +196,8 @@ If you ever rewrite the privacy page, do not remove this phrase. Even subtle par
 |---|---|---|---|---|
 | `18602` | Business ID could not be verified | June 10 BP | Persona/broker lag on young EIN | Manual review email with D&B negative + OpenCorporates positive evidence package |
 | `18606` | Email domain mismatch | June 10 BP | Notification Email = personal Gmail, not company domain | Reply to reviewer FROM company-domain email + plan to update Trust Hub Notification Email |
-| `30527` | Business Registration Number Is Missing or Invalid | June 13 TFV | EIN submitted without dash + same broker-sync lag | Resubmit with `42-2903620` (dashed) + Additional Info citing BP approval + manual review request |
+| `30527` | Business Registration Number Is Missing or Invalid | June 13 TFV (round 1) | EIN submitted without dash + same broker-sync lag | Resubmit with `42-2903620` (dashed) + Additional Info citing BP approval + manual review request |
+| `30527` | Business Registration Number Is Missing or Invalid | June 15 TFV (round 2) | Persona/broker still hasn't ingested 14-day-old EIN; form re-corrupted EIN to dashless + dropped Terms URL between sessions | **Pending** — escalation email sent to Ignacio June 15 PM requesting manual review citing BP approval; did NOT resubmit on the form |
 
 ---
 
@@ -310,10 +342,11 @@ For a future engineer auditing what's actually enforced:
 
 ---
 
-## TL;DR — The Five Lessons That Cost the Most
+## TL;DR — The Lessons That Cost the Most
 
 1. **Persona fails on young EINs.** Don't fight the wizard. Go to manual review with multi-source evidence (CP 575 + state filing + D&B negative + OpenCorporates positive).
 2. **Reply to reviewers FROM your company-domain email.** Half of error code `18606` resolves itself just by doing this.
 3. **EIN format matters.** Always dashed (`42-2903620`), never run-on (`422903620`). Hard requirement on TFV.
-4. **Don't trust form prefill.** Twilio's TFV form silently dropped the Terms URL between submissions. Verify every field on every submit.
+4. **Don't trust form prefill — twice-confirmed.** The TFV form silently strips the EIN dash AND drops the Terms URL between submissions. Reopen and visually verify every field before resubmit. Better: when the root cause is broker-sync, don't resubmit on the form at all — escalate via reviewer email thread.
 5. **Advisory emails ≠ rejections, but treat them like rejections.** Harden the linked URLs preemptively. Cheap insurance.
+6. **Repeat rejections with the same code = same broker-sync issue. Don't burn resubmits.** Persona's automated check does not read the Additional Information field; resubmitting on the form within the same broker-lag window will auto-reject again. The only path forward is a manual-review request on the reviewer's email thread, citing prior BP approval as precedent.
