@@ -6,7 +6,7 @@
 
 ---
 
-## Snapshot — Current State (June 15, 2026)
+## Snapshot — Current State (June 16, 2026)
 
 | Item | Status | Reference |
 |---|---|---|
@@ -14,11 +14,12 @@
 | **Twilio account** | Paid (upgraded from Trial June 1) | |
 | **Twilio Business Profile** | ✅ **Approved June 11, 2026** | Bundle `BUf71fa573b0fd6173b0cc31daba2ba41b`, manual review by Jennifer |
 | **Toll-Free Number** | `+1 (833) 783-0902` | Demo / test line per June 13 decision |
-| **TFV (Toll-Free Verification)** | 🛑 **Rejected June 15, 2026 (round 2, code `30527` again) — escalation email sent to Ignacio June 15 PM** | Ticket `27236005`, TFV Request SID `HH260e95b417689297554480bd502c5e88`, ticket placed on hold by Ignacio |
+| **TFV (Toll-Free Verification)** | 🟡 **Round 3 RESUBMITTED June 16, 2026 PM** — In Review | Ticket `27236005`, TFV Request SID `HH260e95b417689297554480bd502c5e88`. Addressed all 3 of Ignacio's items: Drive-hosted EIN, hello@ notification email, branded+complete sample message. |
 | **A2P 10DLC** | ❌ Not started | Production path for customer numbers — see [10_NEXT_STEPS.md](10_NEXT_STEPS.md) N-6 |
 | **BOI (FinCEN)** | ✅ Permanently exempt | March 2025 FinCEN final rule |
 | **Privacy page hardened** | ✅ June 14, 2026 | frontdesk-ai commit `5e3dc3c` — three coverage points of Twilio "magic phrase" |
-| **Open compliance issues** | TFV escalation pending Ignacio's response (24h SLA = EOD June 16 PDT) | 7-day prioritized resubmit window expires June 22 |
+| **Consent page — IVR-style opt-in flow** | ✅ June 16, 2026 | swoop `42fdf7f` + frontdesk-ai `86a36c8` — Option A SMS template + verbatim IVR flow |
+| **Open compliance issues** | Round 3 in review — awaiting reviewer decision | 7-day prioritized resubmit window expires June 22 |
 
 ---
 
@@ -167,14 +168,58 @@ Attachments included: EIN.pdf (IRS CP 575) + WA Cert of Formation + WA Business 
 
 > **🎯 LESSON: When a TFV rejection code repeats with the same root cause (broker-sync lag), a second resubmit on the form is wasted — it will auto-reject again because Persona's automated check does not read the Additional Information field. The only path with a real chance of approval is a manual-review request on the reviewer's email thread, citing the prior BP approval as precedent.**
 
-### Phase 6 — Awaiting Manual Review (June 15, 2026 → ?)
+### Phase 6 — Ignacio's Three-Item Response (June 16, 2026 AM)
+
+**June 16, 2026 AM** — Ignacio replied to the June 15 escalation. He did NOT approve manually; instead he gave a specific 3-item fix list:
+
+1. **BRN/EIN proof must be publicly accessible** — the Cert of Formation Drive link previously sent was good but not directly tied to the BRN. He wanted the EIN documentation (IRS CP 575) itself hosted at a publicly-viewable URL inside the TFV submission.
+2. **Notification email mismatch** — the value Twilio saw in the resubmission was `sunil1308@gmail.com` again, not `hello@welcomematdigital.com`. (This is the silent form-bug — see Lesson #4 update.)
+3. **Sample message must be branded AND complete** — the round-2 sample was branded but missing message frequency and the Terms URL inline. CTIA "branded and complete" means brand + service description + frequency + Msg&data + STOP + HELP + Terms URL all in the first message.
+
+This reframed the situation: it was NOT broker-sync lag on the EIN (which had been our Round 1/2 hypothesis). It was three concrete, fixable problems. Re-energized after the false despair of Phase 5.
+
+### Phase 7 — Round 3 Code Fixes + Resubmission (June 16, 2026 PM)
+
+**Code changes (swoop commit `42fdf7f` + frontdesk-ai commit `86a36c8`, both PUSHED):**
+
+1. **`public/consent.html` (swoop)** + **`frontdesk-ai/public/swoop/consent.html`** — rewrote the `#opt-in-flow` section as a verbatim IVR-style script: "You called Mike's Plumbing... press 1 to receive a text back..." with the exact first SMS shown right after. The verbatim flow is what a Twilio reviewer can read end-to-end without inference.
+2. **`server/db/database.js`** — updated default `auto_reply_message` to "Option A" template: `{Business Name} here, returning your missed call. We'll send up to 7 msgs to coordinate. Msg&data rates may apply. Reply STOP to end, HELP for help. Terms: welcomematdigital.com/swoop` — every CTIA branded-and-complete element in one short message.
+3. **`server/seed.js`** — Option A applied to Mike's Plumbing + Sara's Electric seed records so demo/test traffic matches what Twilio sees in the sample.
+4. **EIN PDF uploaded to Google Drive** (anyone-with-link view) — `https://drive.google.com/file/d/1621llFjbUY_Dez3G84nQooDsjQvPc3zc/view` — to satisfy Ignacio's item #1 inline within the TFV form.
+
+**TFV form resubmission (June 16 PM):**
+
+Methodical field-by-field walkthrough with screenshot verification of every page before clicking Submit. Form-bug observed for the THIRD time: Notification Email field auto-reverted from `hello@welcomematdigital.com` back to `sunil1308@gmail.com` on the final page (the Twilio console autofills from your account email each time you advance a page). Corrected on the final page and visually verified before clicking Submit.
+
+Final submission contents (round 3):
+- **Use case description** (≤500 chars): rewrote to lead with the trigger ("call goes unanswered, Swoop texts back"), frequency (1-7 msgs/missed call), and all CTIA elements explicitly enumerated; ends with opt-in flow URL.
+- **Sample message:** Option A verbatim (brand + frequency + Msg&data + STOP + HELP + Terms URL).
+- **Terms URL:** `https://welcomematdigital.com/swoop/terms.html` (re-checked after page navigation — held).
+- **Opt-in keywords field:** left empty (grey placeholder `START, STOP` is the field's hint, not a value — verbal opt-in means no keyword auto-reply).
+- **Opt-in message field:** left empty (verbal opt-in means there's no keyword-triggered enrollment SMS).
+- **HELP message:** branded "Mike's Plumbing: Reply HELP for help or call (833) 783-0902. For privacy info, visit welcomematdigital.com/swoop/privacy.html. Reply STOP to opt out. Msg&data rates may apply."
+- **Additional Information** (≤500 chars): "ROUND 3 RESUBMIT (rejection 30527, ticket #27236005)" header + 3-item map (Drive URL for EIN + hello@ email update + branded-complete opt-in URL).
+- **Notification email:** `hello@welcomematdigital.com` (force-overridden on final page, visually verified before checkbox + submit).
+
+Confirmation page: "Thanks for submitting your toll-free registration! Your toll-free registration is being reviewed."
+
+**Reply email to Ignacio sent June 16 PM** on existing ticket thread, mapping each of his 3 items to the corresponding fix + Drive URL for EIN + Drive folder link for the per-page form screenshots (`https://drive.google.com/drive/folders/1pme_s7L2wIl1Spw85dcHzGBKzAXUawXu?usp=sharing`). Pre-empted the email form-bug by explicitly flagging that the Notification Email auto-reverted on page advance and was corrected before submit.
+
+> **🎯 LESSON (Lesson #4 — now THRICE-confirmed): The TFV form's Notification Email field auto-reverts to the Twilio console account email (`sunil1308@gmail.com`) every time you advance a page in the wizard. It is not a one-time prefill bug — it re-corrupts on every page navigation. Workflow: fix it LAST, on the final page, just before the confirmation checkbox; visually verify it shows `hello@welcomematdigital.com` immediately before clicking Submit. Same field-by-field discipline applies to EIN dash format and Terms URL. The other two form-bugs (EIN dash strip, Terms URL drop) were NOT observed on Round 3 — likely because we did the verification walk-through on a single uninterrupted session. The Notification Email reset is the persistent one.**
+
+> **🎯 LESSON: Don't conflate "reviewer is rejecting again" with "reviewer hates us / brokers haven't caught up." Round 2 looked like broker-sync deadlock, but Ignacio's Round 3 reply showed it was three concrete, fixable items all along. When a reviewer reopens a ticket from on-hold and gives a numbered list, treat it as a gift — execute each item literally and reply with a 1:1 mapping.**
+
+> **🎯 LESSON: CTIA "branded AND complete" is a literal seven-element checklist for the FIRST message: brand + service description + frequency + Msg&data + STOP + HELP + Terms URL. Missing any one = rejection. The Option A template now in `database.js` hits all seven in under 160 chars (one SMS segment).**
+
+### Phase 8 — Awaiting Round 3 Decision (June 16, 2026 → ?)
 
 **Watch items:**
-- Expected response from Ignacio: by EOD Tuesday June 16 PDT (1 business day from his on-hold note)
-- If no response by EOD June 16: short "checking in" nudge on the same thread
-- If still no response by Thursday June 18: open a parallel reply on the `trusthub-verify@twilio.com` rejection email (Jennifer's team — same one that approved the BP)
-- Hard deadline: prioritized resubmit window closes June 22; if no manual approval by then, last-resort options are (a) carefully-verified form resubmit, (b) abandon TFV and go 10DLC-only per the June 13 strategic decision
-- India trip departs June 25 — try to land a decision before then
+- Expected reviewer response: 2–7 business days (typical TFV re-review SLA)
+- Hard deadline: prioritized resubmit window closes June 22 — if Round 3 also rejects, only 6 days left to either resubmit (Round 4) or escalate
+- India trip departs June 25 — try to land approval before then
+- If Round 3 approved: thank Ignacio, update Trust Hub Notification Email at the bundle level (separate from form field), unblock SMS production, plan A2P 10DLC for customer numbers
+- If Round 3 rejected with NEW code: read carefully, may be a genuinely new issue (not 30527 broker-sync)
+- If Round 3 rejected with `30527` again: this validates the original "broker-sync lag" hypothesis — go to Round 3 Playbook Step 4 (escalate via ticket reply citing BP approval) AND begin A2P 10DLC migration in parallel
 
 ---
 
@@ -197,7 +242,7 @@ If you ever rewrite the privacy page, do not remove this phrase. Even subtle par
 | `18602` | Business ID could not be verified | June 10 BP | Persona/broker lag on young EIN | Manual review email with D&B negative + OpenCorporates positive evidence package |
 | `18606` | Email domain mismatch | June 10 BP | Notification Email = personal Gmail, not company domain | Reply to reviewer FROM company-domain email + plan to update Trust Hub Notification Email |
 | `30527` | Business Registration Number Is Missing or Invalid | June 13 TFV (round 1) | EIN submitted without dash + same broker-sync lag | Resubmit with `42-2903620` (dashed) + Additional Info citing BP approval + manual review request |
-| `30527` | Business Registration Number Is Missing or Invalid | June 15 TFV (round 2) | Persona/broker still hasn't ingested 14-day-old EIN; form re-corrupted EIN to dashless + dropped Terms URL between sessions | **Pending** — escalation email sent to Ignacio June 15 PM requesting manual review citing BP approval; did NOT resubmit on the form |
+| `30527` | Business Registration Number Is Missing or Invalid | June 15 TFV (round 2) | Three concrete issues (NOT broker-sync as initially suspected): (1) EIN/BRN proof not linked inline in TFV form, (2) Notification email reverted to gmail again via form-bug, (3) Sample message branded but not "complete" (missing frequency + Terms URL inline) | **Round 3 resubmitted June 16 PM** addressing all three with: Drive-hosted EIN URL in Additional Info, force-overridden notification email on final page with visual verify, Option A sample message hitting all 7 CTIA elements. Pending review. |
 
 ---
 
@@ -347,6 +392,8 @@ For a future engineer auditing what's actually enforced:
 1. **Persona fails on young EINs.** Don't fight the wizard. Go to manual review with multi-source evidence (CP 575 + state filing + D&B negative + OpenCorporates positive).
 2. **Reply to reviewers FROM your company-domain email.** Half of error code `18606` resolves itself just by doing this.
 3. **EIN format matters.** Always dashed (`42-2903620`), never run-on (`422903620`). Hard requirement on TFV.
-4. **Don't trust form prefill — twice-confirmed.** The TFV form silently strips the EIN dash AND drops the Terms URL between submissions. Reopen and visually verify every field before resubmit. Better: when the root cause is broker-sync, don't resubmit on the form at all — escalate via reviewer email thread.
+4. **Don't trust form prefill — thrice-confirmed.** The TFV form's Notification Email auto-reverts to the Twilio console account email every time you advance a page. Fix it LAST on the final page and visually verify before submitting. EIN dash strip and Terms URL drop were observed twice (Rounds 1-2) but not on Round 3 — likely fixable with single-session field-by-field verification. The email reset is the persistent one.
 5. **Advisory emails ≠ rejections, but treat them like rejections.** Harden the linked URLs preemptively. Cheap insurance.
-6. **Repeat rejections with the same code = same broker-sync issue. Don't burn resubmits.** Persona's automated check does not read the Additional Information field; resubmitting on the form within the same broker-lag window will auto-reject again. The only path forward is a manual-review request on the reviewer's email thread, citing prior BP approval as precedent.
+6. **"Same rejection code" does NOT always mean "same root cause."** Rounds 1 + 2 both got `30527` and we assumed broker-sync lag. Round 3 reply from Ignacio showed it was actually three concrete reviewer-flagged items (EIN proof not inline + email mismatch + sample message incomplete). Always wait for the reviewer's written feedback before re-diagnosing — the numeric code is a category, not a diagnosis.
+7. **CTIA "branded AND complete" = 7 elements in the first message.** Brand + service description + frequency + Msg&data + STOP + HELP + Terms URL. Missing any one = rejection. Option A template in `database.js` is the proven-passing format.
+8. **When the reviewer gives you a numbered list, execute it literally and reply with a 1:1 mapping.** Don't restate it in your own words, don't add context they didn't ask for. Each of their items → exactly one of your bullets in the reply email.
