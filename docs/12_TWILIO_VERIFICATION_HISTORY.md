@@ -6,7 +6,7 @@
 
 ---
 
-## Snapshot — Current State (June 16, 2026)
+## Snapshot — Current State (June 16, 2026 — evening)
 
 | Item | Status | Reference |
 |---|---|---|
@@ -14,12 +14,12 @@
 | **Twilio account** | Paid (upgraded from Trial June 1) | |
 | **Twilio Business Profile** | ✅ **Approved June 11, 2026** | Bundle `BUf71fa573b0fd6173b0cc31daba2ba41b`, manual review by Jennifer |
 | **Toll-Free Number** | `+1 (833) 783-0902` | Demo / test line per June 13 decision |
-| **TFV (Toll-Free Verification)** | 🟡 **Round 3 RESUBMITTED June 16, 2026 PM** — In Review | Ticket `27236005`, TFV Request SID `HH260e95b417689297554480bd502c5e88`. Addressed all 3 of Ignacio's items: Drive-hosted EIN, hello@ notification email, branded+complete sample message. |
-| **A2P 10DLC** | ❌ Not started | Production path for customer numbers — see [10_NEXT_STEPS.md](10_NEXT_STEPS.md) N-6 |
+| **TFV (Toll-Free Verification)** | 🛑 **Round 3 REJECTED June 16, 2026 ~3:04 PM PDT (code `30527` again, ~4hr auto-reject)** — escalation email sent to Ignacio same evening with dash-strip evidence | Ticket `27236005`, TFV Request SID `HH260e95b417689297554480bd502c5e88`. Console form is silently saving EIN as dashless `422903620` instead of submitted `42-2903620` — likely root cause of all 3 rounds of 30527. |
+| **A2P 10DLC** | ❌ Not started — begin in parallel given Round 3 dead-end | Production path for customer numbers — see [10_NEXT_STEPS.md](10_NEXT_STEPS.md) N-6 |
 | **BOI (FinCEN)** | ✅ Permanently exempt | March 2025 FinCEN final rule |
 | **Privacy page hardened** | ✅ June 14, 2026 | frontdesk-ai commit `5e3dc3c` — three coverage points of Twilio "magic phrase" |
 | **Consent page — IVR-style opt-in flow** | ✅ June 16, 2026 | swoop `42fdf7f` + frontdesk-ai `86a36c8` — Option A SMS template + verbatim IVR flow |
-| **Open compliance issues** | Round 3 in review — awaiting reviewer decision | 7-day prioritized resubmit window expires June 22 |
+| **Open compliance issues** | Awaiting Ignacio's response on manual override request | 7-day prioritized resubmit window expires June 22; India trip June 25 |
 
 ---
 
@@ -211,15 +211,57 @@ Confirmation page: "Thanks for submitting your toll-free registration! Your toll
 
 > **🎯 LESSON: CTIA "branded AND complete" is a literal seven-element checklist for the FIRST message: brand + service description + frequency + Msg&data + STOP + HELP + Terms URL. Missing any one = rejection. The Option A template now in `database.js` hits all seven in under 160 chars (one SMS segment).**
 
-### Phase 8 — Awaiting Round 3 Decision (June 16, 2026 → ?)
+### Phase 8 — Round 3 Auto-Rejection + Dash-Strip Discovery (June 16, 2026 evening)
+
+**June 16, 2026 ~3:04 PM PDT** — `trusthub-verify@twilio.com` rejected Round 3 with code `30527` again. ~4 hours after submission. Speed alone implies the rejection came from Persona's automated pre-check, not from Ignacio or any human reviewer (human SLA is 2–7 business days).
+
+**June 16 evening — Reopened the form to audit what Twilio actually has on file** (look-don't-save discipline: do not click Next or Submit, only inspect). Result of the field-by-field audit:
+
+| Field | What was submitted | What the form now displays | Status |
+|---|---|---|---|
+| Legal entity name | WELCOMEMAT DIGITAL LLC | WELCOMEMAT DIGITAL LLC | ✅ |
+| Website | welcomematdigital.com | welcomematdigital.com | ✅ |
+| **Page-1 contact "Email"** | hello@welcomematdigital.com | **sunil1308@gmail.com** | ❌ reverted (Lesson #4 again) |
+| Phone | 4257867232 | 4257867232 | ✅ |
+| Business Type | Private Profit | Private Profit | ✅ |
+| DBA | Swoop | Swoop | ✅ |
+| Business Registration Type | EIN | EIN | ✅ |
+| **Business Registration Number** | **42-2903620** | **422903620** | ❌ **DASH STRIPPED** — likely root cause of 30527 |
+| Issuing Country | United States | United States | ✅ |
+| Terms & Conditions URL | welcomematdigital.com/swoop/terms.html | same | ✅ held this round |
+| Opt-In Keywords | (empty) | (empty) | ✅ |
+| Estimated monthly volume | 100 | 100 | ✅ |
+| Opt-in type | Verbal | Verbal | ✅ |
+| Use case category | Customer Care | Customer Care | ✅ |
+| Proof of consent URL | welcomematdigital.com/swoop/consent.html#opt-in-flow | same | ✅ |
+| Use case description | full Option A description | same | ✅ |
+| Sample message | Option A | Option A | ✅ |
+| **Page-3 "E-mail for notifications"** (different field from Page-1 Email) | hello@welcomematdigital.com | hello@welcomematdigital.com | ✅ held |
+| Additional information | ROUND 3 RESUBMIT… | full text intact | ✅ |
+
+**Key discoveries:**
+
+1. **The Console form silently strips the dash from the BRN field on save.** EIN saved as `422903620`. If Persona's automated KYB matches on canonical IRS format (`XX-XXXXXXX`), a 9-digit dashless string fails every time. This is consistent with all three rounds of code 30527 — not broker-sync lag as previously hypothesized.
+2. **There are TWO email fields, not one.** Page-1 "Email" (contact email) and Page-3 "E-mail for notifications" are separate. The Page-1 field reverts to the Twilio console account email (`sunil1308@gmail.com`) on every save. The Page-3 field held correctly this round. **Lesson #4 should be split:** Page-3 notification email behavior is variable round-to-round; Page-1 contact email reversion is reproducible.
+3. **Terms URL held this round** (had dropped in Round 1–2). Single-session field-by-field entry likely fixes that.
+
+**Escalation email sent to Ignacio June 16 evening** on existing ticket thread, FROM `hello@welcomematdigital.com`, leading with the dash-strip evidence. Side-by-side framing: "Form currently displays `422903620` / Actual EIN on IRS CP 575 is `42-2903620`" + Drive folder link for the audit screenshots + Drive link for the CP 575. Asked for manual override (citing Jennifer's June 11 BP approval as precedent) and for guidance on whether the Messaging Compliance API path preserves the dash where the Console form doesn't. Did NOT resubmit on the form — every save will re-strip the dash and auto-reject again in ~4 hours.
+
+> **🎯 LESSON (Lesson #3 — CORRECTED): The TFV Console form's BRN field silently strips the dash from a submitted EIN. You CANNOT win this in the UI. Previous lesson ("always use dashed format") was directionally right but practically wrong: typing `42-2903620` and typing `422903620` both result in the form storing `422903620` on save. The fix is either (a) Ignacio's manual override against the BP-approved entity, or (b) the Messaging Compliance API path which may not have the same input sanitizer.**
+
+> **🎯 LESSON: A ~4-hour rejection turnaround on a TFV resubmit means automated rejection, not human review. Human reviewers (Ignacio, Jennifer) take 2–7 business days. If you get rejected the same business day with no reviewer notes, the failure is in Persona's pre-check, not in any of the items the reviewer asked you to fix.**
+
+> **🎯 LESSON: Pre-submit screenshots can't prove what the form saved, only what you typed before clicking Submit. To diagnose form-bugs, reopen the form AFTER rejection and screenshot each page — those screenshots are the ground truth of what the reviewer / Persona actually saw.**
+
+### Phase 9 — Awaiting Manual Override Response (June 16 evening → ?)
 
 **Watch items:**
-- Expected reviewer response: 2–7 business days (typical TFV re-review SLA)
-- Hard deadline: prioritized resubmit window closes June 22 — if Round 3 also rejects, only 6 days left to either resubmit (Round 4) or escalate
-- India trip departs June 25 — try to land approval before then
-- If Round 3 approved: thank Ignacio, update Trust Hub Notification Email at the bundle level (separate from form field), unblock SMS production, plan A2P 10DLC for customer numbers
-- If Round 3 rejected with NEW code: read carefully, may be a genuinely new issue (not 30527 broker-sync)
-- If Round 3 rejected with `30527` again: this validates the original "broker-sync lag" hypothesis — go to Round 3 Playbook Step 4 (escalate via ticket reply citing BP approval) AND begin A2P 10DLC migration in parallel
+- Expected reviewer response on the manual-override ask: 1–3 business days (Ignacio's typical SLA on this thread)
+- Hard deadline: prioritized resubmit window closes June 22 — if no response by June 19, send a soft nudge
+- India trip departs June 25 — try to land a decision before then
+- **PARALLEL TRACK opened:** begin A2P 10DLC brand vetting in parallel since TFV is now demonstrably blocked on a UI bug. Per the June 13 strategic decision, production was always going to 10DLC. Brand vetting (~$4) + single shared campaign (~$10/mo) on the BP-approved entity. If 10DLC clears, Swoop ships regardless of what happens with the 833 number.
+- If Ignacio's manual override succeeds: thank-you note + update Trust Hub bundle Notification Email to `hello@` + close the loop. Document the Persona/form-bug interaction in a postmortem for the playbook.
+- If Ignacio cannot manually override AND Messaging Compliance API path also strips the dash: open a paid Twilio support case, escalate to a CSM, OR abandon TFV entirely and ship Swoop on 10DLC only.
 
 ---
 
@@ -243,6 +285,7 @@ If you ever rewrite the privacy page, do not remove this phrase. Even subtle par
 | `18606` | Email domain mismatch | June 10 BP | Notification Email = personal Gmail, not company domain | Reply to reviewer FROM company-domain email + plan to update Trust Hub Notification Email |
 | `30527` | Business Registration Number Is Missing or Invalid | June 13 TFV (round 1) | EIN submitted without dash + same broker-sync lag | Resubmit with `42-2903620` (dashed) + Additional Info citing BP approval + manual review request |
 | `30527` | Business Registration Number Is Missing or Invalid | June 15 TFV (round 2) | Three concrete issues (NOT broker-sync as initially suspected): (1) EIN/BRN proof not linked inline in TFV form, (2) Notification email reverted to gmail again via form-bug, (3) Sample message branded but not "complete" (missing frequency + Terms URL inline) | **Round 3 resubmitted June 16 PM** addressing all three with: Drive-hosted EIN URL in Additional Info, force-overridden notification email on final page with visual verify, Option A sample message hitting all 7 CTIA elements. Pending review. |
+| `30527` | Business Registration Number Is Missing or Invalid | June 16 TFV (round 3) | **Console form silently strips the dash from the BRN field on save** — stored as `422903620` instead of `42-2903620`. ~4hr auto-rejection by Persona's pre-check, never reached a human reviewer. Was likely the true root cause of Rounds 1–2 as well. | **Pending** — escalation email sent to Ignacio June 16 evening with side-by-side dash-strip evidence (form vs. IRS CP 575), requesting manual override against the BP-approved entity + guidance on whether the Messaging Compliance API path preserves the dash. Did NOT resubmit on the form. |
 
 ---
 
@@ -391,9 +434,11 @@ For a future engineer auditing what's actually enforced:
 
 1. **Persona fails on young EINs.** Don't fight the wizard. Go to manual review with multi-source evidence (CP 575 + state filing + D&B negative + OpenCorporates positive).
 2. **Reply to reviewers FROM your company-domain email.** Half of error code `18606` resolves itself just by doing this.
-3. **EIN format matters.** Always dashed (`42-2903620`), never run-on (`422903620`). Hard requirement on TFV.
-4. **Don't trust form prefill — thrice-confirmed.** The TFV form's Notification Email auto-reverts to the Twilio console account email every time you advance a page. Fix it LAST on the final page and visually verify before submitting. EIN dash strip and Terms URL drop were observed twice (Rounds 1-2) but not on Round 3 — likely fixable with single-session field-by-field verification. The email reset is the persistent one.
+3. **The TFV Console form's BRN field strips the dash from a submitted EIN.** You can't win this in the UI — typing `42-2903620` or `422903620` both result in the form storing `422903620`. If Persona's automated KYB matches on the canonical dashed format, every TFV submission via the Console will auto-reject with code 30527. The only paths around it are (a) manual override by a Trust Hub reviewer against an already-approved BP, or (b) the Messaging Compliance API which may not have the same input sanitizer.
+4. **Don't trust form prefill — split this lesson by field.** Page-1 contact "Email" field reverts to the Twilio console account email on every save (reproducible — 4 times observed). Page-3 "E-mail for notifications" is a DIFFERENT field and behaves variably round-to-round. Terms URL was observed dropping in Rounds 1–2 but held in Round 3, likely because Round 3 was done in a single uninterrupted session. EIN dash-stripping is now hypothesized to be the persistent BRN-field behavior (see Lesson #3 corrected).
 5. **Advisory emails ≠ rejections, but treat them like rejections.** Harden the linked URLs preemptively. Cheap insurance.
-6. **"Same rejection code" does NOT always mean "same root cause."** Rounds 1 + 2 both got `30527` and we assumed broker-sync lag. Round 3 reply from Ignacio showed it was actually three concrete reviewer-flagged items (EIN proof not inline + email mismatch + sample message incomplete). Always wait for the reviewer's written feedback before re-diagnosing — the numeric code is a category, not a diagnosis.
+6. **"Same rejection code" does NOT always mean "same root cause."** Rounds 1 + 2 both got `30527` and we assumed broker-sync lag. Round 3 reply from Ignacio reframed it as three concrete reviewer items. Then Round 3 got `30527` again at automated-check speed, reframing it AGAIN as the form's dash-strip bug. Always wait for the reviewer's written feedback, AND audit the form's saved state, before re-diagnosing.
 7. **CTIA "branded AND complete" = 7 elements in the first message.** Brand + service description + frequency + Msg&data + STOP + HELP + Terms URL. Missing any one = rejection. Option A template in `database.js` is the proven-passing format.
 8. **When the reviewer gives you a numbered list, execute it literally and reply with a 1:1 mapping.** Don't restate it in your own words, don't add context they didn't ask for. Each of their items → exactly one of your bullets in the reply email.
+9. **A ~4-hour rejection turnaround = automated Persona rejection, NOT human review.** Human reviewers take 2–7 business days. Same-business-day rejection with no reviewer notes means Persona's pre-check failed; the next move is escalation via the reviewer's email thread, NOT another form resubmit (which will auto-reject again on the same UI bug).
+10. **Pre-submit screenshots can't prove what the form actually saved.** They only prove what you typed. To diagnose form-bugs, reopen the form AFTER rejection with look-don't-save discipline (no Next, no Submit) and screenshot each page — those are ground truth.
