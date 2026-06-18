@@ -36,7 +36,7 @@ The premise: a missed call to a plumber is worth ~$300. Owners miss 3–5 per we
 | **Hosting** | Render free tier with 1GB persistent disk. Stable. |
 | **Legal entity** | ✅ WA LLC approved. EIN issued. WA Business License filed. Mercury bank account open. |
 | **Twilio Business Profile** | ✅ Approved June 11, 2026. Bundle `BUf71fa573b0fd6173b0cc31daba2ba41b`. |
-| **Twilio Toll-Free Verification (TFV) for `+1 (833) 783-0902`** | ⏳ **Resubmitted June 13, 2026 — in prioritized queue.** Awaiting decision. This is the single blocker for production SMS. See [12_TWILIO_VERIFICATION_HISTORY.md](12_TWILIO_VERIFICATION_HISTORY.md). |
+| **Twilio Toll-Free Verification (TFV) for `+1 (833) 783-0902`** | ⏳ **Appeal opened June 17, 2026 after Round 3 rejection (code 30527).** Ignacio confirmed escalation to the toll-free team; awaiting response. This remains the single blocker for production SMS. See [12_TWILIO_VERIFICATION_HISTORY.md](12_TWILIO_VERIFICATION_HISTORY.md). |
 | **A2P 10DLC** | ❌ Not started. Decided June 13: TFV = demo/test only. 10DLC = production path for customer numbers. |
 | **Auth on dashboards** | ❌ Not built. Anyone with the URL sees all leads — biggest open security issue. |
 | **First paying customer** | ❌ Not yet. Outreach playbook exists but no live customer. |

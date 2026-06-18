@@ -9,7 +9,7 @@
 ## Open — Blockers Before First Paying Customer
 
 ### 🔴 Twilio TFV decision (external, awaiting)
-- Status: resubmitted June 13, in prioritized review queue, decision email expected at `hello@welcomematdigital.com`
+- Status: Round 3 rejected June 16 (code `30527`); Ignacio confirmed on June 17 that an appeal was opened with the toll-free team. Awaiting response at `hello@welcomematdigital.com`
 - Path forward if rejected: see [12_TWILIO_VERIFICATION_HISTORY.md](12_TWILIO_VERIFICATION_HISTORY.md) → "If This Round Is Rejected"
 
 ### 🔴 Per-business auth on dashboard and admin

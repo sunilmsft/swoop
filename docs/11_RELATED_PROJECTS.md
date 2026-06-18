@@ -105,7 +105,7 @@ sunilmsft.github.io/swoop/ (GitHub Pages)
 console.twilio.com (Twilio account)
 ├── Number: +1 (833) 783-0902 (toll-free, TFV in progress)
 ├── Trust Hub: Business Profile BUf71fa573b0fd6173b0cc31daba2ba41b (Approved)
-├── Trust Hub: TFV ticket 27236005 (Resubmitted, in review)
+├── Trust Hub: TFV ticket 27236005 (Appeal opened June 17 after Round 3 rejection; awaiting toll-free team)
 └── Compliance URLs registered: welcomematdigital.com/swoop/{consent,privacy,terms}.html
 
 platform.openai.com (OpenAI account)

@@ -44,7 +44,7 @@ Don't skip this. The whole project hinges on a small ring of third-party account
 - [ ] Account name: should reference WelcomeMat Digital LLC
 - [ ] Confirm number `+1 (833) 783-0902` is owned by the account
 - [ ] Trust Hub → Business Profile bundle `BUf71fa573b0fd6173b0cc31daba2ba41b` → status should be **Approved** (since June 11, 2026)
-- [ ] Trust Hub → Toll-Free Verification → status check. As of June 15, 2026: resubmitted June 13, in prioritized queue. Ticket `27236005`, reviewer Ignacio L.
+- [ ] Trust Hub → Toll-Free Verification → status check. As of June 17, 2026: Round 3 was rejected June 16 (code `30527`), Ignacio confirmed appeal opened to the toll-free team, awaiting response. Ticket `27236005`.
 - [ ] **Rotate `TWILIO_AUTH_TOKEN`** (Account → API keys & tokens → "Request a secondary token") if there's any chance the current one has been exposed
 
 ### 2.4 OpenAI

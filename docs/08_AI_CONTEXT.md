@@ -39,7 +39,7 @@ These are non-negotiable. Violating any of them has burned past sessions.
 What:    AI missed-call text-back SaaS for small home-service businesses
 Who:     Solo founder, target customers = plumbers/electricians/HVAC at $29–$49/mo
 Where:   Node + Express + SQLite + Twilio + OpenAI, hosted on Render free tier
-Status:  v0.2.7 shipped. Twilio TFV resubmitted June 13, awaiting decision.
+Status:  v0.2.7 shipped. Twilio TFV Round 3 rejected June 16; appeal opened June 17 via Ignacio and now awaiting toll-free team response.
           Two blockers before first paying customer: TFV approval + owner auth.
 Brand:   "Swoop." — product under "WelcomeMat Digital LLC" (the holding entity)
 ```

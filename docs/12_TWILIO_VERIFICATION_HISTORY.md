@@ -6,7 +6,7 @@
 
 ---
 
-## Snapshot — Current State (June 16, 2026 — evening)
+## Snapshot — Current State (June 17, 2026 — afternoon)
 
 | Item | Status | Reference |
 |---|---|---|
@@ -14,12 +14,12 @@
 | **Twilio account** | Paid (upgraded from Trial June 1) | |
 | **Twilio Business Profile** | ✅ **Approved June 11, 2026** | Bundle `BUf71fa573b0fd6173b0cc31daba2ba41b`, manual review by Jennifer |
 | **Toll-Free Number** | `+1 (833) 783-0902` | Demo / test line per June 13 decision |
-| **TFV (Toll-Free Verification)** | 🛑 **Round 3 REJECTED June 16, 2026 ~3:04 PM PDT (code `30527` again, ~4hr auto-reject)** — escalation email sent to Ignacio same evening with dash-strip evidence | Ticket `27236005`, TFV Request SID `HH260e95b417689297554480bd502c5e88`. Console form is silently saving EIN as dashless `422903620` instead of submitted `42-2903620` — likely root cause of all 3 rounds of 30527. |
+| **TFV (Toll-Free Verification)** | ⏳ **Appeal opened June 17, 2026 (after Round 3 rejection on June 16, code `30527`)** — Ignacio confirmed escalation to the toll-free team | Ticket `27236005`, TFV Request SID `HH260e95b417689297554480bd502c5e88`. Console form is silently saving EIN as dashless `422903620` instead of submitted `42-2903620` — likely root cause of all 3 rounds of 30527. |
 | **A2P 10DLC** | ❌ Not started — begin in parallel given Round 3 dead-end | Production path for customer numbers — see [10_NEXT_STEPS.md](10_NEXT_STEPS.md) N-6 |
 | **BOI (FinCEN)** | ✅ Permanently exempt | March 2025 FinCEN final rule |
 | **Privacy page hardened** | ✅ June 14, 2026 | frontdesk-ai commit `5e3dc3c` — three coverage points of Twilio "magic phrase" |
 | **Consent page — IVR-style opt-in flow** | ✅ June 16, 2026 | swoop `42fdf7f` + frontdesk-ai `86a36c8` — Option A SMS template + verbatim IVR flow |
-| **Open compliance issues** | Awaiting Ignacio's response on manual override request | 7-day prioritized resubmit window expires June 22; India trip June 25 |
+| **Open compliance issues** | Awaiting toll-free team response on Ignacio's June 17 appeal | 7-day prioritized resubmit window expires June 22; India trip June 25 |
 
 ---
 
@@ -254,6 +254,8 @@ Confirmation page: "Thanks for submitting your toll-free registration! Your toll
 > **🎯 LESSON: Pre-submit screenshots can't prove what the form saved, only what you typed before clicking Submit. To diagnose form-bugs, reopen the form AFTER rejection and screenshot each page — those screenshots are the ground truth of what the reviewer / Persona actually saw.**
 
 ### Phase 9 — Awaiting Manual Override Response (June 16 evening → ?)
+
+**June 17, 2026 ~10:11 AM PDT** — Ignacio replied on ticket `27236005`: "I have created an appeal - as soon as we have a response from our toll-free team, I will let you know." This confirms escalation is accepted and actively in queue.
 
 **Watch items:**
 - Expected reviewer response on the manual-override ask: 1–3 business days (Ignacio's typical SLA on this thread)

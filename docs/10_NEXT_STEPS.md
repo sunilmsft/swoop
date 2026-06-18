@@ -7,7 +7,7 @@
 ## Now (this week)
 
 ### N-1. Wait for Twilio TFV decision
-- **Why:** It's the single external blocker. Resubmitted June 13, 2026, prioritized queue. Decision email lands at `hello@welcomematdigital.com`.
+- **Why:** It's the single external blocker. Round 3 was rejected June 16 (code `30527`); appeal was opened June 17 by Ignacio to the toll-free team. Decision email lands at `hello@welcomematdigital.com`.
 - **What to do while waiting:** Do NOT modify the compliance surface (consent / privacy / terms pages, default SMS template, STOP/HELP handlers). Anything else is fair game.
 - **Success:** Email from Twilio with approval. Number `+1 (833) 783-0902` becomes A2P-verified for SMS.
 - **If rejected:** See [12_TWILIO_VERIFICATION_HISTORY.md](12_TWILIO_VERIFICATION_HISTORY.md) → "If This Round Is Rejected".
