@@ -18,15 +18,19 @@ router.post('/voice', validateTwilioRequest, async (req, res) => {
   const twiml = new VoiceResponse();
 
   const business = db.prepare('SELECT * FROM businesses WHERE phone = ?').get(To);
+  const businessName = business ? business.name : 'this business';
+
+  // Verbal consent disclosure — plays on every inbound call for toll-free verification compliance.
+  // Required: caller must hear the disclosure before consent is recorded via missed-call SMS.
+  // Specifies: business name, kind of messages, frequency, Msg&data, opt-out.
+  twiml.say(`Thank you for calling ${businessName}. If we miss your call, we will send you a text to follow up. You may receive up to 7 messages regarding your missed call — including responses to your questions and appointment reminders. Message and data rates may apply. Reply STOP at any time to stop all messages.`);
 
   if (business && business.forward_phone) {
     // Ring the business owner's cell phone for 20 seconds
     console.log(`📞 Forwarding call to ${business.forward_phone}`);
     twiml.dial({ timeout: 20, action: '/webhooks/voice-dial-result' }, business.forward_phone);
-  } else {
-    // No forwarding number — just end the call (status callback will handle it)
-    twiml.say('');
   }
+  // If no forwarding number, call ends after the disclosure; voice-status callback handles the missed-call SMS.
 
   res.type('text/xml');
   res.send(twiml.toString());

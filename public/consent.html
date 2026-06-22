@@ -65,52 +65,48 @@
 
         <p>Swoop does not import, purchase, or accept uploaded phone number lists. Every recipient is a person who personally called the business within the prior 30 days.</p>
 
-        <h2 id="opt-in-flow">Opt-In Flow &mdash; Branded &amp; Complete</h2>
+        <h2 id="opt-in-flow">Opt-In Flow &mdash; Verbal IVR Script &amp; SMS Confirmation</h2>
         <p>The opt-in to receive an SMS from a Swoop-enabled business is a <strong>single, standalone, customer-initiated event</strong> &mdash; not bundled with any other agreement, term, marketing message, or account action.</p>
 
-        <h3 style="font-size:1.05rem; color:#0f172a; margin:1.25rem 0 0.5rem;">The Customer's Experience (End-to-End)</h3>
-        <p>The flow below is functionally equivalent to a verbal IVR opt-in script and contains every CTIA-required disclosure (brand, service description, frequency, Msg&amp;data, STOP, HELP, Terms URL, Privacy URL, affirmative response, confirmation):</p>
+        <p>The flow below is the <strong>verbatim verbal consent script</strong> as experienced by the caller, followed by the exact SMS messages sent. Every CTIA-required element is present: brand, service description, frequency, Msg&amp;data disclosure, STOP, HELP, Terms URL, affirmative response, and enrollment confirmation.</p>
 
-        <div class="opt-in-steps">
-          <div class="step">
-            <div class="step-num">1</div>
-            <div class="step-body"><strong>Customer dials the business's published phone number.</strong> This voluntary call is the standalone opt-in action &mdash; no checkbox, no form, no bundled agreement, no purchase, no third-party data, no list import.</div>
-          </div>
-          <div class="step">
-            <div class="step-num">2</div>
-            <div class="step-body"><strong>Business misses the call.</strong> Swoop receives the missed-call event from Twilio and identifies the caller's number (the same number the customer voluntarily dialed from).</div>
-          </div>
-          <div class="step">
-            <div class="step-num">3</div>
-            <div class="step-body"><strong>Swoop sends a single, fully branded confirmation SMS</strong> from the business's number within seconds. The message contains every required disclosure: the sending business name, the service description, message frequency, the Msg&amp;data rate disclosure, the STOP and HELP keywords, and a link to the Terms of Service (which also links to the Privacy Policy). See the exact text below.</div>
-          </div>
-          <div class="step">
-            <div class="step-num">4</div>
-            <div class="step-body"><strong>The customer's reply is the explicit affirmative consent</strong> to continue the conversation. Replying with a question, a service request, or &ldquo;yes&rdquo; continues the engagement. Replying <strong>STOP</strong> ends it immediately with a single branded confirmation. Replying <strong>HELP</strong> returns the business name, a help message, and the privacy URL.</div>
-          </div>
-          <div class="step">
-            <div class="step-num">5</div>
-            <div class="step-body"><strong>Enrollment confirmation.</strong> Once the customer replies (anything other than STOP), Swoop sends one short confirmation acknowledging the engagement and the message frequency they should expect.</div>
-          </div>
+        <h3 style="font-size:1.05rem; color:#0f172a; margin:1.5rem 0 0.75rem;">Step 1 — Customer Calls the Business</h3>
+        <p>The customer dials the business's published phone number. This is the standalone opt-in action &mdash; no checkbox, no form, no bundled agreement.</p>
+
+        <h3 style="font-size:1.05rem; color:#0f172a; margin:1.5rem 0 0.75rem;">Step 2 — Verbal Disclosure Plays on the Call (IVR)</h3>
+        <p>Swoop plays the following verbal disclosure to every caller before any call-forwarding or hang-up occurs:</p>
+        <div class="sms-example" style="font-style:italic;">
+            IVR: &ldquo;Thank you for calling {Business Name}. If we miss your call, we will send you a text to follow up. You may receive up to 7 messages regarding your missed call — including responses to your questions and appointment reminders. Message and data rates may apply. Reply STOP at any time to stop all messages.&rdquo;
         </div>
+        <p style="font-size:0.85rem; color:#64748b;">The business name is substituted dynamically (e.g., &ldquo;Thank you for calling Acme Plumbing&rdquo;). This disclosure is delivered via Twilio TwiML <code>&lt;Say&gt;</code> on every inbound call before the call is forwarded or ended. It specifies: (1) the business name, (2) the kind of messages (callback responses and reminders), (3) frequency (up to 7 per missed call), (4) Msg&amp;data rates, and (5) STOP opt-out.</p>
 
-        <h3 style="font-size:1.05rem; color:#0f172a; margin:1.5rem 0 0.5rem;">The Exact First Message (Fully Branded &amp; Complete)</h3>
+        <h3 style="font-size:1.05rem; color:#0f172a; margin:1.5rem 0 0.75rem;">Step 3 — Business Misses the Call</h3>
+        <p>The call goes unanswered (forwarding times out, is busy, or no forwarding number is set). Swoop receives the missed-call event and prepares the follow-up SMS.</p>
+
+        <h3 style="font-size:1.05rem; color:#0f172a; margin:1.5rem 0 0.75rem;">Step 4 — First SMS Sent (Fully Branded &amp; Complete)</h3>
+        <p>Swoop immediately sends a single branded SMS from the business's number containing every required disclosure:</p>
         <div class="sms-example">
             {Business Name} here, returning your missed call. We'll send up to 7 msgs to coordinate. Msg&amp;data rates may apply. Reply STOP to end, HELP for help. Terms: welcomematdigital.com/swoop
         </div>
-        <p style="font-size:0.85rem; color:#64748b;">The business name is substituted dynamically per Swoop-enabled business. The wording is otherwise consistent across all senders to ensure carrier compliance. The Terms page links to the full Privacy Policy.</p>
+        <p style="font-size:0.85rem; color:#64748b;">All 7 CTIA branded-and-complete elements in one SMS segment: brand · service description · frequency · Msg&amp;data · STOP · HELP · Terms URL.</p>
 
-        <h3 style="font-size:1.05rem; color:#0f172a; margin:1.5rem 0 0.5rem;">Confirmation Reply (After Customer Engages)</h3>
+        <h3 style="font-size:1.05rem; color:#0f172a; margin:1.5rem 0 0.75rem;">Step 5 — Customer Replies (Explicit Affirmative Consent)</h3>
+        <div class="sms-example" style="font-style:italic;">
+            Customer: &ldquo;Hi, yes — I called about a leaking pipe.&rdquo;
+        </div>
+        <p>Any reply other than STOP is the customer's explicit, affirmative consent to continue the conversation. Replying STOP immediately ends all messages.</p>
+
+        <h3 style="font-size:1.05rem; color:#0f172a; margin:1.5rem 0 0.75rem;">Step 6 — Enrollment Confirmation Sent</h3>
         <div class="sms-example">
             Thanks! {Business Name} will be in touch shortly. Reply STOP at any time to end messages.
         </div>
 
-        <h3 style="font-size:1.05rem; color:#0f172a; margin:1.5rem 0 0.5rem;">STOP Confirmation</h3>
+        <h3 style="font-size:1.05rem; color:#0f172a; margin:1.5rem 0 0.75rem;">STOP Confirmation</h3>
         <div class="sms-example">
             You've been unsubscribed from {Business Name}. No further messages will be sent. Reply START to re-subscribe.
         </div>
 
-        <h3 style="font-size:1.05rem; color:#0f172a; margin:1.5rem 0 0.5rem;">HELP Reply</h3>
+        <h3 style="font-size:1.05rem; color:#0f172a; margin:1.5rem 0 0.75rem;">HELP Reply</h3>
         <div class="sms-example">
             {Business Name} via Swoop. We reply to missed calls and follow up on requests. Msg&amp;data rates may apply. Reply STOP to opt out. welcomematdigital.com/swoop
         </div>
@@ -163,7 +159,7 @@
             <li>Privacy: <a href="mailto:privacy@welcomematdigital.com">privacy@welcomematdigital.com</a></li>
         </ul>
 
-        <p style="margin-top: 1.5rem; font-size: 0.85rem; color: #64748b;">Last updated: June 16, 2026.</p>
+        <p style="margin-top: 1.5rem; font-size: 0.85rem; color: #64748b;">Last updated: June 21, 2026.</p>
     </div>
     <footer>
         &copy; 2026 WelcomeMat Digital LLC. Swoop is a product of WelcomeMat Digital LLC.<br>
