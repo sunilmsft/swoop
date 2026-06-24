@@ -175,43 +175,47 @@ async function handleInboundSMS(businessId, callerPhone, body) {
     .run('cancelled', lead.id, 'pending');
 
   // --- AI Reply Agent ---
-  if (business && !lead.ai_handoff_done) {
+  if (business && !lead.ai_handoff_done && business.ai_enabled) {
     const aiReply = await generateReply(business, lead, body);
+    const fallbackReply = `${business.name}: Thanks for the details. We can help with that. What city is the job in, and what's the best time for a callback?`;
+    const replyBody = aiReply || fallbackReply;
 
-    if (aiReply) {
-      // Send the AI-generated reply
-      let twilioSid = null;
-      try {
-        const twilioMsg = await sendSMS(callerPhone, aiReply);
-        twilioSid = twilioMsg.sid;
-      } catch (err) {
-        console.log(`⚠️ AI reply generated but SMS send failed: ${err.message}`);
-      }
+    if (!aiReply) {
+      console.log('🤖 AI agent unavailable, using fallback response');
+    }
 
-      // Log the outbound AI message (even if send failed — we still want the record)
-      db.prepare(
-        'INSERT INTO messages (lead_id, direction, body, twilio_sid) VALUES (?, ?, ?, ?)'
-      ).run(lead.id, 'outbound', aiReply, twilioSid);
+    // Send the generated or fallback reply
+    let twilioSid = null;
+    try {
+      const twilioMsg = await sendSMS(callerPhone, replyBody);
+      twilioSid = twilioMsg.sid;
+    } catch (err) {
+      console.log(`⚠️ Auto-reply SMS send failed: ${err.message}`);
+    }
 
-      // Increment turn count
-      const newTurnCount = (lead.ai_turn_count || 0) + 1;
-      const maxTurns = business.max_ai_turns || 3;
-      const isHandoff = newTurnCount >= maxTurns;
+    // Log the outbound message (even if send failed — we still want the record)
+    db.prepare(
+      'INSERT INTO messages (lead_id, direction, body, twilio_sid) VALUES (?, ?, ?, ?)'
+    ).run(lead.id, 'outbound', replyBody, twilioSid);
 
-      db.prepare(
-        'UPDATE leads SET ai_turn_count = ?, ai_handoff_done = ?, lead_status = ?, updated_at = datetime(\'now\') WHERE id = ?'
-      ).run(newTurnCount, isHandoff ? 1 : 0, isHandoff ? 'needs_attention' : 'engaged', lead.id);
+    // Increment turn count
+    const newTurnCount = (lead.ai_turn_count || 0) + 1;
+    const maxTurns = business.max_ai_turns || 3;
+    const isHandoff = newTurnCount >= maxTurns;
 
-      if (isHandoff) {
-        // Build summary for the business owner
-        const allMessages = db.prepare(
-          'SELECT direction, body FROM messages WHERE lead_id = ? ORDER BY sent_at ASC'
-        ).all(lead.id);
-        const summary = buildHandoffSummary(lead, allMessages);
+    db.prepare(
+      'UPDATE leads SET ai_turn_count = ?, ai_handoff_done = ?, lead_status = ?, updated_at = datetime(\'now\') WHERE id = ?'
+    ).run(newTurnCount, isHandoff ? 1 : 0, isHandoff ? 'needs_attention' : 'engaged', lead.id);
 
-        db.prepare('UPDATE leads SET notes = ? WHERE id = ?').run(summary, lead.id);
-        console.log(`🤝 AI handoff complete for lead ${lead.id}: ${summary}`);
-      }
+    if (isHandoff) {
+      // Build summary for the business owner
+      const allMessages = db.prepare(
+        'SELECT direction, body FROM messages WHERE lead_id = ? ORDER BY sent_at ASC'
+      ).all(lead.id);
+      const summary = buildHandoffSummary(lead, allMessages);
+
+      db.prepare('UPDATE leads SET notes = ? WHERE id = ?').run(summary, lead.id);
+      console.log(`🤝 AI handoff complete for lead ${lead.id}: ${summary}`);
     }
   }
 
