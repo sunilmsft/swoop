@@ -4,20 +4,29 @@
 
 ---
 
-## Now (this week)
+## Now (first week after return)
 
-### N-1. Wait for Twilio TFV decision
-- **Why:** It's the single external blocker. Round 3 was rejected June 16 (code `30527`); appeal was opened June 17 by Ignacio to the toll-free team. Decision email lands at `hello@welcomematdigital.com`.
-- **What to do while waiting:** Do NOT modify the compliance surface (consent / privacy / terms pages, default SMS template, STOP/HELP handlers). Anything else is fair game.
-- **Success:** Email from Twilio with approval. Number `+1 (833) 783-0902` becomes A2P-verified for SMS.
-- **If rejected:** See [12_TWILIO_VERIFICATION_HISTORY.md](12_TWILIO_VERIFICATION_HISTORY.md) → "If This Round Is Rejected".
+### N-1. Validate production runtime config with one live call test
+- **Why:** TFV is approved and pushed, but reliable pilot testing depends on config correctness (`TWILIO_MOCK_MODE`, OpenAI key, webhooks).
+- **How:** Confirm `https://swoop-x79g.onrender.com/api/test/status` returns `{"mockMode":false}`. Place one missed call from QA phone and verify first SMS delivery + second-turn reply path.
+- **Success:** Missed-call SMS delivers and customer reply receives either AI response or fallback response within one turn.
 
-### N-2. Update Notification Email in Twilio Trust Hub
-- **Why:** Currently `sunil1308@gmail.com`. Should be `hello@welcomematdigital.com` for consistency and to avoid the domain-mismatch flag that hit on June 10.
-- **How:** Twilio Console → Trust Hub → Business Profile bundle `BUf71fa573b0fd6173b0cc31daba2ba41b` → edit Notification Email
-- **Success:** Trust Hub shows `hello@`. No re-verification needed.
+### N-2. Fix/rotate OpenAI key and confirm AI reply path
+- **Why:** Current testing surfaced intermittent 401 key failures; fallback response now prevents silence but AI should be restored for pilot quality.
+- **How:** Update `OPENAI_API_KEY` in Render, redeploy, send customer-style inbound text, verify AI-generated reply appears in logs/messages.
+- **Success:** Two-turn conversation works with AI on primary path (fallback only used on exception).
 
-### N-3. Repo hygiene — move out of OneDrive (recommended)
+### N-3. Start A2P 10DLC brand + campaign registration
+- **Why:** Toll-free is now approved for demo/testing, but production customer onboarding requires local numbers + 10DLC.
+- **How:** Twilio Console → Messaging → Regulatory Compliance → A2P 10DLC: brand registration, then shared campaign for missed-call response.
+- **Success:** Brand and campaign approved and ready for per-customer number attachment.
+
+### N-4. Implement landline/non-textable fallback
+- **Why:** Home phone callers may not be SMS reachable; current flow needs callback routing when SMS is not viable.
+- **How:** Twilio Lookup line-type check before first SMS; if landline/non-textable, create callback-needed lead state and owner alert.
+- **Success:** Non-textable callers are never dropped; owner gets clear callback action.
+
+### N-5. Repo hygiene — move out of OneDrive (recommended)
 - **Why:** Repo lives in OneDrive sync folder. If OneDrive is corporate-tied, `.env` with live secrets is in M365 cloud.
 - **How:** `git clone https://github.com/sunilmsft/swoop.git C:\dev\swoop`, copy `.env`, point VS Code there, delete the OneDrive copy.
 - **Success:** New working tree under `C:\dev\swoop`, `.env` no longer sync'd anywhere.

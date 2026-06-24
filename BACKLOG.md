@@ -1,5 +1,13 @@
 # Swoop — Backlog
 
+## 🧭 Post-Trip Restart Checklist (when back from India)
+- [ ] Verify production env on Render: `TWILIO_MOCK_MODE=false`, `OPENAI_API_KEY` valid, `TWILIO_PHONE_NUMBER` set
+- [ ] Run one live missed-call + SMS reply test from dedicated QA phone
+- [ ] Confirm AI second-turn reply path (or fallback) is working for a realistic customer text
+- [ ] Start A2P 10DLC brand vetting (production path for customer local numbers)
+- [ ] Implement landline/non-textable fallback path (Twilio Lookup + owner callback alert)
+- [ ] Open auth implementation sprint (magic-link login + business scoping)
+
 ## ✅ Done (v0.1.0)
 - [x] Express server with static file serving
 - [x] SQLite database with businesses, leads, messages, follow_ups tables
@@ -245,6 +253,7 @@
 > **Sequencing:** finish TFV first (already 80% done, warm contact at Twilio) → use it to test the full flow → register 10DLC Brand + Campaign when first customer signs up.
 
 - [ ] 🟢 Message delivery status tracking (Twilio status callbacks)
+- [ ] 🟡 **Landline / non-textable fallback path** — Add Twilio Lookup line-type check (mobile/landline/voip) before first missed-call SMS. If landline/non-textable, skip SMS and mark lead as `no_sms_callback_needed`, then notify owner to call back manually. Keep SMS failure fallback (delivery error handling) as backup for ambiguous VOIP/ported numbers.
 - [ ] 🟡 **A2P 10DLC brand + campaign registration for Swoop** — register Swoop as the brand and one "missed-call response" campaign. Once approved, every new customer's local number gets assigned to this shared campaign — no per-customer paperwork wait. Unblocks fast onboarding for real customers. (~$4 brand vetting + ~$10/mo campaign.) **Decided June 13: this is the production path. Toll-free `+18337830902` stays as demo/test only.**
 - [ ] 🟡 **Local number provisioning per customer** — once 10DLC approved, buy local Twilio number in customer's area code on signup (a Sammamish plumber needs a 425 number, not an 833). Wire into admin.html "Add Business" flow so number purchase + campaign attach happens automatically. Keep current toll-free as permanent test/demo line. _Bumped from 🟢 → 🟡 on June 13 — confirmed as the customer-onboarding mechanic._
 - [ ] 🟢 **Plan B SMS provider notes** — Bandwidth.com or Telnyx as Twilio alternates if verification continues to drag. Same A2P rails, often faster brand approval. (Evaluated Sent.dm + Sendblue May 27 — both passed: Sent.dm still needs A2P; Sendblue is iMessage-only and breaks for Android callers.)

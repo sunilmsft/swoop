@@ -1,11 +1,10 @@
-# 03 — Current State (June 15, 2026)
+# 03 — Current State (June 23, 2026)
 
 ## Code Status
 
-- **Latest version tag:** v0.2.7 (TFV branded opt-in compliance)
-- **Latest commit on `master` / `origin/master`:** `8ecca63` — *"consent: add standalone Opt-In Flow section; BACKLOG: log Day 2 (June 2) + Day 3 (June 3-4) launch wins"*
-- **Commit count:** ~56 (single author — `Sunil Venugopal <sunilve@microsoft.com>` historically; future commits = `sunil1308@gmail.com`)
-- **Branch reality:** local branch is `master`; Render and GitHub Pages deploy from `main`. Push with `git push origin master:main`. Remote `master` branch was deleted; ignore the apparent mismatch.
+- **Latest status milestone:** Toll-free verification approved; live missed-call SMS testing passing
+- **Latest commit on `master` / `origin/main`:** `4b8b60e` — *"Add fallback second-turn SMS reply"*
+- **Branch reality:** local branch is `master`; Render and GitHub Pages deploy from `main`. Push with `git push origin master:main`.
 
 ## What's Shipped (working in production today)
 
@@ -66,7 +65,7 @@
 ## What's Not Built (still open)
 
 ### Hard blockers for a paying customer
-- 🔴 **TFV decision pending** — resubmitted June 13, in prioritized queue
+- ✅ **TFV approved** — `+1 (833) 783-0902` can now send SMS/MMS through Twilio
 - 🔴 **No auth on dashboard or admin** — public URLs expose all leads
 - 🔴 **No A2P 10DLC brand or campaign** — required for customer production numbers
 - 🔴 **No local-number provisioning per customer** — owners need a 425 number, not the 833 demo line
@@ -121,8 +120,9 @@ Any edit to these surfaces requires re-reading [12_TWILIO_VERIFICATION_HISTORY.m
 
 ## Outstanding Watch Items
 
-- **TFV decision** — could land any day. Email goes to `hello@welcomematdigital.com`.
-- **India trip June 25** — TFV decision may arrive while traveling. If approved, light up SMS testing. If rejected with code 30527 again, escalate via direct manual support ticket referencing BP approval bundle.
+- **OpenAI key reliability** — fallback second-turn response is in place, but production AI path should be restored and validated.
+- **Landline/non-textable callers** — backlog item added for Twilio Lookup + callback-needed fallback.
+- **India trip June 25** — resume with post-trip checklist in [BACKLOG.md](../BACKLOG.md).
 - **WA Business License email** — expected delivery within 10 business days from June 2 filing.
 - **Sammamish home-occupation endorsement** — ~3 weeks from June 2.
 - **Calendar reminders set:** May 29 2027 (Zoho renewal), May 30 2027 (WA license renewal warning), June 1 2027 (Annual Report 30-day warning), **June 30 2027 (HARD WA Annual Report deadline ~$70)**.
