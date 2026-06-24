@@ -24,6 +24,11 @@ async function handleMissedCall(businessId, callerPhone) {
   const business = db.prepare('SELECT * FROM businesses WHERE id = ?').get(businessId);
   if (!business) throw new Error(`Business ${businessId} not found`);
 
+  const consentMethod = 'verbal_ivr';
+  const consentSource = 'inbound call to published business phone number';
+  const consentScriptVersion = '2026-06-23-v1';
+  const consentNotes = 'Caller heard the TwiML verbal disclosure before the missed-call SMS; consent metadata is stored on the lead record with the outbound confirmation text.';
+
   // Find existing lead or create new one
   let lead = db.prepare(
     'SELECT * FROM leads WHERE business_id = ? AND caller_phone = ? ORDER BY created_at DESC LIMIT 1'
@@ -31,13 +36,14 @@ async function handleMissedCall(businessId, callerPhone) {
 
   if (!lead) {
     const result = db.prepare(
-      'INSERT INTO leads (business_id, caller_phone, call_status) VALUES (?, ?, ?)'
-    ).run(businessId, callerPhone, 'missed');
+      'INSERT INTO leads (business_id, caller_phone, call_status, consent_method, consent_source, consent_recorded_at, consent_script_version, consent_notes) VALUES (?, ?, ?, ?, ?, datetime(\'now\'), ?, ?)'
+    ).run(businessId, callerPhone, 'missed', consentMethod, consentSource, consentScriptVersion, consentNotes);
     lead = db.prepare('SELECT * FROM leads WHERE id = ?').get(result.lastInsertRowid);
   } else {
     // Update existing lead with new missed call
-    db.prepare('UPDATE leads SET call_status = ?, updated_at = datetime(\'now\') WHERE id = ?')
-      .run('missed', lead.id);
+    db.prepare(
+      'UPDATE leads SET call_status = ?, consent_method = COALESCE(consent_method, ?), consent_source = COALESCE(consent_source, ?), consent_recorded_at = COALESCE(consent_recorded_at, datetime(\'now\')), consent_script_version = COALESCE(consent_script_version, ?), consent_notes = COALESCE(consent_notes, ?), updated_at = datetime(\'now\') WHERE id = ?'
+    ).run('missed', consentMethod, consentSource, consentScriptVersion, consentNotes, lead.id);
   }
 
   // Respect opt-out state for repeat callers.

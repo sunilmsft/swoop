@@ -6,7 +6,7 @@
 
 ---
 
-## Snapshot — Current State (June 17, 2026 — afternoon)
+## Snapshot — Current State (June 23, 2026 — TFV APPROVED)
 
 | Item | Status | Reference |
 |---|---|---|
@@ -14,12 +14,13 @@
 | **Twilio account** | Paid (upgraded from Trial June 1) | |
 | **Twilio Business Profile** | ✅ **Approved June 11, 2026** | Bundle `BUf71fa573b0fd6173b0cc31daba2ba41b`, manual review by Jennifer |
 | **Toll-Free Number** | `+1 (833) 783-0902` | Demo / test line per June 13 decision |
-| **TFV (Toll-Free Verification)** | ⏳ **Appeal opened June 17, 2026 (after Round 3 rejection on June 16, code `30527`)** — Ignacio confirmed escalation to the toll-free team | Ticket `27236005`, TFV Request SID `HH260e95b417689297554480bd502c5e88`. Console form is silently saving EIN as dashless `422903620` instead of submitted `42-2903620` — likely root cause of all 3 rounds of 30527. |
-| **A2P 10DLC** | ❌ Not started — begin in parallel given Round 3 dead-end | Production path for customer numbers — see [10_NEXT_STEPS.md](10_NEXT_STEPS.md) N-6 |
+| **TFV (Toll-Free Verification)** | ✅ **APPROVED June 23** on SID `HH260e95b417689297554480bd502c5e88` | Direct update via `messaging.v1.tollfreeVerifications(sid).update()` bypassed Console form bugs and moved the record into review. Twilio Consumer Trust Team approval email received the same evening confirming `+1 (833) 783-0902` may now send SMS and MMS through Twilio. |
+| **A2P 10DLC** | ⏳ In parallel — brand vetting running | Production path for customer numbers — see [10_NEXT_STEPS.md](10_NEXT_STEPS.md) N-6 |
 | **BOI (FinCEN)** | ✅ Permanently exempt | March 2025 FinCEN final rule |
 | **Privacy page hardened** | ✅ June 14, 2026 | frontdesk-ai commit `5e3dc3c` — three coverage points of Twilio "magic phrase" |
-| **Consent page — IVR-style opt-in flow** | ✅ June 16, 2026 | swoop `42fdf7f` + frontdesk-ai `86a36c8` — Option A SMS template + verbatim IVR flow |
-| **Open compliance issues** | Awaiting toll-free team response on Ignacio's June 17 appeal | 7-day prioritized resubmit window expires June 22; India trip June 25 |
+| **Consent page — Verbal IVR script (June 22 revision)** | ✅ June 22, 2026 | swoop + frontdesk-ai — step-by-step verbatim IVR dialogue with dynamic business name, message types (callback responses, appointment reminders), frequency (up to 7 per missed call) |
+| **Voice webhook — Verbal disclosure** | ✅ June 22, 2026 | `server/routes/webhooks.js` — `twiml.say()` plays on every inbound call with business name, message disclosure, Msg&data, STOP opt-out |
+| **Open compliance issues** | ✅ **CLOSED** — TFV approved. | Direct Messaging API update bypassed all Console form sanitizer bugs and resulted in same-day approval. India trip June 25. |
 
 ---
 
@@ -253,19 +254,177 @@ Confirmation page: "Thanks for submitting your toll-free registration! Your toll
 
 > **🎯 LESSON: Pre-submit screenshots can't prove what the form saved, only what you typed before clicking Submit. To diagnose form-bugs, reopen the form AFTER rejection and screenshot each page — those screenshots are the ground truth of what the reviewer / Persona actually saw.**
 
-### Phase 9 — Awaiting Manual Override Response (June 16 evening → ?)
+### Phase 9 — Toll-Free Team Response: Verbal Consent Script Required (June 21, 2026)
 
 **June 17, 2026 ~10:11 AM PDT** — Ignacio replied on ticket `27236005`: "I have created an appeal - as soon as we have a response from our toll-free team, I will let you know." This confirms escalation is accepted and actively in queue.
 
-**Watch items:**
-- Expected reviewer response on the manual-override ask: 1–3 business days (Ignacio's typical SLA on this thread)
-- Hard deadline: prioritized resubmit window closes June 22 — if no response by June 19, send a soft nudge
-- India trip departs June 25 — try to land a decision before then
-- **PARALLEL TRACK opened:** begin A2P 10DLC brand vetting in parallel since TFV is now demonstrably blocked on a UI bug. Per the June 13 strategic decision, production was always going to 10DLC. Brand vetting (~$4) + single shared campaign (~$10/mo) on the BP-approved entity. If 10DLC clears, Swoop ships regardless of what happens with the 833 number.
-- If Ignacio's manual override succeeds: thank-you note + update Trust Hub bundle Notification Email to `hello@` + close the loop. Document the Persona/form-bug interaction in a postmortem for the playbook.
-- If Ignacio cannot manually override AND Messaging Compliance API path also strips the dash: open a paid Twilio support case, escalate to a CSM, OR abandon TFV entirely and ship Swoop on 10DLC only.
+**June 23, 2026** — Switched from `trusthub.v1.complianceTollfreeInquiries.create` (which only opens an embedded Persona session, not a real TFV update) to the correct endpoint: `messaging.v1.tollfreeVerifications(sid).update()`. Fixed four field corruption issues left by the Console form: contact email → `hello@`, `CUSTOMER_CARE` enum (all-caps, no space), `editReason` added, `additionalInformation` updated with verbal script summary. TFV status moved from `TWILIO_REJECTED` → `IN_REVIEW`, then to **APPROVED** the same evening. Official Twilio Consumer Trust Team acknowledgment email arrived first, followed by the approval email confirming `+1 (833) 783-0902` may now send SMS and MMS through Twilio. Reply sent to Ignacio on ticket #27236005. **🎯 LESSON: The correct direct TFV resubmission endpoint is `messaging.v1.tollfreeVerifications(sid).update()` — NOT the TrustHub compliance inquiries path, which only starts a Persona UI session.**
 
----
+**June 21, 2026** — Ignacio relayed the toll-free team's response. The team is NOT asking about the EIN/BRN at this stage — the blocking issue is the **missing verbal consent script**. Exact feedback:
+
+> "At this time, a script for the verbal consent process has not been provided. In order for verbal consent to be accepted, we need a detailed script or a simulated conversation that clearly shows how users are informed and how their consent is obtained. Without this information, we're unable to verify compliance."
+
+The team requires:
+1. **The exact language used to obtain verbal consent** — verbatim IVR script
+2. **Clear opt-out instructions** — how callers are told they can stop messages
+
+They provided a reference example (Twilio IVR best-practices blog) and said: "Once this is provided, we'll be happy to continue with the review."
+
+**Root cause of this gap:** The TFV form had opt-in type set to "Verbal" and the opt-in proof URL pointed to `consent.html#opt-in-flow`. But that page described the flow in prose ("functionally equivalent to a verbal IVR") rather than as a verbatim script. The voice webhook also played NO verbal disclosure — it just forwarded the call or hung up silently. We had the concept of verbal opt-in but not the actual implementation.
+
+**Fixes applied June 21 (LOCAL — not yet pushed):**
+1. **`server/routes/webhooks.js`** — added `twiml.say()` verbal disclosure before `<Dial>`: *"Thank you for calling {Business Name}. If we miss your call, we will send a text message to follow up. Message and data rates may apply. Reply STOP at any time to stop messages."* Every caller now hears a verbal disclosure before the call is forwarded or ends.
+2. **`public/consent.html`** (`#opt-in-flow` section) — rewrote from prose to a verbatim step-by-step IVR script with dialogue format: IVR speaks → call ends missed → SMS sent → customer replies → confirmation sent. Includes exact wording for each step. Last updated date updated to June 21.
+
+**Pre-clearance reply SENT June 21** — Replied to Ignacio on ticket `27236005` FROM `hello@welcomematdigital.com` with the full verbal IVR script inlined. Asked him to confirm (1) the script is acceptable to the toll-free team and (2) whether any other items are outstanding before resubmitting the form. Updated `consent.html#opt-in-flow` URL included.
+
+**Ignacio feedback received June 22, 1:14 PM PDT** — Two refinements to the verbal script:
+1. **Business name must be explicit** — not a placeholder. The script now shows: *"Thank you for calling {Business Name}"* which clarifies that the business name is dynamically substituted (e.g., "Thank you for calling Acme Plumbing").
+2. **Script must specify kind of messages + frequency** — Ignacio provided a Twilio IVR example that specified message type and frequency explicitly. Our original script only said "we will send a text message to follow up" without saying WHAT kind or HOW MANY. 
+
+**Revised verbal disclosure (UPDATED June 22, ready to push):**
+> *"Thank you for calling {Business Name}. If we miss your call, we will send you a text to follow up. You may receive up to 7 messages regarding your missed call — including responses to your questions and appointment reminders. Message and data rates may apply. Reply STOP at any time to stop all messages."*
+
+This now includes:
+- Dynamic business name substitution
+- Kind of messages (responses to questions, appointment reminders)
+- Frequency (up to 7 per missed call)
+- Msg&data rates
+- STOP opt-out
+
+**Status:** Script confirmed acceptable by Ignacio. **Ready to push code + resubmit form on June 22.**
+
+**Watch items:**
+- Hard deadline: prioritized resubmit window closes June 22 — push code + send Ignacio reply TODAY
+- India trip departs June 25 — land a decision before then
+- **PARALLEL TRACK still open:** A2P 10DLC brand vetting proceeds regardless of TFV outcome (production was always going 10DLC)
+- If Ignacio confirms script is acceptable AND no other items outstanding → push code → resubmit via form (or API if dash-strip is still a problem) → email Ignacio with form screenshot + pre-empt the email field reset
+- If Ignacio flags additional items → fix them first before any resubmit
+
+> **🎯 LESSON: "Verbal opt-in" on a TFV form requires a verbatim IVR dialogue script AND an actual verbal disclosure in the call flow. Saying the flow is "functionally equivalent" to a verbal script is not sufficient. The reviewer needs to read the exact words a caller hears.**
+
+> **🎯 LESSON: When a toll-free team escalation comes back with a list of items, ask the reviewer to confirm there are no other open issues before resubmitting. Every resubmit risks another automated rejection cycle. Pre-clearance via email costs nothing and avoids the 4-hour Persona gate.**
+
+### Phase 9 — Toll-Free Team: Verbal Script Required + June 22 Form Resubmission (June 21–22, 2026)
+
+**June 17, 2026 ~10:11 AM PDT** — Ignacio replied on ticket `27236005`: "I have created an appeal - as soon as we have a response from our toll-free team, I will let you know." Escalation accepted and queued.
+
+**June 21, 2026** — Ignacio relayed the toll-free team's response. The team is NOT asking about EIN/BRN — the blocking issue is the **missing verbal consent script**. Exact feedback:
+
+> "At this time, a script for the verbal consent process has not been provided. In order for verbal consent to be accepted, we need a detailed script or a simulated conversation that clearly shows how users are informed and how their consent is obtained. Without this information, we're unable to verify compliance."
+
+Requirements:
+1. **Exact language used to obtain verbal consent** — verbatim IVR script
+2. **Clear opt-out instructions** — how callers are told to stop messages
+
+**Root cause analysis:** TFV form had opt-in type set to "Verbal" + opt-in proof URL pointed to `consent.html#opt-in-flow`. But that page described the flow in prose ("functionally equivalent to a verbal IVR") rather than verbatim script. The voice webhook also played NO verbal disclosure — it just forwarded the call silently. Concept of verbal opt-in existed; actual implementation did not.
+
+**Pre-clearance reply sent to Ignacio June 21** from `hello@welcomematdigital.com`:
+- Provided full verbatim verbal IVR script
+- Asked him to confirm (1) script is acceptable to toll-free team, (2) any other items outstanding before resubmit
+
+**Ignacio's June 22 feedback** (1:14 PM PDT):
+1. **Business name must be explicit** — not a placeholder. Should show `"{Business Name}"` to clarify dynamic substitution (e.g., "Thank you for calling Acme Plumbing").
+2. **Script must specify message type AND frequency** — original script only said "we will send a text message to follow up" without WHAT kind or HOW MANY. Needed explicit type (callback responses, appointment reminders) + explicit frequency (up to 7 per missed call).
+
+**Final verbal disclosure script (approved by Ignacio June 22):**
+```
+"Thank you for calling {Business Name}. If we miss your call, we will send you a text to follow up. You may receive up to 7 messages regarding your missed call — including responses to your questions and appointment reminders. Message and data rates may apply. Reply STOP at any time to stop all messages."
+```
+
+Includes all required elements:
+- Dynamic business name substitution
+- Kind of messages (callback responses, appointment reminders)
+- Frequency (up to 7 per missed call)
+- Msg&data rates disclosure
+- STOP opt-out mechanism
+
+**Code deployment June 22** (swoop commit `a4df90c`, PUSHED to main, live at welcomematdigital.com/swoop):
+
+1. **`server/routes/webhooks.js`** — Added `twiml.say()` verbal disclosure before call forwarding:
+   ```javascript
+   const businessName = business ? business.name : 'this business';
+   // Verbal consent disclosure — plays on every inbound call for toll-free verification compliance.
+   twiml.say(`Thank you for calling ${businessName}. If we miss your call, we will send you a text to follow up. You may receive up to 7 messages regarding your missed call — including responses to your questions and appointment reminders. Message and data rates may apply. Reply STOP at any time to stop all messages.`);
+   if (business && business.forward_phone) {
+     twiml.dial({ timeout: 20, action: '/webhooks/voice-dial-result' }, business.forward_phone);
+   }
+   ```
+   Every caller hears the disclosure before the call is forwarded or ends.
+
+2. **`public/consent.html` (`#opt-in-flow` section)** — Rewrote from prose to verbatim step-by-step IVR script:
+   - Step 1: Customer dials published business phone number
+   - Step 2: IVR speaks verbatim disclosure (with business name dynamically substituted)
+   - Step 3: Call missed / IVR hangs up
+   - Step 4: SMS auto-reply sent
+   - Step 5: Customer receives message
+   - Step 6: Customer replies to question
+   - Step 7: Opt-out flow (STOP/HELP keywords)
+   - Last updated: June 21 (footer updated June 22)
+
+3. **TFV form resubmitted June 22** via Twilio Console → Phone Numbers → Regulatory Compliance → TFV:
+   - All fields matched Round 3 + new verbal disclosure live in both webhook and documentation
+   - Notification Email auto-reverted to `sunil1308@gmail.com` on page advance (Lesson #4 continues); corrected on final page + visually verified before Submit
+   - Confirmation page: "Thanks for submitting your toll-free registration! Your toll-free registration is being reviewed."
+
+4. **Reply email sent to Ignacio** (June 22 EOD) from `hello@welcomematdigital.com`:
+   - Confirmed code deployed and live at welcomematdigital.com/swoop
+   - Referenced updated consent.html URL with verbatim script
+   - Attached screenshot of final form page showing corrected Notification Email
+   - Pre-emptively noted Email field auto-revert as a recurring form-side bug (now documented 4+ times)
+   - Added footnote for Twilio escalation: if TFV rejects on same field errors, it may indicate form engineering issue needing escalation
+   - Thanked Ignacio for pre-clearance approach — saved from another blind rejection cycle
+
+**June 23 follow-up — consent record storage strengthened:**
+- `server/db/database.js` now stores explicit consent metadata on each lead (`consent_method`, `consent_source`, `consent_recorded_at`, `consent_script_version`, `consent_notes`)
+- `server/services/leads.js` now persists the verbal IVR consent record whenever a missed call is logged, alongside the outbound confirmation SMS body/Twilio SID
+- `public/consent.html` now documents exactly what is recorded and stored so Twilio reviewers can verify the proof trail end-to-end
+- `scripts/tfv-api-resubmit.js` + `config/tfv-submission.json` now provide an API-based resubmission path that avoids the Console UI bugs
+
+**Status as of June 22 EOD:**
+- ✅ Hard deadline (7-day prioritized window): **MET** — form resubmitted by EOD
+- ✅ Code deployed and live
+- ✅ Email sent to Ignacio with form screenshot
+- ⏳ Expected toll-free team SLA: 1–3 business days for approval
+- 📅 India trip: June 25 departure (hard stop)
+- 🔵 Fallback: A2P 10DLC brand vetting continues in parallel (production always on 10DLC)
+
+**If rejected again:**
+- Reply to Ignacio immediately with error details
+- Request escalation to Messaging Compliance API path as alternative
+- Reference form-field bugs (Email revert, EIN dash strip) as potential form engineering issue
+
+> **🎯 LESSON: "Verbal opt-in" on a TFV form requires BOTH documentation (a verbatim IVR script in the consent page) AND production implementation (actual TwiML `<Say>` on the voice call). "Functionally equivalent" or "we do this in code" is insufficient. Reviewers read the script, listen to the call, and cross-check them.**
+
+> **🎯 LESSON: The dash-strip issue consumed 2 rejection cycles before the real blocker (missing verbal script) was revealed. Root cause was not broker-sync, not form bugs, but missing implementation. When rejection feedback is vague (just a code), escalate quickly to ask for clarification — don't waste cycles hypothesizing. Ignacio's June 21 email saved us from another blind resubmit.**
+### Phase 10 — Round 5 Rejection: Code 30511 (June 22 evening, 2026)
+
+**June 22, 2026 ~8:49 PM PDT** — `trusthub-verify@twilio.com` rejected Round 4 (resubmitted June 22 EOD) with **NEW error code `30511`** — "Verbal Consent Script Must Be Provided for Approval". 
+
+**Key difference:** This is a DIFFERENT rejection code than Rounds 1–3 (was 30527 "BRN Invalid"). **Progress indicator:** We cleared the BRN/EIN/broker-sync blocker. But the verbal script submission format is still not acceptable.
+
+**Help doc indicates five possible solutions:**
+1. Submit a detailed script showing exact language used for obtaining verbal consent ✅ (we have: consent.html#opt-in-flow verbatim IVR)
+2. Include a simulated conversation demonstrating how users are informed and consent is collected ✅ (we have: step-by-step dialogue)
+3. **Provide documentation of how verbal consent is recorded and stored** ❓ (unclear what format — email? PDF? inline in form?)
+4. Include instructions for how users can opt-out after providing verbal consent ✅ (we have: STOP/HELP)
+5. Consider implementing a confirmation text message after verbal opt-in ❓ (we don't have this — could add)
+
+**The real issue:** Help doc lists five possible solutions but **doesn't specify which one is the actual requirement or in what format**. The Twilio rejection email mentions two paths: (1) edit via **Messaging Compliance API**, or (2) edit via Console and resubmit. The API is explicitly offered as an option.
+
+**Pre-clearance email planned:** Send clarifying question to Ignacio on ticket `27236005` asking:
+- Which of the five solutions is actually required?
+- What format does "documentation of how we record/store consent calls" need to be (email attachment? PDF? inline?)
+- Should we use the Messaging Compliance API instead of the Console (which has proven unreliable)?
+
+This is the **last pre-clearance ask before the next resubmit** — forcing prescriptive guidance instead of another guess-and-reject cycle.
+
+> **🎯 NEW LESSON: Code 30511 (new from Rounds 1–4) indicates we cleared the entity/EIN blockers but the verbal script SUBMISSION FORMAT is wrong — not the content. The help doc lists 5 possible fixes but Twilio doesn't specify which one is actually required. This is the exact prescriptive-guidance gap identified earlier. Email escalation to ask "which format?" before next resubmit.**
+
+> **🎯 NEW LESSON: The Messaging Compliance API is explicitly offered as an alternative to the Console form in the rejection email. Given the Console form's persistent bugs (dash strip, email revert), the API path may be the faster route — it bypasses the form entirely and lets you POST/PATCH fields as JSON without the UI's input sanitizers.**
+
+
+
 
 ## The Exact Twilio "Magic Phrase"
 
@@ -287,7 +446,8 @@ If you ever rewrite the privacy page, do not remove this phrase. Even subtle par
 | `18606` | Email domain mismatch | June 10 BP | Notification Email = personal Gmail, not company domain | Reply to reviewer FROM company-domain email + plan to update Trust Hub Notification Email |
 | `30527` | Business Registration Number Is Missing or Invalid | June 13 TFV (round 1) | EIN submitted without dash + same broker-sync lag | Resubmit with `42-2903620` (dashed) + Additional Info citing BP approval + manual review request |
 | `30527` | Business Registration Number Is Missing or Invalid | June 15 TFV (round 2) | Three concrete issues (NOT broker-sync as initially suspected): (1) EIN/BRN proof not linked inline in TFV form, (2) Notification email reverted to gmail again via form-bug, (3) Sample message branded but not "complete" (missing frequency + Terms URL inline) | **Round 3 resubmitted June 16 PM** addressing all three with: Drive-hosted EIN URL in Additional Info, force-overridden notification email on final page with visual verify, Option A sample message hitting all 7 CTIA elements. Pending review. |
-| `30527` | Business Registration Number Is Missing or Invalid | June 16 TFV (round 3) | **Console form silently strips the dash from the BRN field on save** — stored as `422903620` instead of `42-2903620`. ~4hr auto-rejection by Persona's pre-check, never reached a human reviewer. Was likely the true root cause of Rounds 1–2 as well. | **Pending** — escalation email sent to Ignacio June 16 evening with side-by-side dash-strip evidence (form vs. IRS CP 575), requesting manual override against the BP-approved entity + guidance on whether the Messaging Compliance API path preserves the dash. Did NOT resubmit on the form. |
+| `30527` | Business Registration Number Is Missing or Invalid | June 16 TFV (round 3) | **Console form silently strips the dash from the BRN field on save** — stored as `422903620` instead of `42-2903620`. ~4hr auto-rejection by Persona's pre-check, never reached a human reviewer. Was likely the true root cause of Rounds 1–2 as well. | **OVERRIDDEN** — June 21 toll-free team escalation revealed the real blocker was missing verbal script, not BRN. EIN dash-strip was a red herring. |
+| (No code) | Missing verbal IVR consent script | June 21 TFV toll-free team escalation | "At this time, a script for the verbal consent process has not been provided." Opt-in type was set to Verbal but consent.html described flow in prose and voice webhook played no verbal disclosure. | **FIXED June 22:** `server/routes/webhooks.js` added `<Say>` TwiML with business name, message type/frequency, Msg&data, STOP; `public/consent.html` rewritten as verbatim step-by-step IVR script; form resubmitted with all three items (business name explicit + message types + frequency). |
 
 ---
 

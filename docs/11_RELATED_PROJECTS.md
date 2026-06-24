@@ -103,7 +103,7 @@ sunilmsft.github.io/swoop/ (GitHub Pages)
     Used historically for Twilio compliance URLs; now mostly superseded
 
 console.twilio.com (Twilio account)
-├── Number: +1 (833) 783-0902 (toll-free, TFV in progress)
+├── Number: +1 (833) 783-0902 (toll-free, TFV approved June 23, 2026)
 ├── Trust Hub: Business Profile BUf71fa573b0fd6173b0cc31daba2ba41b (Approved)
 ├── Trust Hub: TFV ticket 27236005 (Appeal opened June 17 after Round 3 rejection; awaiting toll-free team)
 └── Compliance URLs registered: welcomematdigital.com/swoop/{consent,privacy,terms}.html

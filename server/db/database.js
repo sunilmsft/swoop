@@ -43,6 +43,11 @@ db.exec(`
     lead_status TEXT DEFAULT 'new',
     ai_turn_count INTEGER DEFAULT 0,
     ai_handoff_done INTEGER DEFAULT 0,
+    consent_method TEXT,
+    consent_source TEXT,
+    consent_recorded_at TEXT,
+    consent_script_version TEXT,
+    consent_notes TEXT,
     notes TEXT,
     created_at TEXT DEFAULT (datetime('now')),
     updated_at TEXT DEFAULT (datetime('now')),
@@ -86,6 +91,21 @@ if (!leadColumns.includes('opt_out_at')) {
 if (!leadColumns.includes('is_test')) {
   db.exec('ALTER TABLE leads ADD COLUMN is_test INTEGER DEFAULT 0');
   db.exec('CREATE INDEX IF NOT EXISTS idx_leads_is_test ON leads(is_test)');
+}
+if (!leadColumns.includes('consent_method')) {
+  db.exec('ALTER TABLE leads ADD COLUMN consent_method TEXT');
+}
+if (!leadColumns.includes('consent_source')) {
+  db.exec('ALTER TABLE leads ADD COLUMN consent_source TEXT');
+}
+if (!leadColumns.includes('consent_recorded_at')) {
+  db.exec('ALTER TABLE leads ADD COLUMN consent_recorded_at TEXT');
+}
+if (!leadColumns.includes('consent_script_version')) {
+  db.exec('ALTER TABLE leads ADD COLUMN consent_script_version TEXT');
+}
+if (!leadColumns.includes('consent_notes')) {
+  db.exec('ALTER TABLE leads ADD COLUMN consent_notes TEXT');
 }
 
 const messageColumns = db.prepare('PRAGMA table_info(messages)').all().map((col) => col.name);

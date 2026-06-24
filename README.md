@@ -68,7 +68,7 @@ npm run dev
    - **Voice status callback:** `https://your-app.onrender.com/webhooks/voice-status` (POST)
    - **SMS webhook:** `https://your-app.onrender.com/webhooks/sms` (POST)
 
-## Local Testing While Twilio Approval Is Pending
+## Local Testing Without Hitting Twilio
 
 You can fully test dashboard and workflow behavior without sending real SMS.
 

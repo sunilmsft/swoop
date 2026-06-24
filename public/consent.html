@@ -100,6 +100,21 @@
         <div class="sms-example">
             Thanks! {Business Name} will be in touch shortly. Reply STOP at any time to end messages.
         </div>
+        <p style="font-size:0.85rem; color:#64748b;">This confirmation text is the written record that follows the verbal opt-in call. Swoop stores the caller's phone number, the date/time of the call, the business name, the consent method (verbal IVR), the script version, and the outbound confirmation SMS body/Twilio SID in the lead record so the business can verify how consent was obtained.</p>
+
+        <h3 style="font-size:1.05rem; color:#0f172a; margin:1.5rem 0 0.75rem;">How Consent Is Recorded and Stored</h3>
+        <div class="highlight">
+            <p><strong>Record kept by Swoop:</strong></p>
+            <ul>
+                <li>Caller phone number and business phone number</li>
+                <li>Date/time of the inbound call and verbal disclosure</li>
+                <li>Consent method: verbal IVR</li>
+                <li>Script version used for the disclosure</li>
+                <li>Outbound confirmation SMS body and Twilio SID</li>
+                <li>Service inquiry context tied to the missed call</li>
+            </ul>
+            <p style="margin-top:0.5rem;">This record is stored on the lead record in Swoop and is visible to the business owner in the dashboard for audit and support purposes.</p>
+        </div>
 
         <h3 style="font-size:1.05rem; color:#0f172a; margin:1.5rem 0 0.75rem;">STOP Confirmation</h3>
         <div class="sms-example">
