@@ -16,7 +16,7 @@ db.exec(`
     forward_phone TEXT,
     owner_name TEXT,
     timezone TEXT DEFAULT 'America/Los_Angeles',
-    auto_reply_message TEXT DEFAULT '{business_name} here, returning your missed call. We''ll send up to 7 msgs to coordinate. Msg&data rates may apply. Reply STOP to end, HELP for help. Terms: welcomematdigital.com/swoop',
+    auto_reply_message TEXT DEFAULT '{business_name}: Sorry we missed your call. What can we help with today? Reply with your issue and best time. We''ll send up to 7 msgs about this request. Msg&data rates may apply. Reply STOP to opt out, HELP for help. Terms: welcomematdigital.com/swoop',
     review_link TEXT,
     description TEXT,
     services TEXT,
