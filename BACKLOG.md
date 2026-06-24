@@ -177,7 +177,7 @@
 - [x] 🟡 Deploy to Render (render.yaml ready)
 - [x] 🟡 Set environment variables on Render
 - [x] 🟡 Update Twilio webhooks to Render URL
-- [x] 🟢 Local test mode: `TWILIO_MOCK_MODE` to simulate SMS flows without hitting the live Twilio number
+- [x] 🟢 Local test mode: `TWILIO_MOCK_MODE` to simulate SMS flows without hitting the live Twilio number. `npm run dev:mock` now starts the app in harness mode and `npm run test:harness:smoke` validates the missed-call → inbound SMS path end-to-end.
 - [x] 🟡 Complete Twilio toll-free SMS verification ✅ Approved June 23 on SID `HH260e95b417689297554480bd502c5e88`
 - [ ] 🟡 Switch Twilio consent/terms URL to always-on GitHub Pages page (`/consent.html`) to avoid Render cold-start validation failures
 

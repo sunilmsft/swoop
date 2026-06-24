@@ -6,7 +6,9 @@
   "scripts": {
     "start": "node server/index.js",
     "dev": "node --watch server/index.js",
+    "dev:mock": "node -e \"process.env.TWILIO_MOCK_MODE='true'; process.env.NODE_ENV='development'; require('./server/index.js')\"",
     "seed": "node server/seed.js",
+    "test:harness:smoke": "node scripts/test-harness-smoke.js",
     "tfv:resubmit": "node scripts/tfv-api-resubmit.js"
   },
   "keywords": [

@@ -72,9 +72,10 @@ npm run dev
 
 You can fully test dashboard and workflow behavior without sending real SMS.
 
-1. In `.env`, set `TWILIO_MOCK_MODE=true`
-2. Run `npm run dev`
-3. Trigger sample events:
+1. Run `npm run dev:mock`
+2. Open `http://localhost:3000/?dev=1` to reveal the in-dashboard Test Console
+3. Optionally run `npm run test:harness:smoke` for an end-to-end mock pass
+4. Or trigger sample events manually:
 
 ```bash
 # Simulate a missed call that should auto-text and create/update a lead
