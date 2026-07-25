@@ -481,6 +481,16 @@
         const API = resolveApiBase();
         let latestLeads = [];
 
+        function apiPath(path) {
+            return API
+                ? `/api/proxy?base=${encodeURIComponent(API)}&path=${encodeURIComponent(path)}`
+                : path;
+        }
+
+        function apiFetch(path, options = {}) {
+            return fetch(apiPath(path), options);
+        }
+
         function showEnvBanner(message) {
             const el = document.getElementById('env-banner');
             el.innerHTML = message;
@@ -515,8 +525,8 @@
         async function loadDashboard() {
             try {
                 const [statsRes, leadsRes] = await Promise.all([
-                    fetch(`${API}/api/dashboard`),
-                    fetch(`${API}/api/leads`),
+                    apiFetch('/api/dashboard'),
+                    apiFetch('/api/leads'),
                 ]);
 
                 let stats = null;
@@ -645,7 +655,7 @@
 
         // ---- Lead Detail ----
         async function openLead(id) {
-            const res = await fetch(`${API}/api/leads/${id}`);
+            const res = await apiFetch(`/api/leads/${id}`);
             if (!res.ok) return;
             const lead = await res.json();
 
@@ -714,7 +724,7 @@
         }
 
         async function updateLead(id, status) {
-            await fetch(`${API}/api/leads/${id}`, {
+            await apiFetch(`/api/leads/${id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ lead_status: status }),
@@ -724,7 +734,7 @@
         }
 
         async function requestReview(id) {
-            await fetch(`${API}/api/leads/${id}/review`, { method: 'POST' });
+            await apiFetch(`/api/leads/${id}/review`, { method: 'POST' });
             openLead(id); // Refresh the modal
             loadDashboard();
         }
@@ -735,7 +745,7 @@
             if (!body) return;
             input.disabled = true;
             try {
-                const res = await fetch(`${API}/api/leads/${id}/sms`, {
+                const res = await apiFetch(`/api/leads/${id}/sms`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ body }),
@@ -871,7 +881,7 @@
                 auto_reply_message: document.getElementById('biz-reply').value || undefined,
                 review_link: document.getElementById('biz-review').value || undefined,
             };
-            const res = await fetch(`${API}/api/businesses`, {
+            const res = await apiFetch('/api/businesses', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body),
@@ -998,7 +1008,7 @@
             const picker = document.getElementById('test-biz-picker');
             if (!picker) return;
             try {
-                const res = await fetch(`${API}/api/businesses`);
+                const res = await apiFetch('/api/businesses');
                 const list = await res.json();
                 if (!Array.isArray(list) || list.length === 0) {
                     picker.innerHTML = '<option value="">No businesses — add one in admin</option>';
@@ -1039,7 +1049,7 @@
 
         async function checkMockMode() {
             try {
-                const res = await fetch(`${API}/api/test/status`);
+                const res = await apiFetch('/api/test/status');
                 if (!res.ok) return;
                 const data = await res.json();
                 mockModeActive = !!data.mockMode;
@@ -1144,7 +1154,7 @@
 
         async function fetchLead(leadId) {
             try {
-                const res = await fetch(`${API}/api/leads/${leadId}`);
+                const res = await apiFetch(`/api/leads/${leadId}`);
                 if (!res.ok) return null;
                 return await res.json();
             } catch { return null; }
@@ -1278,7 +1288,7 @@
                 if (bizId) payload.businessId = bizId;
             }
             try {
-                const res = await fetch(`${API}/api/test/simulate`, {
+                const res = await apiFetch('/api/test/simulate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload),

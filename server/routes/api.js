@@ -6,6 +6,43 @@ const { buildSystemPrompt } = require('../services/ai-agent');
 
 const router = express.Router();
 
+async function proxyRequest(baseUrl, path, req, res) {
+  const targetBase = String(baseUrl || '').trim().replace(/\/+$/, '');
+  const targetPath = String(path || '').startsWith('/') ? String(path || '') : `/${path || ''}`;
+
+  if (!/^https?:\/\//i.test(targetBase)) {
+    return res.status(400).json({ error: 'Invalid proxy base URL' });
+  }
+
+  const targetUrl = new URL(targetPath, targetBase).toString();
+  const headers = { 'Content-Type': req.headers['content-type'] || 'application/json' };
+  const init = { method: req.method, headers };
+
+  if (!['GET', 'HEAD'].includes(req.method)) {
+    init.body = JSON.stringify(req.body ?? {});
+  }
+
+  const upstream = await fetch(targetUrl, init);
+  const contentType = upstream.headers.get('content-type') || '';
+
+  res.status(upstream.status);
+  if (contentType.includes('application/json')) {
+    return res.json(await upstream.json());
+  }
+
+  const text = await upstream.text();
+  return res.type(contentType || 'text/plain').send(text);
+}
+
+router.all('/proxy', async (req, res) => {
+  try {
+    const { base, path } = req.query;
+    await proxyRequest(base, path, req, res);
+  } catch (err) {
+    res.status(500).json({ error: `Proxy request failed: ${err.message}` });
+  }
+});
+
 /**
  * GET /api/dashboard — Summary stats for the dashboard
  */
