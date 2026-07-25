@@ -3,7 +3,7 @@ services:
     name: swoop
     runtime: node
     plan: free
-    buildCommand: npm install
+    buildCommand: npm install && npm run seed:businesses
     startCommand: npm start
     disk:
       name: swoop-data
