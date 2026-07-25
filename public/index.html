@@ -43,6 +43,23 @@
         .header .status .dot { width: 10px; height: 10px; border-radius: 50%; background: #4ade80; animation: pulse 2s infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
+        .env-banner {
+            display: none;
+            background: #fff7ed;
+            color: #9a3412;
+            border-bottom: 1px solid #fed7aa;
+            padding: 0.65rem 1rem;
+            font-size: 0.88rem;
+        }
+        .env-banner strong { color: #7c2d12; }
+        .env-banner code {
+            background: #fff;
+            border: 1px solid #fed7aa;
+            padding: 0.1rem 0.3rem;
+            border-radius: 4px;
+            font-size: 0.82rem;
+        }
+
         .container { max-width: 1200px; margin: 0 auto; padding: 1.5rem; }
 
         /* Stats Grid */
@@ -306,6 +323,8 @@
         </div>
     </div>
 
+    <div class="env-banner" id="env-banner"></div>
+
     <!-- Mock Mode banner (shown only when TWILIO_MOCK_MODE=true) -->
     <div id="mock-banner" style="display:none; background:#fef3c7; border-bottom:1px solid #fcd34d; padding:0.6rem 1rem; text-align:center; font-size:0.9rem; color:#92400e;">
         🧪 <strong>MOCK MODE ACTIVE</strong> — No real texts are being sent. Append <code>?dev=1</code> to the URL to reveal the Test Console tab (<code>?dev=0</code> to hide it again).
@@ -442,8 +461,45 @@
     </div>
 
     <script>
-        const API = '';
+        function normalizeApiBase(input) {
+            if (!input) return '';
+            const trimmed = String(input).trim();
+            if (!/^https?:\/\//i.test(trimmed)) return '';
+            return trimmed.replace(/\/+$/, '');
+        }
+
+        function resolveApiBase() {
+            const qs = new URLSearchParams(window.location.search);
+            const qsApi = normalizeApiBase(qs.get('api'));
+            if (qsApi) {
+                localStorage.setItem('swoop_api_base', qsApi);
+                return qsApi;
+            }
+            return normalizeApiBase(localStorage.getItem('swoop_api_base'));
+        }
+
+        const API = resolveApiBase();
         let latestLeads = [];
+
+        function showEnvBanner(message) {
+            const el = document.getElementById('env-banner');
+            el.innerHTML = message;
+            el.style.display = 'block';
+        }
+
+        function initEnvironmentHints() {
+            const prettySource = API ? API : 'current host';
+            if (window.location.protocol === 'file:') {
+                showEnvBanner(
+                    'This page is opened as a local file and cannot read live API data. Open <code>http://localhost:3000</code> for local mode, or use <code>?api=https://swoop-x79g.onrender.com</code> to read production data.'
+                );
+                return;
+            }
+
+            if (API) {
+                showEnvBanner(`Data source override active: <strong>${prettySource}</strong>. Remove the query parameter and clear local storage if you want to switch back.`);
+            }
+        }
 
         // ---- Tabs ----
         function switchTab(name) {
@@ -475,7 +531,8 @@
                     document.getElementById('stat-sent').textContent = stats.messagesSent;
                     document.getElementById('stat-followups').textContent = stats.pendingFollowUps;
                     document.getElementById('stat-reviews').textContent = stats.reviewsSent;
-                    document.getElementById('status-text').textContent = 'Live';
+                    const source = API ? new URL(API).host : window.location.host;
+                    document.getElementById('status-text').textContent = `Live · ${source}`;
 
                     // Show setup banner if no leads yet
                     if (stats.totalLeads === 0) {
@@ -494,7 +551,9 @@
                     renderOwnerQueue(stats);
                 }
             } catch (err) {
+                const source = API ? API : window.location.origin;
                 document.getElementById('status-text').textContent = 'Offline';
+                showEnvBanner(`Cannot reach API source <code>${source}</code>. If this is local, start the server and open <code>http://localhost:3000</code>. If this is production, use the correct host with <code>?api=https://YOUR_HOST</code>.`);
                 console.error('Dashboard load error:', err);
             }
         }
@@ -1311,6 +1370,7 @@
 
         // ---- Init ----
         checkMockMode();
+        initEnvironmentHints();
         loadDashboard();
         setInterval(loadDashboard, 30000); // Refresh every 30s
     </script>
