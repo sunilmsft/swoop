@@ -204,6 +204,7 @@
 - [x] 🟡 Smart "Open Next Priority Lead" routing using urgency scoring (status + age + incomplete profile)
 - [x] 🟢 Funnel metric fix: conversion denominator aligned with "engaged" label
 - [ ] 🔴 Bug: Owner dashboard can show stale/local leads while live Twilio traffic lands on a different host (file:// or localhost view vs `swoop-x79g.onrender.com`). Add explicit environment/source indicator + enforce single canonical dashboard URL for live operations. — _Ray: "If I can't trust what I see, I can't run my day."_
+- [ ] 🔴 Bug: Render deploys were reseeding the database on every build, which wiped live lead data and replaced it with demo rows. Remove destructive production seeding and keep seed only for local/dev. — _Priya: "I need the real conversations to survive deploys."_
 - [ ] 🟢 Search/filter leads (by status, phone, name)
 - [ ] 🟢 Pagination for leads list (currently capped at 50)
 - [ ] 🟡 Add explicit "Opted out" chip + list filter for faster owner triage — _Priya: "I need to see compliance state before I click in."_

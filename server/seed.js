@@ -7,6 +7,11 @@
 
 const db = require('./db/database');
 
+if (process.env.NODE_ENV === 'production' && process.env.ALLOW_PROD_SEED !== 'true') {
+  console.log('Skipping seed in production to avoid wiping live data.');
+  process.exit(0);
+}
+
 console.log('🌱 Seeding database...\n');
 
 // Clear existing data (order matters for FK constraints)
