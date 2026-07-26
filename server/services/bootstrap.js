@@ -1,11 +1,7 @@
 const db = require('../db/database');
 
 function ensureDefaultBusiness() {
-  const twilioPhone = process.env.TWILIO_PHONE_NUMBER;
-  if (!twilioPhone) {
-    console.log('⚠️ Startup bootstrap skipped: TWILIO_PHONE_NUMBER is not set.');
-    return;
-  }
+  const twilioPhone = process.env.TWILIO_PHONE_NUMBER || '+18337830902';
 
   const defaultForwardPhone = process.env.DEFAULT_FORWARD_PHONE || '+14257867232';
 
