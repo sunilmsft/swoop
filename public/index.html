@@ -535,13 +535,15 @@
         // ---- Dashboard Data ----
         async function loadDashboard() {
             try {
-                const [statsRes, leadsRes] = await Promise.all([
+                const [statsRes, leadsRes, businessesRes] = await Promise.all([
                     apiFetch('/api/dashboard'),
                     apiFetch('/api/leads'),
+                    apiFetch('/api/businesses'),
                 ]);
 
                 let stats = null;
                 let leads = [];
+                let businesses = [];
 
                 if (statsRes.ok) {
                     stats = await statsRes.json();
@@ -554,17 +556,24 @@
                     document.getElementById('stat-reviews').textContent = stats.reviewsSent;
                     const source = API ? new URL(API).host : window.location.host;
                     document.getElementById('status-text').textContent = `Live · ${source}`;
-
-                    // Show setup banner if no leads yet
-                    if (stats.totalLeads === 0) {
-                        document.getElementById('setup-banner').style.display = 'block';
-                    }
                 }
 
                 if (leadsRes.ok) {
                     leads = await leadsRes.json();
                     latestLeads = leads;
                     renderLeads(leads);
+                }
+
+                if (businessesRes && businessesRes.ok) {
+                    businesses = await businessesRes.json();
+                }
+
+                if (statsRes.ok) {
+                    if (Array.isArray(businesses) && businesses.length === 0) {
+                        document.getElementById('setup-banner').style.display = 'block';
+                    } else {
+                        document.getElementById('setup-banner').style.display = 'none';
+                    }
                 }
 
                 if (stats) {
