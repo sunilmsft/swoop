@@ -4,10 +4,13 @@ const express = require('express');
 const path = require('path');
 const cron = require('node-cron');
 const { processDueFollowUps } = require('./services/leads');
+const { ensureDefaultBusiness } = require('./services/bootstrap');
 
 const app = express();
 app.set('trust proxy', 1); // Trust Render's reverse proxy (fixes req.protocol for Twilio signature validation)
 const PORT = process.env.PORT || 3000;
+
+ensureDefaultBusiness();
 
 // Middleware
 app.use(express.urlencoded({ extended: false })); // Twilio sends form-encoded
