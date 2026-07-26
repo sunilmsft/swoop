@@ -115,6 +115,18 @@
             align-items: baseline;
             gap: 0.6rem;
         }
+        .briefing-item button {
+            border: none;
+            background: transparent;
+            color: inherit;
+            padding: 0;
+            text-align: left;
+            cursor: pointer;
+            font: inherit;
+        }
+        .briefing-item button:hover {
+            text-decoration: underline;
+        }
         .briefing-item strong {
             color: var(--text);
             font-size: 0.95rem;
@@ -654,15 +666,15 @@
             const actionRows = [];
 
             if (needsAttention > 0) {
-                actionRows.push(`<div class="briefing-item"><span><span class="alert-pill alert-critical">Immediate</span> Leads waiting on owner</span><strong>${needsAttention}</strong></div>`);
+                actionRows.push(`<div class="briefing-item"><button onclick="openBriefingAction('needs_attention')"><span class="alert-pill alert-critical">Immediate</span> Leads waiting on owner</button><strong>${needsAttention}</strong></div>`);
             }
 
             if (followUpsDue > 0) {
-                actionRows.push(`<div class="briefing-item"><span><span class="alert-pill alert-warn">Due now</span> Follow-ups to send</span><strong>${followUpsDue}</strong></div>`);
+                actionRows.push(`<div class="briefing-item"><button onclick="openBriefingAction('follow_up_due')"><span class="alert-pill alert-warn">Due now</span> Follow-ups to send</button><strong>${followUpsDue}</strong></div>`);
             }
 
             if (staleEngaged > 0) {
-                actionRows.push(`<div class="briefing-item"><span><span class="alert-pill alert-warn">Stale</span> Active conversations older than 24h</span><strong>${staleEngaged}</strong></div>`);
+                actionRows.push(`<div class="briefing-item"><button onclick="openBriefingAction('stale_engaged')"><span class="alert-pill alert-warn">Stale</span> Active conversations older than 24h</button><strong>${staleEngaged}</strong></div>`);
             }
 
             if (actionRows.length === 0) {
@@ -679,6 +691,30 @@
             actions.innerHTML = actionRows.join('');
             progress.innerHTML = progressRows.join('');
             meta.textContent = `Updated ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+        }
+
+        function openBriefingAction(action) {
+            if (!latestLeads || latestLeads.length === 0) return;
+
+            const now = Date.now();
+            const isStale = (lead) => (now - new Date(`${lead.updated_at}Z`).getTime()) > (24 * 60 * 60 * 1000);
+
+            let target = null;
+            if (action === 'needs_attention') {
+                target = latestLeads.find((lead) => lead.lead_status === 'needs_attention');
+            } else if (action === 'follow_up_due') {
+                target = latestLeads.find((lead) => lead.lead_status === 'new' || (lead.lead_status === 'engaged' && isStale(lead)));
+            } else if (action === 'stale_engaged') {
+                target = latestLeads.find((lead) => lead.lead_status === 'engaged' && isStale(lead));
+            }
+
+            if (!target) {
+                target = latestLeads[0];
+            }
+
+            if (target) {
+                openLead(target.id);
+            }
         }
 
         function initEnvironmentHints() {
