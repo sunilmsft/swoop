@@ -1,8 +1,22 @@
 const Database = require('better-sqlite3');
 const path = require('path');
 
+const isProduction = process.env.NODE_ENV === 'production';
 const dbPath = process.env.DB_PATH || path.join(__dirname, 'swoop.db');
+
+if (isProduction) {
+  if (!process.env.DB_PATH) {
+    throw new Error('Production requires DB_PATH to be set (expected: /var/data/swoop.db). Refusing to start on ephemeral local DB.');
+  }
+
+  const isPersistentPath = String(process.env.DB_PATH).startsWith('/var/data/');
+  if (!isPersistentPath && process.env.ALLOW_EPHEMERAL_DB !== 'true') {
+    throw new Error(`Unsafe DB_PATH for production: ${process.env.DB_PATH}. Use /var/data/... or set ALLOW_EPHEMERAL_DB=true only for temporary debugging.`);
+  }
+}
+
 const db = new Database(dbPath);
+db.__dbPath = dbPath;
 
 // Enable WAL mode for better concurrent read performance
 db.pragma('journal_mode = WAL');

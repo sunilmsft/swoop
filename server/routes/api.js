@@ -1,4 +1,5 @@
 const express = require('express');
+const fs = require('fs');
 const db = require('../db/database');
 const { sendReviewRequest } = require('../services/leads');
 const { sendSMS } = require('../services/twilio');
@@ -325,6 +326,26 @@ router.get('/admin/businesses', (req, res) => {
     ORDER BY b.created_at DESC
   `).all();
   res.json(businesses);
+});
+
+/**
+ * GET /api/admin/storage-health — Verify DB path + file characteristics.
+ */
+router.get('/admin/storage-health', (req, res) => {
+  const dbPath = db.__dbPath || process.env.DB_PATH || null;
+  const fileExists = dbPath ? fs.existsSync(dbPath) : false;
+  const stat = fileExists ? fs.statSync(dbPath) : null;
+
+  res.json({
+    nodeEnv: process.env.NODE_ENV || 'unset',
+    dbPath,
+    dbPathFromEnv: process.env.DB_PATH || null,
+    allowEphemeralDb: process.env.ALLOW_EPHEMERAL_DB === 'true',
+    isLikelyPersistentPath: dbPath ? String(dbPath).startsWith('/var/data/') : false,
+    fileExists,
+    fileSizeBytes: stat ? stat.size : 0,
+    fileMtime: stat ? stat.mtime.toISOString() : null,
+  });
 });
 
 module.exports = router;
