@@ -62,6 +62,76 @@
 
         .container { max-width: 1200px; margin: 0 auto; padding: 1.5rem; }
 
+        .briefing {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem 1.1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .briefing-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.55rem;
+        }
+        .briefing-title {
+            font-size: 0.98rem;
+            font-weight: 700;
+        }
+        .briefing-meta {
+            font-size: 0.76rem;
+            color: var(--text-muted);
+        }
+        .briefing-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 0.8rem;
+        }
+        .briefing-card {
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 0.65rem 0.75rem;
+            background: #fff;
+        }
+        .briefing-card h4 {
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.35px;
+            color: var(--text-muted);
+            margin-bottom: 0.45rem;
+        }
+        .briefing-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.42rem;
+            font-size: 0.84rem;
+        }
+        .briefing-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 0.6rem;
+        }
+        .briefing-item strong {
+            color: var(--text);
+            font-size: 0.95rem;
+        }
+        .alert-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.76rem;
+            border-radius: 999px;
+            padding: 0.18rem 0.55rem;
+            font-weight: 600;
+        }
+        .alert-critical { background: #fee2e2; color: #991b1b; }
+        .alert-warn { background: #fef3c7; color: #92400e; }
+        .alert-ok { background: #dcfce7; color: #166534; }
+
         /* Stats Grid */
         .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
         .stat-card {
@@ -332,6 +402,7 @@
             .sms-compose .btn-primary { width: 100%; text-align: center; }
             .module-grid { grid-template-columns: 1fr; }
             .journey-steps { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            .briefing-grid { grid-template-columns: 1fr; }
         }
         @media (max-width: 480px) {
             .stats { grid-template-columns: 1fr 1fr; }
@@ -364,6 +435,27 @@
         </div>
 
         <div class="flow-note" id="flow-note">Loading call flow mode...</div>
+
+        <div class="briefing" id="owner-briefing">
+            <div class="briefing-head">
+                <div class="briefing-title">Owner Briefing</div>
+                <div class="briefing-meta" id="briefing-meta">Updating...</div>
+            </div>
+            <div class="briefing-grid">
+                <div class="briefing-card">
+                    <h4>Action Needed Now</h4>
+                    <div class="briefing-list" id="briefing-actions">
+                        <div class="briefing-item"><span>Loading current priorities...</span></div>
+                    </div>
+                </div>
+                <div class="briefing-card">
+                    <h4>Progress Snapshot</h4>
+                    <div class="briefing-list" id="briefing-progress">
+                        <div class="briefing-item"><span>Loading today’s summary...</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- Production tab -->
         <div class="tab-panel active" data-panel="prod">
@@ -540,6 +632,55 @@
             el.textContent = `Call flow mode: Twilio primary. Calls to ${businessNumber} play disclosure, then ring ${forwardNumber}. A lead thread appears only when the call is missed or voicemail is detected.`;
         }
 
+        function renderOwnerBriefing(stats, leads) {
+            const meta = document.getElementById('briefing-meta');
+            const actions = document.getElementById('briefing-actions');
+            const progress = document.getElementById('briefing-progress');
+
+            const needsAttention = stats.needsAttention || 0;
+            const followUpsDue = stats.followUpsDueNow ?? 0;
+            const awaitingReply = stats.newLeads || 0;
+            const openLeads = stats.openLeads ?? stats.totalLeads ?? 0;
+            const completed = stats.convertedLeads || 0;
+            const calls24h = stats.callsLast24h || 0;
+            const missed24h = stats.missedCallsLast24h || 0;
+            const answered24h = stats.answeredCallsLast24h || 0;
+
+            const staleEngaged = (leads || []).filter((lead) => {
+                const ageMs = Date.now() - new Date(`${lead.updated_at}Z`).getTime();
+                return lead.lead_status === 'engaged' && ageMs > (24 * 60 * 60 * 1000);
+            }).length;
+
+            const actionRows = [];
+
+            if (needsAttention > 0) {
+                actionRows.push(`<div class="briefing-item"><span><span class="alert-pill alert-critical">Immediate</span> Leads waiting on owner</span><strong>${needsAttention}</strong></div>`);
+            }
+
+            if (followUpsDue > 0) {
+                actionRows.push(`<div class="briefing-item"><span><span class="alert-pill alert-warn">Due now</span> Follow-ups to send</span><strong>${followUpsDue}</strong></div>`);
+            }
+
+            if (staleEngaged > 0) {
+                actionRows.push(`<div class="briefing-item"><span><span class="alert-pill alert-warn">Stale</span> Active conversations older than 24h</span><strong>${staleEngaged}</strong></div>`);
+            }
+
+            if (actionRows.length === 0) {
+                actionRows.push('<div class="briefing-item"><span><span class="alert-pill alert-ok">All clear</span> No urgent owner actions right now</span><strong>0</strong></div>');
+            }
+
+            const progressRows = [
+                `<div class="briefing-item"><span>Open leads in queue</span><strong>${openLeads}</strong></div>`,
+                `<div class="briefing-item"><span>Awaiting first customer reply</span><strong>${awaitingReply}</strong></div>`,
+                `<div class="briefing-item"><span>Calls in last 24h (answered / missed)</span><strong>${calls24h} (${answered24h}/${missed24h})</strong></div>`,
+                `<div class="briefing-item"><span>Jobs completed</span><strong>${completed}</strong></div>`,
+            ];
+
+            actions.innerHTML = actionRows.join('');
+            progress.innerHTML = progressRows.join('');
+            meta.textContent = `Updated ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+        }
+
         function initEnvironmentHints() {
             const prettySource = API ? API : 'current host';
             if (window.location.protocol === 'file:') {
@@ -613,6 +754,7 @@
                 if (stats) {
                     renderJourney(stats);
                     renderOwnerQueue(stats);
+                    renderOwnerBriefing(stats, leads);
                 }
             } catch (err) {
                 const source = API ? API : window.location.origin;
