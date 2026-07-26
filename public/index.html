@@ -715,7 +715,7 @@
                 </div>
                 <div class="action-bar">
                     ${lead.lead_status !== 'converted' ? `<button class="btn btn-green" onclick="updateLead(${lead.id}, 'converted')">✅ Mark Converted</button>` : ''}
-                    ${lead.lead_status !== 'review_sent' ? `<button class="btn" onclick="requestReview(${lead.id})" ${disableMessaging ? 'disabled' : ''}>⭐ Request Review</button>` : ''}
+                    ${lead.lead_status === 'converted' && lead.lead_status !== 'review_sent' ? `<button class="btn" onclick="requestReview(${lead.id})" ${disableMessaging ? 'disabled' : ''}>⭐ Request Review After Completion</button>` : ''}
                 </div>
             `;
 

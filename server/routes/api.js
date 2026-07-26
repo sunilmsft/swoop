@@ -132,6 +132,9 @@ router.post('/leads/:id/review', async (req, res) => {
   const lead = db.prepare('SELECT * FROM leads WHERE id = ?').get(req.params.id);
   if (!lead) return res.status(404).json({ error: 'Lead not found' });
   if (lead.sms_opt_out) return res.status(409).json({ error: 'Lead has opted out of SMS' });
+  if (lead.lead_status !== 'converted') {
+    return res.status(409).json({ error: 'Review requests can only be sent after the lead is marked converted.' });
+  }
 
   try {
     await sendReviewRequest(Number(req.params.id));
