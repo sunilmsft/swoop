@@ -295,6 +295,7 @@
         .lead-card .info .phone { font-size: 0.82rem; color: var(--text-muted); }
         .lead-card .info .last-msg { font-size: 0.82rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 0.15rem; }
         .lead-card .info .lead-insight { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.1rem; }
+        .lead-card .info .lead-detail { font-size: 0.78rem; color: #475569; margin-top: 0.15rem; }
         .lead-card .meta { text-align: right; flex-shrink: 0; }
         .lead-card .meta .time { font-size: 0.78rem; color: var(--text-muted); }
 
@@ -710,10 +711,26 @@
                 ? `${lastLead.caller_name || lastLead.caller_phone} · ${timeAgo(lastLead.updated_at)}`
                 : 'No active lead threads yet';
 
+            const priorityLead = (leads || []).slice().sort((a, b) => {
+                const aInfo = classifyLead(a);
+                const bInfo = classifyLead(b);
+                if (bInfo.score !== aInfo.score) return bInfo.score - aInfo.score;
+                return new Date(`${b.updated_at}Z`) - new Date(`${a.updated_at}Z`);
+            })[0];
+
+            const nextContact = priorityLead
+                ? `${priorityLead.caller_name || 'Unknown caller'} · ${priorityLead.caller_phone || 'No phone'}`
+                : 'No lead waiting for callback';
+            const nextLocation = priorityLead?.location_hint || 'Location not captured yet';
+            const nextUrgency = priorityLead?.urgency_level || 'normal';
+
             const progressRows = [
                 `<div class="briefing-item"><span>Open pipeline (new + active + reply now)</span><strong>${openPipeline}</strong></div>`,
                 `<div class="briefing-item"><span>Awaiting first customer reply</span><strong>${awaitingReply}</strong></div>`,
                 `<div class="briefing-item"><span>Calls in last 24h (answered / missed)</span><strong>${calls24h} (${answered24h}/${missed24h})</strong></div>`,
+                `<div class="briefing-item"><span>Next callback contact</span><strong>${escapeHtml(nextContact)}</strong></div>`,
+                `<div class="briefing-item"><span>Next callback location</span><strong>${escapeHtml(nextLocation)}</strong></div>`,
+                `<div class="briefing-item"><span>Next callback urgency</span><strong>${escapeHtml(nextUrgency)}</strong></div>`,
                 `<div class="briefing-item"><span>Conversion from engaged</span><strong>${conversionRate}%</strong></div>`,
                 `<div class="briefing-item"><span>Last lead activity</span><strong>${escapeHtml(lastLeadText)}</strong></div>`,
                 `<div class="briefing-item"><span>Jobs completed</span><strong>${completed}</strong></div>`,
@@ -1009,6 +1026,8 @@
 
             list.innerHTML = sortedLeads.map(lead => {
                 const info = classifyLead(lead);
+                const location = lead.location_hint || 'location not captured';
+                const urgency = lead.urgency_level || 'normal';
                 return `
                 <div class="lead-card" onclick="openLead(${lead.id})">
                     <div class="avatar">${(lead.caller_name || lead.caller_phone).charAt(0).toUpperCase()}</div>
@@ -1017,6 +1036,7 @@
                         <div class="phone">${lead.caller_name ? escapeHtml(lead.caller_phone) : ''}</div>
                         <div class="last-msg">${lead.last_message ? escapeHtml(lead.last_message) : 'No messages yet'}</div>
                         <div class="lead-insight"><strong>${escapeHtml(info.label)}</strong> · ${escapeHtml(info.detail)}</div>
+                        <div class="lead-detail">📍 ${escapeHtml(location)} · ⚡ ${escapeHtml(urgency)}</div>
                     </div>
                     <div class="meta">
                         <div class="time">${timeAgo(lead.updated_at)}</div>

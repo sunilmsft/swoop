@@ -14,6 +14,32 @@ function getKeywordIntent(body) {
   return null;
 }
 
+function inferUrgencyLevel(text) {
+  const value = String(text || '').toLowerCase();
+  if (!value) return null;
+
+  if (/emergency|urgent|asap|right now|flood|flooding|burst|no heat|no water|gas leak|leak now/.test(value)) {
+    return 'high';
+  }
+  if (/today|soon|this afternoon|tonight|tomorrow morning|quick/.test(value)) {
+    return 'medium';
+  }
+  return null;
+}
+
+function inferLocationHint(text) {
+  const value = String(text || '').trim();
+  if (!value) return null;
+
+  const prepped = value.replace(/[\n\r]+/g, ' ');
+  const byPhrase = prepped.match(/\b(?:in|at|near|around|from|live in|live at)\s+([A-Za-z][A-Za-z\s'-]{1,40})/i);
+  if (byPhrase && byPhrase[1]) {
+    return byPhrase[1].trim().replace(/[.,!?;:]+$/, '');
+  }
+
+  return null;
+}
+
 /**
  * Handle a missed call:
  * 1. Find or create the lead
@@ -166,9 +192,14 @@ async function handleInboundSMS(businessId, callerPhone, body) {
     return lead;
   }
 
+  const inferredLocation = inferLocationHint(body);
+  const inferredUrgency = inferUrgencyLevel(body);
+  const statusFromUrgency = inferredUrgency === 'high' ? 'needs_attention' : 'engaged';
+
   // Update lead status — they replied, they're engaged
-  db.prepare('UPDATE leads SET lead_status = ?, updated_at = datetime(\'now\') WHERE id = ?')
-    .run('engaged', lead.id);
+  db.prepare(
+    'UPDATE leads SET lead_status = ?, location_hint = COALESCE(?, location_hint), urgency_level = COALESCE(?, urgency_level), updated_at = datetime(\'now\') WHERE id = ?'
+  ).run(statusFromUrgency, inferredLocation, inferredUrgency, lead.id);
 
   // Cancel pending follow-ups since they replied
   db.prepare('UPDATE follow_ups SET status = ? WHERE lead_id = ? AND status = ?')

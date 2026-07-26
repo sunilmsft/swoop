@@ -39,6 +39,8 @@ db.exec(`
     business_id INTEGER NOT NULL,
     caller_phone TEXT NOT NULL,
     caller_name TEXT,
+    location_hint TEXT,
+    urgency_level TEXT DEFAULT 'normal',
     call_status TEXT DEFAULT 'missed',
     lead_status TEXT DEFAULT 'new',
     ai_turn_count INTEGER DEFAULT 0,
@@ -122,6 +124,12 @@ if (!leadColumns.includes('consent_script_version')) {
 }
 if (!leadColumns.includes('consent_notes')) {
   db.exec('ALTER TABLE leads ADD COLUMN consent_notes TEXT');
+}
+if (!leadColumns.includes('location_hint')) {
+  db.exec('ALTER TABLE leads ADD COLUMN location_hint TEXT');
+}
+if (!leadColumns.includes('urgency_level')) {
+  db.exec("ALTER TABLE leads ADD COLUMN urgency_level TEXT DEFAULT 'normal'");
 }
 
 const messageColumns = db.prepare('PRAGMA table_info(messages)').all().map((col) => col.name);
