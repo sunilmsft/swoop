@@ -1,4 +1,5 @@
 const Database = require('better-sqlite3');
+const fs = require('fs');
 const path = require('path');
 
 const isProduction = process.env.NODE_ENV === 'production';
@@ -12,6 +13,14 @@ if (isProduction) {
   const isPersistentPath = String(process.env.DB_PATH).startsWith('/var/data/');
   if (!isPersistentPath && process.env.ALLOW_EPHEMERAL_DB !== 'true') {
     throw new Error(`Unsafe DB_PATH for production: ${process.env.DB_PATH}. Use /var/data/... or set ALLOW_EPHEMERAL_DB=true only for temporary debugging.`);
+  }
+
+  const dbDir = path.dirname(process.env.DB_PATH);
+  if (!fs.existsSync(dbDir)) {
+    throw new Error(
+      `DB directory does not exist: ${dbDir}. This usually means the persistent disk is not mounted. ` +
+      `In Render, attach a disk and mount it at /var/data, then redeploy.`
+    );
   }
 }
 
