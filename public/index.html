@@ -373,11 +373,12 @@
             <div class="stat-card"><div class="label">Awaiting First Reply</div><div class="value" id="stat-new">—</div></div>
             <div class="stat-card"><div class="label">Needs Attention</div><div class="value" style="color:var(--red)" id="stat-attention">—</div></div>
             <div class="stat-card"><div class="label">Active Conversations</div><div class="value green" id="stat-engaged">—</div></div>
-            <div class="stat-card"><div class="label">First Texts Sent</div><div class="value blue" id="stat-sent">—</div></div>
-            <div class="stat-card"><div class="label">Follow-ups Queued</div><div class="value yellow" id="stat-followups">—</div></div>
+            <div class="stat-card"><div class="label">Calls (Last 24h)</div><div class="value blue" id="stat-sent">—</div></div>
+            <div class="stat-card"><div class="label">Follow-ups Due Now</div><div class="value yellow" id="stat-followups">—</div></div>
             <div class="stat-card"><div class="label">Jobs Completed</div><div class="value green" id="stat-reviews">—</div></div>
+            <div class="stat-card"><div class="label">Missed Calls (24h)</div><div class="value" style="color:var(--yellow)" id="stat-missed">—</div></div>
         </div>
-        <div class="owner-explainer">Top cards show current owner workload. Funnel shows pipeline movement from missed call to completion.</div>
+        <div class="owner-explainer">Top cards show owner workload and call outcomes. Funnel shows missed-call text-back pipeline only.</div>
 
         <!-- End-to-End Demo Modules -->
         <div class="module-grid">
@@ -448,7 +449,7 @@
         </div> <!-- /tab-test -->
 
         <!-- Production tab continued (setup + leads) -->
-        <div class="tab-panel active" data-panel="prod">
+        <div class="tab-panel" data-panel="prod">
 
         <!-- Setup Banner (shown when no businesses exist) -->
         <div class="setup-banner" id="setup-banner" style="display:none;">
@@ -536,7 +537,7 @@
 
             const businessNumber = primary.phone || 'business number';
             const forwardNumber = primary.forward_phone || 'owner phone';
-            el.textContent = `Call flow mode: Twilio primary. Calls to ${businessNumber} play disclosure, then ring ${forwardNumber}. A lead is created when the call is missed (or voicemail is detected).`;
+            el.textContent = `Call flow mode: Twilio primary. Calls to ${businessNumber} play disclosure, then ring ${forwardNumber}. A lead thread appears only when the call is missed or voicemail is detected.`;
         }
 
         function initEnvironmentHints() {
@@ -582,9 +583,10 @@
                     document.getElementById('stat-new').textContent = stats.newLeads;
                     document.getElementById('stat-attention').textContent = stats.needsAttention || 0;
                     document.getElementById('stat-engaged').textContent = stats.engagedLeads;
-                    document.getElementById('stat-sent').textContent = stats.initialTextsSent ?? stats.messagesSent;
-                    document.getElementById('stat-followups').textContent = stats.pendingFollowUps;
+                    document.getElementById('stat-sent').textContent = stats.callsLast24h ?? 0;
+                    document.getElementById('stat-followups').textContent = stats.followUpsDueNow ?? stats.pendingFollowUps;
                     document.getElementById('stat-reviews').textContent = stats.convertedLeads;
+                    document.getElementById('stat-missed').textContent = stats.missedCallsLast24h ?? 0;
                     const source = API ? new URL(API).host : window.location.host;
                     document.getElementById('status-text').textContent = `Live · ${source}`;
                 }
@@ -685,9 +687,9 @@
             }).length;
 
             document.getElementById('owner-queue').innerHTML = `
-                <div class="queue-item"><div class="name">Needs attention</div><div class="count">${stats.needsAttention || 0}</div></div>
+                <div class="queue-item"><div class="name">Reply now</div><div class="count">${stats.needsAttention || 0}</div></div>
                 <div class="queue-item"><div class="name">Waiting on customer</div><div class="count">${waitingOnCustomer}</div></div>
-                <div class="queue-item"><div class="name">Pending follow-ups</div><div class="count">${stats.pendingFollowUps || 0}</div></div>
+                <div class="queue-item"><div class="name">Follow-ups due now</div><div class="count">${stats.followUpsDueNow ?? stats.pendingFollowUps ?? 0}</div></div>
             `;
         }
 

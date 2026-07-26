@@ -22,6 +22,17 @@ function findBusinessByPhone(phone) {
   ).get(phone, normalized);
 }
 
+function logCallEvent({ businessId, fromPhone, toPhone, callStatus = null, dialStatus = null, dialDuration = 0, outcome = 'unknown' }) {
+  try {
+    db.prepare(
+      `INSERT INTO call_events (business_id, from_phone, to_phone, call_status, dial_status, dial_duration, outcome)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`
+    ).run(businessId || null, fromPhone || null, toPhone || null, callStatus, dialStatus, Number(dialDuration || 0), outcome);
+  } catch (err) {
+    console.error('Failed to log call event:', err.message);
+  }
+}
+
 /**
  * POST /webhooks/voice — Twilio calls this when a call comes in
  *
@@ -36,6 +47,14 @@ router.post('/voice', validateTwilioRequest, async (req, res) => {
 
   const business = findBusinessByPhone(To);
   const businessName = business ? business.name : 'this business';
+
+  logCallEvent({
+    businessId: business ? business.id : null,
+    fromPhone: From,
+    toPhone: To,
+    callStatus: req.body.CallStatus || null,
+    outcome: 'incoming',
+  });
 
   // Verbal consent disclosure — plays on every inbound call for toll-free verification compliance.
   // Required: caller must hear the disclosure before consent is recorded via missed-call SMS.
@@ -68,13 +87,25 @@ router.post('/voice-dial-result', validateTwilioRequest, async (req, res) => {
 
   const isMissed = ['no-answer', 'busy', 'failed', 'canceled'].includes(DialCallStatus);
   const isVoicemail = DialCallStatus === 'completed' && Number(DialCallDuration || 0) < 15;
+  const business = findBusinessByPhone(To);
+
+  let outcome = 'answered';
+  if (isVoicemail) outcome = 'voicemail';
+  if (isMissed) outcome = 'missed';
+
+  logCallEvent({
+    businessId: business ? business.id : null,
+    fromPhone: From,
+    toPhone: To,
+    dialStatus: DialCallStatus || null,
+    dialDuration: DialCallDuration || 0,
+    outcome,
+  });
 
   if (isMissed || isVoicemail) {
     if (isVoicemail) {
       console.log('📞 Short "completed" call — likely voicemail, treating as missed');
     }
-
-    const business = findBusinessByPhone(To);
 
     if (business) {
       try {
@@ -100,11 +131,19 @@ router.post('/voice-dial-result', validateTwilioRequest, async (req, res) => {
 router.post('/voice-status', validateTwilioRequest, async (req, res) => {
   console.log('📞 /webhooks/voice-status hit:', JSON.stringify(req.body));
   const { CallStatus, From, To } = req.body;
+  const business = findBusinessByPhone(To);
+
+  if (['completed', 'busy', 'failed', 'no-answer', 'canceled'].includes(CallStatus)) {
+    logCallEvent({
+      businessId: business ? business.id : null,
+      fromPhone: From,
+      toPhone: To,
+      callStatus: CallStatus,
+      outcome: ['no-answer', 'busy', 'failed', 'canceled'].includes(CallStatus) ? 'missed' : 'answered',
+    });
+  }
 
   if (['no-answer', 'busy', 'failed'].includes(CallStatus)) {
-    // Find the business by their Twilio number
-    const business = findBusinessByPhone(To);
-
     if (business) {
       try {
         await handleMissedCall(business.id, From);

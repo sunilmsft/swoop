@@ -209,6 +209,8 @@
 - [x] 🟡 Automatic SQLite backups added (startup snapshot + daily cron) with retention rotation. — _Priya: "If a tester asks where data went, we need a recovery story."_
 - [x] 🟡 Dashboard stat consistency fix: pending follow-up counts now JOIN non-test leads and startup cleanup removes orphan rows. — _Ray: "Numbers must agree at a glance."_
 - [x] 🟡 Owner-facing call-flow explainer added in dashboard (Twilio-primary mode + when a lead is created). — _Ray: "Tell me why a call did or did not show up."_
+- [x] 🟡 Added call outcome tracking (`call_events`) + dashboard cards for Calls (24h) and Missed Calls (24h), so answered forwarded calls are visible even when no missed-lead thread is created.
+- [x] 🟡 Dashboard terminology simplified for owners: "Reply now", "Waiting on customer", "Follow-ups due now", "Jobs completed".
 - [ ] 🟢 Search/filter leads (by status, phone, name)
 - [ ] 🟢 Pagination for leads list (currently capped at 50)
 - [ ] 🟡 Add explicit "Opted out" chip + list filter for faster owner triage — _Priya: "I need to see compliance state before I click in."_

@@ -75,9 +75,23 @@ db.exec(`
     FOREIGN KEY (lead_id) REFERENCES leads(id)
   );
 
+  CREATE TABLE IF NOT EXISTS call_events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    business_id INTEGER,
+    from_phone TEXT,
+    to_phone TEXT,
+    call_status TEXT,
+    dial_status TEXT,
+    dial_duration INTEGER,
+    outcome TEXT,
+    created_at TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (business_id) REFERENCES businesses(id)
+  );
+
   CREATE INDEX IF NOT EXISTS idx_leads_business ON leads(business_id);
   CREATE INDEX IF NOT EXISTS idx_leads_phone ON leads(caller_phone);
   CREATE INDEX IF NOT EXISTS idx_follow_ups_status ON follow_ups(status, scheduled_for);
+  CREATE INDEX IF NOT EXISTS idx_call_events_business_created ON call_events(business_id, created_at);
 `);
 
 // Lightweight schema migrations for existing local DBs.
