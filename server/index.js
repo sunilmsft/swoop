@@ -5,12 +5,15 @@ const path = require('path');
 const cron = require('node-cron');
 const { processDueFollowUps } = require('./services/leads');
 const { ensureDefaultBusiness } = require('./services/bootstrap');
+const { backupDatabase, cleanOrphanedRows } = require('./services/maintenance');
 
 const app = express();
 app.set('trust proxy', 1); // Trust Render's reverse proxy (fixes req.protocol for Twilio signature validation)
 const PORT = process.env.PORT || 3000;
 
 ensureDefaultBusiness();
+cleanOrphanedRows();
+backupDatabase('startup');
 
 // Middleware
 app.use(express.urlencoded({ extended: false })); // Twilio sends form-encoded
@@ -46,6 +49,11 @@ if (process.env.NODE_ENV !== 'development') {
     } catch (err) {
       console.error('Cron error:', err.message);
     }
+  });
+
+  // Daily backup at 03:25 server time.
+  cron.schedule('25 3 * * *', () => {
+    backupDatabase('daily');
   });
 }
 

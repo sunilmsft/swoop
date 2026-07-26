@@ -205,6 +205,10 @@
 - [x] 🟢 Funnel metric fix: conversion denominator aligned with "engaged" label
 - [ ] 🔴 Bug: Owner dashboard can show stale/local leads while live Twilio traffic lands on a different host (file:// or localhost view vs `swoop-x79g.onrender.com`). Add explicit environment/source indicator + enforce single canonical dashboard URL for live operations. — _Ray: "If I can't trust what I see, I can't run my day."_
 - [ ] 🔴 Bug: Render deploys were reseeding the database on every build, which wiped live lead data and replaced it with demo rows. Remove destructive production seeding and keep seed only for local/dev. — _Priya: "I need the real conversations to survive deploys."_
+- [x] 🔴 Guard destructive purge endpoint in production (`DELETE /api/businesses/:id/leads`) unless `ALLOW_LEAD_PURGE=true`. — _Morgan: "No single click should erase customer history in prod."_
+- [x] 🟡 Automatic SQLite backups added (startup snapshot + daily cron) with retention rotation. — _Priya: "If a tester asks where data went, we need a recovery story."_
+- [x] 🟡 Dashboard stat consistency fix: pending follow-up counts now JOIN non-test leads and startup cleanup removes orphan rows. — _Ray: "Numbers must agree at a glance."_
+- [x] 🟡 Owner-facing call-flow explainer added in dashboard (Twilio-primary mode + when a lead is created). — _Ray: "Tell me why a call did or did not show up."_
 - [ ] 🟢 Search/filter leads (by status, phone, name)
 - [ ] 🟢 Pagination for leads list (currently capped at 50)
 - [ ] 🟡 Add explicit "Opted out" chip + list filter for faster owner triage — _Priya: "I need to see compliance state before I click in."_

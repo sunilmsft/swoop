@@ -49,6 +49,7 @@ router.all('/proxy', async (req, res) => {
 router.get('/dashboard', (req, res) => {
   const stats = {
     totalLeads: db.prepare('SELECT COUNT(*) as count FROM leads WHERE is_test = 0').get().count,
+    openLeads: db.prepare("SELECT COUNT(*) as count FROM leads WHERE is_test = 0 AND lead_status IN ('new', 'engaged', 'needs_attention')").get().count,
     newLeads: db.prepare('SELECT COUNT(*) as count FROM leads WHERE is_test = 0 AND lead_status = ?').get('new').count,
     engagedLeads: db.prepare('SELECT COUNT(*) as count FROM leads WHERE is_test = 0 AND lead_status = ?').get('engaged').count,
     convertedLeads: db.prepare('SELECT COUNT(*) as count FROM leads WHERE is_test = 0 AND lead_status = ?').get('converted').count,
@@ -56,7 +57,10 @@ router.get('/dashboard', (req, res) => {
     reviewsSent: db.prepare('SELECT COUNT(*) as count FROM leads WHERE is_test = 0 AND lead_status = ?').get('review_sent').count,
     messagesSent: db.prepare('SELECT COUNT(*) as count FROM messages WHERE is_test = 0 AND direction = ?').get('outbound').count,
     messagesReceived: db.prepare('SELECT COUNT(*) as count FROM messages WHERE is_test = 0 AND direction = ?').get('inbound').count,
-    pendingFollowUps: db.prepare('SELECT COUNT(*) as count FROM follow_ups WHERE status = ? AND lead_id NOT IN (SELECT id FROM leads WHERE is_test = 1)').get('pending').count,
+    pendingFollowUps: db.prepare("SELECT COUNT(*) as count FROM follow_ups f JOIN leads l ON l.id = f.lead_id WHERE f.status = 'pending' AND l.is_test = 0").get().count,
+    followUpsDueNow: db.prepare("SELECT COUNT(*) as count FROM follow_ups f JOIN leads l ON l.id = f.lead_id WHERE f.status = 'pending' AND l.is_test = 0 AND f.scheduled_for <= datetime('now')").get().count,
+    initialTextsSent: db.prepare("SELECT COUNT(*) as count FROM leads l WHERE l.is_test = 0 AND EXISTS (SELECT 1 FROM messages m WHERE m.lead_id = l.id AND m.direction = 'outbound' AND COALESCE(m.is_test, 0) = 0)").get().count,
+    customerReplyLeads: db.prepare("SELECT COUNT(*) as count FROM leads l WHERE l.is_test = 0 AND EXISTS (SELECT 1 FROM messages m WHERE m.lead_id = l.id AND m.direction = 'inbound' AND COALESCE(m.is_test, 0) = 0)").get().count,
   };
 
   res.json(stats);
@@ -296,7 +300,7 @@ router.get('/admin/overview', (req, res) => {
     totalAiTurns: db.prepare('SELECT COALESCE(SUM(ai_turn_count), 0) as c FROM leads WHERE is_test = 0').get().c,
     convertedLeads: db.prepare('SELECT COUNT(*) as c FROM leads WHERE is_test = 0 AND lead_status = ?').get('converted').c,
     needsAttention: db.prepare('SELECT COUNT(*) as c FROM leads WHERE is_test = 0 AND lead_status = ?').get('needs_attention').c,
-    pendingFollowUps: db.prepare('SELECT COUNT(*) as c FROM follow_ups WHERE status = ? AND lead_id NOT IN (SELECT id FROM leads WHERE is_test = 1)').get('pending').c,
+    pendingFollowUps: db.prepare("SELECT COUNT(*) as c FROM follow_ups f JOIN leads l ON l.id = f.lead_id WHERE f.status = 'pending' AND l.is_test = 0").get().c,
     testLeads: db.prepare('SELECT COUNT(*) as c FROM leads WHERE is_test = 1').get().c,
   };
   res.json(stats);

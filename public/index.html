@@ -153,6 +153,21 @@
         .tab-btn.active { color: var(--blue); border-bottom-color: var(--blue); }
         .tab-panel { display: none; }
         .tab-panel.active { display: block; }
+
+        .owner-explainer {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+        .flow-note {
+            margin-bottom: 1rem;
+            padding: 0.6rem 0.8rem;
+            border: 1px solid #dbeafe;
+            background: #f8fbff;
+            border-radius: 8px;
+            color: #1e3a8a;
+            font-size: 0.82rem;
+        }
         .lead-list { display: flex; flex-direction: column; gap: 0.75rem; }
         .lead-card {
             background: var(--card-bg);
@@ -348,18 +363,21 @@
             <button class="tab-btn" data-tab="test" id="tab-btn-test" style="display:none;" onclick="switchTab('test')">🧪 Test Console</button>
         </div>
 
+        <div class="flow-note" id="flow-note">Loading call flow mode...</div>
+
         <!-- Production tab -->
         <div class="tab-panel active" data-panel="prod">
         <!-- Stats -->
         <div class="stats" id="stats">
-            <div class="stat-card"><div class="label">Total Leads</div><div class="value blue" id="stat-total">—</div></div>
-            <div class="stat-card"><div class="label">New</div><div class="value" id="stat-new">—</div></div>
+            <div class="stat-card"><div class="label">Open Leads</div><div class="value blue" id="stat-total">—</div></div>
+            <div class="stat-card"><div class="label">Awaiting First Reply</div><div class="value" id="stat-new">—</div></div>
             <div class="stat-card"><div class="label">Needs Attention</div><div class="value" style="color:var(--red)" id="stat-attention">—</div></div>
-            <div class="stat-card"><div class="label">Engaged</div><div class="value green" id="stat-engaged">—</div></div>
-            <div class="stat-card"><div class="label">Texts Sent</div><div class="value blue" id="stat-sent">—</div></div>
-            <div class="stat-card"><div class="label">Pending Follow-ups</div><div class="value yellow" id="stat-followups">—</div></div>
-            <div class="stat-card"><div class="label">Reviews Requested</div><div class="value green" id="stat-reviews">—</div></div>
+            <div class="stat-card"><div class="label">Active Conversations</div><div class="value green" id="stat-engaged">—</div></div>
+            <div class="stat-card"><div class="label">First Texts Sent</div><div class="value blue" id="stat-sent">—</div></div>
+            <div class="stat-card"><div class="label">Follow-ups Queued</div><div class="value yellow" id="stat-followups">—</div></div>
+            <div class="stat-card"><div class="label">Jobs Completed</div><div class="value green" id="stat-reviews">—</div></div>
         </div>
+        <div class="owner-explainer">Top cards show current owner workload. Funnel shows pipeline movement from missed call to completion.</div>
 
         <!-- End-to-End Demo Modules -->
         <div class="module-grid">
@@ -508,6 +526,19 @@
             el.style.display = 'block';
         }
 
+        function renderCallFlowNote(businesses) {
+            const el = document.getElementById('flow-note');
+            const primary = Array.isArray(businesses) && businesses.length > 0 ? businesses[0] : null;
+            if (!primary) {
+                el.textContent = 'Call flow mode: no business configured yet.';
+                return;
+            }
+
+            const businessNumber = primary.phone || 'business number';
+            const forwardNumber = primary.forward_phone || 'owner phone';
+            el.textContent = `Call flow mode: Twilio primary. Calls to ${businessNumber} play disclosure, then ring ${forwardNumber}. A lead is created when the call is missed (or voicemail is detected).`;
+        }
+
         function initEnvironmentHints() {
             const prettySource = API ? API : 'current host';
             if (window.location.protocol === 'file:') {
@@ -547,13 +578,13 @@
 
                 if (statsRes.ok) {
                     stats = await statsRes.json();
-                    document.getElementById('stat-total').textContent = stats.totalLeads;
+                    document.getElementById('stat-total').textContent = stats.openLeads ?? stats.totalLeads;
                     document.getElementById('stat-new').textContent = stats.newLeads;
                     document.getElementById('stat-attention').textContent = stats.needsAttention || 0;
                     document.getElementById('stat-engaged').textContent = stats.engagedLeads;
-                    document.getElementById('stat-sent').textContent = stats.messagesSent;
+                    document.getElementById('stat-sent').textContent = stats.initialTextsSent ?? stats.messagesSent;
                     document.getElementById('stat-followups').textContent = stats.pendingFollowUps;
-                    document.getElementById('stat-reviews').textContent = stats.reviewsSent;
+                    document.getElementById('stat-reviews').textContent = stats.convertedLeads;
                     const source = API ? new URL(API).host : window.location.host;
                     document.getElementById('status-text').textContent = `Live · ${source}`;
                 }
@@ -566,6 +597,7 @@
 
                 if (businessesRes && businessesRes.ok) {
                     businesses = await businessesRes.json();
+                    renderCallFlowNote(businesses);
                 }
 
                 if (statsRes.ok) {
@@ -589,8 +621,8 @@
         }
 
         function renderJourney(stats) {
-            const replied = (stats.engagedLeads || 0) + (stats.needsAttention || 0) + (stats.convertedLeads || 0) + (stats.reviewsSent || 0);
-            const autoSent = Math.max(stats.totalLeads || 0, 0);
+            const replied = stats.customerReplyLeads ?? ((stats.engagedLeads || 0) + (stats.needsAttention || 0) + (stats.convertedLeads || 0) + (stats.reviewsSent || 0));
+            const autoSent = Math.max((stats.initialTextsSent ?? stats.totalLeads ?? 0), 0);
 
             const values = [
                 stats.totalLeads || 0,
