@@ -5,12 +5,12 @@
  * Safe to run multiple times — clears existing data first.
  */
 
-const db = require('./db/database');
-
 if (process.env.NODE_ENV === 'production' && process.env.ALLOW_PROD_SEED !== 'true') {
   console.log('Skipping seed in production to avoid wiping live data.');
   process.exit(0);
 }
+
+const db = require('./db/database');
 
 console.log('🌱 Seeding database...\n');
 
