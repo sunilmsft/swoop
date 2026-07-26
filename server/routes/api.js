@@ -261,6 +261,12 @@ router.put('/businesses/:id', (req, res) => {
  * DELETE /api/businesses/:id/leads — Clear all leads (and their messages/follow-ups) for a business
  */
 router.delete('/businesses/:id/leads', (req, res) => {
+  if (process.env.NODE_ENV === 'production' && process.env.ALLOW_LEAD_PURGE !== 'true') {
+    return res.status(403).json({
+      error: 'Lead purges are disabled in production. Set ALLOW_LEAD_PURGE=true only for intentional maintenance.'
+    });
+  }
+
   const business = db.prepare('SELECT * FROM businesses WHERE id = ?').get(req.params.id);
   if (!business) return res.status(404).json({ error: 'Business not found' });
 
