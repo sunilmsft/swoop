@@ -10,7 +10,7 @@ if (process.env.OPENAI_API_KEY) {
  * Build a system prompt from the business profile.
  * This grounds the AI agent in the business's identity, services, and rules.
  */
-function buildSystemPrompt(business) {
+function buildSystemPrompt(business, lead = null) {
   let prompt = `You are a friendly text-message assistant for ${business.name}.`;
 
   if (business.owner_name) {
@@ -64,6 +64,15 @@ function buildSystemPrompt(business) {
 
   prompt += `\n\nYOUR GOAL: Acknowledge the customer's need, ask one qualifying question (like location, timeline, or scope), then confirm you'll have ${business.owner_name || 'someone'} reach out to them.`;
 
+  const missingName = !lead || !lead.caller_name;
+  const missingLocation = !lead || !lead.location_hint;
+  if (missingName || missingLocation) {
+    const asks = [];
+    if (missingName) asks.push('their first name');
+    if (missingLocation) asks.push('their city/location');
+    prompt += `\n\nCAPTURE REQUIREMENT: If missing, prioritize collecting ${asks.join(' and ')} before ending the conversation.`;
+  }
+
   return prompt;
 }
 
@@ -105,7 +114,7 @@ async function generateReply(business, lead, inboundMessage) {
 
   // Build chat messages array
   const chatMessages = [
-    { role: 'system', content: buildSystemPrompt(business) },
+    { role: 'system', content: buildSystemPrompt(business, lead) },
   ];
 
   // Add conversation history

@@ -208,7 +208,7 @@ async function handleInboundSMS(businessId, callerPhone, body) {
   // --- AI Reply Agent ---
   if (business && !lead.ai_handoff_done && business.ai_enabled) {
     const aiReply = await generateReply(business, lead, body);
-    const fallbackReply = `${business.name}: Thanks for the details. We can help with that. What city is the job in, and what's the best time for a callback?`;
+    const fallbackReply = `${business.name}: Thanks for the details. We can help with that. What name should we put on this request, and what city is the job in?`;
     const replyBody = aiReply || fallbackReply;
 
     if (!aiReply) {
