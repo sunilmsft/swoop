@@ -153,6 +153,8 @@
             border: 1px solid var(--border);
             box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
+        .stat-card.clickable { cursor: pointer; }
+        .stat-card.clickable:hover { border-color: var(--primary); box-shadow: 0 2px 8px rgba(37,99,235,0.12); }
         .stat-card .label { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
         .stat-card .value { font-size: 2rem; font-weight: 700; margin-top: 0.25rem; }
         .stat-card .value.green { color: var(--green); }
@@ -216,6 +218,8 @@
             margin-bottom: 0.5rem;
             background: #fff;
         }
+        .queue-item.clickable { cursor: pointer; }
+        .queue-item.clickable:hover { border-color: var(--primary); }
         .queue-item:last-child { margin-bottom: 0; }
         .queue-item .name {
             font-size: 0.82rem;
@@ -487,11 +491,11 @@
         <div class="tab-panel active" data-panel="prod">
         <!-- Stats -->
         <div class="stats" id="stats">
-            <div class="stat-card"><div class="label">Needs Attention</div><div class="value" style="color:var(--red)" id="stat-attention">—</div></div>
-            <div class="stat-card"><div class="label">Follow-ups Due Now</div><div class="value yellow" id="stat-followups">—</div></div>
-            <div class="stat-card"><div class="label">Calls (Last 24h)</div><div class="value blue" id="stat-sent">—</div></div>
-            <div class="stat-card"><div class="label">Answered Calls (24h)</div><div class="value green" id="stat-answered">—</div></div>
-            <div class="stat-card"><div class="label">Missed Calls (24h)</div><div class="value" style="color:var(--yellow)" id="stat-missed">—</div></div>
+            <div class="stat-card clickable" onclick="openDashboardMetric('needs_attention')"><div class="label">Needs Attention</div><div class="value" style="color:var(--red)" id="stat-attention">—</div></div>
+            <div class="stat-card clickable" onclick="openDashboardMetric('follow_up_due')"><div class="label">Follow-ups Due Now</div><div class="value yellow" id="stat-followups">—</div></div>
+            <div class="stat-card clickable" onclick="openDashboardMetric('recent_activity')"><div class="label">Calls (Last 24h)</div><div class="value blue" id="stat-sent">—</div></div>
+            <div class="stat-card clickable" onclick="openDashboardMetric('recent_activity')"><div class="label">Answered Calls (24h)</div><div class="value green" id="stat-answered">—</div></div>
+            <div class="stat-card clickable" onclick="openDashboardMetric('recent_activity')"><div class="label">Missed Calls (24h)</div><div class="value" style="color:var(--yellow)" id="stat-missed">—</div></div>
         </div>
         <div class="owner-explainer">Cards focus on immediate action and recent call outcomes. The funnel below tracks missed-call text-back progression.</div>
 
@@ -744,6 +748,21 @@
             }
         }
 
+        function openDashboardMetric(kind) {
+            if (kind === 'needs_attention') {
+                openBriefingAction('needs_attention');
+                return;
+            }
+            if (kind === 'follow_up_due') {
+                openBriefingAction('follow_up_due');
+                return;
+            }
+            if (kind === 'recent_activity') {
+                setLeadFilter('recent_activity', 'Updated in last 24h');
+                renderLeads(latestLeads);
+            }
+        }
+
         function setLeadFilter(key, label) {
             currentLeadFilter = key;
             currentLeadFilterLabel = label;
@@ -925,9 +944,9 @@
             }).length;
 
             document.getElementById('owner-queue').innerHTML = `
-                <div class="queue-item"><div class="name">Reply now</div><div class="count">${stats.needsAttention || 0}</div></div>
-                <div class="queue-item"><div class="name">Waiting on customer</div><div class="count">${waitingOnCustomer}</div></div>
-                <div class="queue-item"><div class="name">Follow-ups due now</div><div class="count">${stats.followUpsDueNow ?? stats.pendingFollowUps ?? 0}</div></div>
+                <div class="queue-item clickable" onclick="openBriefingAction('needs_attention')"><div class="name">Reply now</div><div class="count">${stats.needsAttention || 0}</div></div>
+                <div class="queue-item clickable" onclick="setLeadFilter('open_queue', 'Open leads in queue'); renderLeads(latestLeads)"><div class="name">Waiting on customer</div><div class="count">${waitingOnCustomer}</div></div>
+                <div class="queue-item clickable" onclick="openBriefingAction('follow_up_due')"><div class="name">Follow-ups due now</div><div class="count">${stats.followUpsDueNow ?? stats.pendingFollowUps ?? 0}</div></div>
             `;
         }
 

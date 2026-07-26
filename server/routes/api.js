@@ -61,9 +61,9 @@ router.get('/dashboard', (req, res) => {
     followUpsDueNow: db.prepare("SELECT COUNT(*) as count FROM follow_ups f JOIN leads l ON l.id = f.lead_id WHERE f.status = 'pending' AND l.is_test = 0 AND f.scheduled_for <= datetime('now')").get().count,
     initialTextsSent: db.prepare("SELECT COUNT(*) as count FROM leads l WHERE l.is_test = 0 AND EXISTS (SELECT 1 FROM messages m WHERE m.lead_id = l.id AND m.direction = 'outbound' AND COALESCE(m.is_test, 0) = 0)").get().count,
     customerReplyLeads: db.prepare("SELECT COUNT(*) as count FROM leads l WHERE l.is_test = 0 AND EXISTS (SELECT 1 FROM messages m WHERE m.lead_id = l.id AND m.direction = 'inbound' AND COALESCE(m.is_test, 0) = 0)").get().count,
-    callsLast24h: db.prepare("SELECT COUNT(*) as count FROM call_events WHERE created_at >= datetime('now', '-1 day')").get().count,
-    missedCallsLast24h: db.prepare("SELECT COUNT(*) as count FROM call_events WHERE created_at >= datetime('now', '-1 day') AND outcome IN ('missed', 'voicemail')").get().count,
-    answeredCallsLast24h: db.prepare("SELECT COUNT(*) as count FROM call_events WHERE created_at >= datetime('now', '-1 day') AND outcome = 'answered'").get().count,
+    callsLast24h: db.prepare("SELECT COUNT(*) as count FROM call_events WHERE created_at >= datetime('now', '-1 day') AND event_source IN ('dial_result', 'voice_status')").get().count,
+    missedCallsLast24h: db.prepare("SELECT COUNT(*) as count FROM call_events WHERE created_at >= datetime('now', '-1 day') AND event_source IN ('dial_result', 'voice_status') AND outcome IN ('missed', 'voicemail')").get().count,
+    answeredCallsLast24h: db.prepare("SELECT COUNT(*) as count FROM call_events WHERE created_at >= datetime('now', '-1 day') AND event_source IN ('dial_result', 'voice_status') AND outcome = 'answered'").get().count,
   };
 
   res.json(stats);

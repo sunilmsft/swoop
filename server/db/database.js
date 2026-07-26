@@ -80,10 +80,12 @@ db.exec(`
     business_id INTEGER,
     from_phone TEXT,
     to_phone TEXT,
+    call_sid TEXT,
     call_status TEXT,
     dial_status TEXT,
     dial_duration INTEGER,
     outcome TEXT,
+    event_source TEXT DEFAULT 'dial_result',
     created_at TEXT DEFAULT (datetime('now')),
     FOREIGN KEY (business_id) REFERENCES businesses(id)
   );
@@ -126,5 +128,15 @@ const messageColumns = db.prepare('PRAGMA table_info(messages)').all().map((col)
 if (!messageColumns.includes('is_test')) {
   db.exec('ALTER TABLE messages ADD COLUMN is_test INTEGER DEFAULT 0');
 }
+
+const callEventColumns = db.prepare('PRAGMA table_info(call_events)').all().map((col) => col.name);
+if (!callEventColumns.includes('call_sid')) {
+  db.exec('ALTER TABLE call_events ADD COLUMN call_sid TEXT');
+}
+if (!callEventColumns.includes('event_source')) {
+  db.exec("ALTER TABLE call_events ADD COLUMN event_source TEXT DEFAULT 'dial_result'");
+}
+
+db.exec('CREATE INDEX IF NOT EXISTS idx_call_events_sid_source ON call_events(call_sid, event_source)');
 
 module.exports = db;

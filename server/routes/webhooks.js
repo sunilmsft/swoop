@@ -22,12 +22,32 @@ function findBusinessByPhone(phone) {
   ).get(phone, normalized);
 }
 
-function logCallEvent({ businessId, fromPhone, toPhone, callStatus = null, dialStatus = null, dialDuration = 0, outcome = 'unknown' }) {
+function logCallEvent({
+  businessId,
+  fromPhone,
+  toPhone,
+  callSid = null,
+  callStatus = null,
+  dialStatus = null,
+  dialDuration = 0,
+  outcome = 'unknown',
+  eventSource = 'dial_result',
+}) {
   try {
     db.prepare(
-      `INSERT INTO call_events (business_id, from_phone, to_phone, call_status, dial_status, dial_duration, outcome)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`
-    ).run(businessId || null, fromPhone || null, toPhone || null, callStatus, dialStatus, Number(dialDuration || 0), outcome);
+      `INSERT INTO call_events (business_id, from_phone, to_phone, call_sid, call_status, dial_status, dial_duration, outcome, event_source)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ).run(
+      businessId || null,
+      fromPhone || null,
+      toPhone || null,
+      callSid,
+      callStatus,
+      dialStatus,
+      Number(dialDuration || 0),
+      outcome,
+      eventSource
+    );
   } catch (err) {
     console.error('Failed to log call event:', err.message);
   }
@@ -47,14 +67,6 @@ router.post('/voice', validateTwilioRequest, async (req, res) => {
 
   const business = findBusinessByPhone(To);
   const businessName = business ? business.name : 'this business';
-
-  logCallEvent({
-    businessId: business ? business.id : null,
-    fromPhone: From,
-    toPhone: To,
-    callStatus: req.body.CallStatus || null,
-    outcome: 'incoming',
-  });
 
   // Verbal consent disclosure — plays on every inbound call for toll-free verification compliance.
   // Required: caller must hear the disclosure before consent is recorded via missed-call SMS.
@@ -80,7 +92,7 @@ router.post('/voice', validateTwilioRequest, async (req, res) => {
  * Real conversations are typically > 15 seconds. Voicemail pickups are < 10.
  */
 router.post('/voice-dial-result', validateTwilioRequest, async (req, res) => {
-  const { DialCallStatus, DialCallDuration, From, To } = req.body;
+  const { DialCallStatus, DialCallDuration, From, To, CallSid } = req.body;
   console.log('📞 /webhooks/voice-dial-result:', DialCallStatus, `(${DialCallDuration || 0}s)`, 'From:', From, 'To:', To);
   const VoiceResponse = require('twilio').twiml.VoiceResponse;
   const twiml = new VoiceResponse();
@@ -97,9 +109,11 @@ router.post('/voice-dial-result', validateTwilioRequest, async (req, res) => {
     businessId: business ? business.id : null,
     fromPhone: From,
     toPhone: To,
+    callSid: CallSid || null,
     dialStatus: DialCallStatus || null,
     dialDuration: DialCallDuration || 0,
     outcome,
+    eventSource: 'dial_result',
   });
 
   if (isMissed || isVoicemail) {
@@ -130,16 +144,20 @@ router.post('/voice-dial-result', validateTwilioRequest, async (req, res) => {
  */
 router.post('/voice-status', validateTwilioRequest, async (req, res) => {
   console.log('📞 /webhooks/voice-status hit:', JSON.stringify(req.body));
-  const { CallStatus, From, To } = req.body;
+  const { CallStatus, From, To, CallSid } = req.body;
   const business = findBusinessByPhone(To);
 
-  if (['completed', 'busy', 'failed', 'no-answer', 'canceled'].includes(CallStatus)) {
+  const shouldLogStatusEvent = !business || !business.forward_phone;
+
+  if (shouldLogStatusEvent && ['completed', 'busy', 'failed', 'no-answer', 'canceled'].includes(CallStatus)) {
     logCallEvent({
       businessId: business ? business.id : null,
       fromPhone: From,
       toPhone: To,
+      callSid: CallSid || null,
       callStatus: CallStatus,
       outcome: ['no-answer', 'busy', 'failed', 'canceled'].includes(CallStatus) ? 'missed' : 'answered',
+      eventSource: 'voice_status',
     });
   }
 

@@ -201,7 +201,8 @@ async function handleInboundSMS(businessId, callerPhone, body) {
     // Increment turn count
     const newTurnCount = (lead.ai_turn_count || 0) + 1;
     const maxTurns = business.max_ai_turns || 3;
-    const isHandoff = newTurnCount >= maxTurns;
+    const ownerCallbackIntent = /have\s+\w+\s+reach\s+out|reach\s+out\s+shortly|call\s+you\s+shortly|owner\s+will\s+reach\s+out/i.test(replyBody);
+    const isHandoff = ownerCallbackIntent || newTurnCount >= maxTurns;
 
     db.prepare(
       'UPDATE leads SET ai_turn_count = ?, ai_handoff_done = ?, lead_status = ?, updated_at = datetime(\'now\') WHERE id = ?'
