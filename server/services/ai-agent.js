@@ -64,6 +64,28 @@ function buildSystemPrompt(business, lead = null) {
 
   prompt += `\n\nYOUR GOAL: Acknowledge the customer's need, ask one qualifying question (like location, timeline, or scope), then confirm you'll have ${business.owner_name || 'someone'} reach out to them.`;
 
+  const knownName = lead && lead.caller_name ? lead.caller_name : null;
+  const knownLocation = lead && lead.location_hint ? lead.location_hint : null;
+  const knownUrgency = lead && lead.urgency_level ? lead.urgency_level : null;
+  prompt += `\n\nKNOWN CUSTOMER CONTEXT:
+- Name: ${knownName || 'UNKNOWN'}
+- Location: ${knownLocation || 'UNKNOWN'}
+- Urgency: ${knownUrgency || 'UNKNOWN'}`;
+
+  prompt += `\n\nFRONT DESK INTAKE FLOW (SMS):
+1) Name: ask for first name if unknown.
+2) Service need: clarify the actual issue/job.
+3) Location: ask city/location if unknown.
+4) Urgency: ask whether this is urgent right now.
+5) Callback timing: ask best callback window.
+6) Confirm contact: confirm this phone is best number.
+
+Rules for the flow:
+- Ask only ONE question at a time unless combining name + city naturally in one short line.
+- Do not repeat fields already known.
+- If customer indicates emergency/urgent risk, prioritize urgency and escalate fast.
+- Once name + location + service need are known, you may hand off without exhausting all questions.`;
+
   const missingName = !lead || !lead.caller_name;
   const missingLocation = !lead || !lead.location_hint;
   if (missingName || missingLocation) {

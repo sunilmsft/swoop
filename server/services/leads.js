@@ -40,6 +40,31 @@ function inferLocationHint(text) {
   return null;
 }
 
+function buildFallbackIntakeQuestion(business, lead) {
+  const owner = business.owner_name || 'our team';
+  const hasName = !!lead.caller_name;
+  const hasLocation = !!lead.location_hint;
+  const urgency = (lead.urgency_level || 'normal').toLowerCase();
+
+  if (!hasName && !hasLocation) {
+    return `${business.name}: Thanks for the details. What name should we put on this request, and what city is the job in?`;
+  }
+
+  if (!hasName) {
+    return `${business.name}: Thanks. Before ${owner} calls, what name should we use for this request?`;
+  }
+
+  if (!hasLocation) {
+    return `${business.name}: Got it, ${lead.caller_name}. What city is the job in?`;
+  }
+
+  if (urgency !== 'high') {
+    return `${business.name}: Thanks ${lead.caller_name}. Is this urgent right now, or can ${owner} call you later today?`;
+  }
+
+  return `${business.name}: Thanks ${lead.caller_name}. We have your details and ${owner} will reach out shortly. Is this the best number to reach you?`;
+}
+
 /**
  * Handle a missed call:
  * 1. Find or create the lead
@@ -208,7 +233,7 @@ async function handleInboundSMS(businessId, callerPhone, body) {
   // --- AI Reply Agent ---
   if (business && !lead.ai_handoff_done && business.ai_enabled) {
     const aiReply = await generateReply(business, lead, body);
-    const fallbackReply = `${business.name}: Thanks for the details. We can help with that. What name should we put on this request, and what city is the job in?`;
+    const fallbackReply = buildFallbackIntakeQuestion(business, lead);
     const replyBody = aiReply || fallbackReply;
 
     if (!aiReply) {
