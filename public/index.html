@@ -475,9 +475,9 @@
                     </div>
                 </div>
                 <div class="briefing-card">
-                    <h4>Progress Snapshot</h4>
+                    <h4>Today At A Glance</h4>
                     <div class="briefing-list" id="briefing-progress">
-                        <div class="briefing-item"><span>Loading today’s summary...</span></div>
+                        <div class="briefing-item"><span>Loading summary...</span></div>
                     </div>
                 </div>
             </div>
@@ -487,16 +487,13 @@
         <div class="tab-panel active" data-panel="prod">
         <!-- Stats -->
         <div class="stats" id="stats">
-            <div class="stat-card"><div class="label">Open Leads</div><div class="value blue" id="stat-total">—</div></div>
-            <div class="stat-card"><div class="label">Awaiting First Reply</div><div class="value" id="stat-new">—</div></div>
             <div class="stat-card"><div class="label">Needs Attention</div><div class="value" style="color:var(--red)" id="stat-attention">—</div></div>
-            <div class="stat-card"><div class="label">Active Conversations</div><div class="value green" id="stat-engaged">—</div></div>
-            <div class="stat-card"><div class="label">Calls (Last 24h)</div><div class="value blue" id="stat-sent">—</div></div>
             <div class="stat-card"><div class="label">Follow-ups Due Now</div><div class="value yellow" id="stat-followups">—</div></div>
-            <div class="stat-card"><div class="label">Jobs Completed</div><div class="value green" id="stat-reviews">—</div></div>
+            <div class="stat-card"><div class="label">Calls (Last 24h)</div><div class="value blue" id="stat-sent">—</div></div>
+            <div class="stat-card"><div class="label">Answered Calls (24h)</div><div class="value green" id="stat-answered">—</div></div>
             <div class="stat-card"><div class="label">Missed Calls (24h)</div><div class="value" style="color:var(--yellow)" id="stat-missed">—</div></div>
         </div>
-        <div class="owner-explainer">Top cards show owner workload and call outcomes. Funnel shows missed-call text-back pipeline only.</div>
+        <div class="owner-explainer">Cards focus on immediate action and recent call outcomes. The funnel below tracks missed-call text-back progression.</div>
 
         <!-- End-to-End Demo Modules -->
         <div class="module-grid">
@@ -701,11 +698,21 @@
                 actionRows.push('<div class="briefing-item"><span><span class="alert-pill alert-ok">All clear</span> No urgent owner actions right now</span><strong>0</strong></div>');
             }
 
+            const openPipeline = (stats.newLeads || 0) + (stats.engagedLeads || 0) + (stats.needsAttention || 0);
+            const conversionBase = stats.engagedLeads || 0;
+            const conversionRate = conversionBase > 0 ? Math.round(((stats.convertedLeads || 0) / conversionBase) * 100) : 0;
+            const lastLead = (leads || []).slice().sort((a, b) => new Date(`${b.updated_at}Z`) - new Date(`${a.updated_at}Z`))[0];
+            const lastLeadText = lastLead
+                ? `${lastLead.caller_name || lastLead.caller_phone} · ${timeAgo(lastLead.updated_at)}`
+                : 'No active lead threads yet';
+
             const progressRows = [
-                `<div class="briefing-item"><button onclick="openBriefingProgress('open_queue')">Open leads in queue</button><strong>${openLeads}</strong></div>`,
-                `<div class="briefing-item"><button onclick="openBriefingProgress('awaiting_reply')">Awaiting first customer reply</button><strong>${awaitingReply}</strong></div>`,
-                `<div class="briefing-item"><button onclick="openBriefingProgress('recent_activity')">Calls in last 24h (answered / missed)</button><strong>${calls24h} (${answered24h}/${missed24h})</strong></div>`,
-                `<div class="briefing-item"><button onclick="openBriefingProgress('completed')">Jobs completed</button><strong>${completed}</strong></div>`,
+                `<div class="briefing-item"><span>Open pipeline (new + active + reply now)</span><strong>${openPipeline}</strong></div>`,
+                `<div class="briefing-item"><span>Awaiting first customer reply</span><strong>${awaitingReply}</strong></div>`,
+                `<div class="briefing-item"><span>Calls in last 24h (answered / missed)</span><strong>${calls24h} (${answered24h}/${missed24h})</strong></div>`,
+                `<div class="briefing-item"><span>Conversion from engaged</span><strong>${conversionRate}%</strong></div>`,
+                `<div class="briefing-item"><span>Last lead activity</span><strong>${escapeHtml(lastLeadText)}</strong></div>`,
+                `<div class="briefing-item"><span>Jobs completed</span><strong>${completed}</strong></div>`,
             ];
 
             actions.innerHTML = actionRows.join('');
@@ -735,21 +742,6 @@
             if (target) {
                 openLead(target.id);
             }
-        }
-
-        function openBriefingProgress(kind) {
-            if (kind === 'open_queue') {
-                setLeadFilter('open_queue', 'Open leads in queue');
-            } else if (kind === 'awaiting_reply') {
-                setLeadFilter('awaiting_reply', 'Awaiting first customer reply');
-            } else if (kind === 'recent_activity') {
-                setLeadFilter('recent_activity', 'Updated in last 24h');
-            } else if (kind === 'completed') {
-                setLeadFilter('completed', 'Jobs completed');
-            } else {
-                setLeadFilter('all', 'All leads');
-            }
-            renderLeads(latestLeads);
         }
 
         function setLeadFilter(key, label) {
@@ -827,13 +819,10 @@
 
                 if (statsRes.ok) {
                     stats = await statsRes.json();
-                    document.getElementById('stat-total').textContent = stats.openLeads ?? stats.totalLeads;
-                    document.getElementById('stat-new').textContent = stats.newLeads;
                     document.getElementById('stat-attention').textContent = stats.needsAttention || 0;
-                    document.getElementById('stat-engaged').textContent = stats.engagedLeads;
                     document.getElementById('stat-sent').textContent = stats.callsLast24h ?? 0;
                     document.getElementById('stat-followups').textContent = stats.followUpsDueNow ?? stats.pendingFollowUps;
-                    document.getElementById('stat-reviews').textContent = stats.convertedLeads;
+                    document.getElementById('stat-answered').textContent = stats.answeredCallsLast24h ?? 0;
                     document.getElementById('stat-missed').textContent = stats.missedCallsLast24h ?? 0;
                     const source = API ? new URL(API).host : window.location.host;
                     document.getElementById('status-text').textContent = `Live · ${source}`;
