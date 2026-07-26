@@ -229,6 +229,20 @@
 
         /* Lead List */
         .section-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+        .lead-filter-bar {
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.8rem;
+            margin-top: -0.45rem;
+            margin-bottom: 0.85rem;
+            padding: 0.5rem 0.65rem;
+            border: 1px solid #dbeafe;
+            background: #eff6ff;
+            border-radius: 8px;
+            font-size: 0.82rem;
+            color: #1e3a8a;
+        }
         .tabs { display: flex; gap: 0.25rem; border-bottom: 1px solid #e5e7eb; margin-bottom: 1.25rem; }
         .tab-btn { background: transparent; border: none; padding: 0.7rem 1rem; font-size: 0.9rem; font-weight: 600; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
         .tab-btn:hover { color: var(--text); }
@@ -574,6 +588,10 @@
 
         <!-- Lead List -->
         <div class="section-title">📋 Recent Leads</div>
+        <div class="lead-filter-bar" id="lead-filter-bar">
+            <span id="lead-filter-label">Showing all leads</span>
+            <button class="btn" onclick="clearLeadFilter()">Clear filter</button>
+        </div>
         <div class="lead-list" id="lead-list">
             <div class="empty-state" id="empty-state">
                 <div class="emoji">🦅</div>
@@ -614,6 +632,8 @@
 
         const API = resolveApiBase();
         let latestLeads = [];
+        let currentLeadFilter = 'all';
+        let currentLeadFilterLabel = 'All leads';
 
         function apiPath(path) {
             return API
@@ -682,10 +702,10 @@
             }
 
             const progressRows = [
-                `<div class="briefing-item"><span>Open leads in queue</span><strong>${openLeads}</strong></div>`,
-                `<div class="briefing-item"><span>Awaiting first customer reply</span><strong>${awaitingReply}</strong></div>`,
-                `<div class="briefing-item"><span>Calls in last 24h (answered / missed)</span><strong>${calls24h} (${answered24h}/${missed24h})</strong></div>`,
-                `<div class="briefing-item"><span>Jobs completed</span><strong>${completed}</strong></div>`,
+                `<div class="briefing-item"><button onclick="openBriefingProgress('open_queue')">Open leads in queue</button><strong>${openLeads}</strong></div>`,
+                `<div class="briefing-item"><button onclick="openBriefingProgress('awaiting_reply')">Awaiting first customer reply</button><strong>${awaitingReply}</strong></div>`,
+                `<div class="briefing-item"><button onclick="openBriefingProgress('recent_activity')">Calls in last 24h (answered / missed)</button><strong>${calls24h} (${answered24h}/${missed24h})</strong></div>`,
+                `<div class="briefing-item"><button onclick="openBriefingProgress('completed')">Jobs completed</button><strong>${completed}</strong></div>`,
             ];
 
             actions.innerHTML = actionRows.join('');
@@ -715,6 +735,57 @@
             if (target) {
                 openLead(target.id);
             }
+        }
+
+        function openBriefingProgress(kind) {
+            if (kind === 'open_queue') {
+                setLeadFilter('open_queue', 'Open leads in queue');
+            } else if (kind === 'awaiting_reply') {
+                setLeadFilter('awaiting_reply', 'Awaiting first customer reply');
+            } else if (kind === 'recent_activity') {
+                setLeadFilter('recent_activity', 'Updated in last 24h');
+            } else if (kind === 'completed') {
+                setLeadFilter('completed', 'Jobs completed');
+            } else {
+                setLeadFilter('all', 'All leads');
+            }
+            renderLeads(latestLeads);
+        }
+
+        function setLeadFilter(key, label) {
+            currentLeadFilter = key;
+            currentLeadFilterLabel = label;
+            const bar = document.getElementById('lead-filter-bar');
+            const labelEl = document.getElementById('lead-filter-label');
+            if (key && key !== 'all') {
+                bar.style.display = 'flex';
+                labelEl.textContent = `Filtered view: ${label}`;
+            } else {
+                bar.style.display = 'none';
+            }
+        }
+
+        function clearLeadFilter() {
+            setLeadFilter('all', 'All leads');
+            renderLeads(latestLeads);
+        }
+
+        function matchesLeadFilter(lead) {
+            if (!currentLeadFilter || currentLeadFilter === 'all') return true;
+            if (currentLeadFilter === 'open_queue') {
+                return ['new', 'engaged', 'needs_attention'].includes(lead.lead_status);
+            }
+            if (currentLeadFilter === 'awaiting_reply') {
+                return lead.lead_status === 'new';
+            }
+            if (currentLeadFilter === 'completed') {
+                return ['converted', 'review_sent'].includes(lead.lead_status);
+            }
+            if (currentLeadFilter === 'recent_activity') {
+                const ageMs = Date.now() - new Date(`${lead.updated_at}Z`).getTime();
+                return ageMs <= (24 * 60 * 60 * 1000);
+            }
+            return true;
         }
 
         function initEnvironmentHints() {
@@ -903,14 +974,25 @@
         function renderLeads(leads) {
             const list = document.getElementById('lead-list');
             const empty = document.getElementById('empty-state');
+            const emptyTitle = empty.querySelector('h3');
+            const emptyBody = empty.querySelector('p');
 
-            if (leads.length === 0) {
+            const filteredLeads = leads.filter(matchesLeadFilter);
+
+            if (filteredLeads.length === 0) {
                 empty.style.display = 'block';
+                if (currentLeadFilter && currentLeadFilter !== 'all') {
+                    emptyTitle.textContent = 'No leads in this filter';
+                    emptyBody.textContent = `No leads currently match: ${currentLeadFilterLabel}. Try clearing the filter.`;
+                } else {
+                    emptyTitle.textContent = 'No leads yet';
+                    emptyBody.textContent = 'When someone misses a call, Swoop texts them back instantly. Their info shows up here.';
+                }
                 return;
             }
 
             empty.style.display = 'none';
-            const sortedLeads = [...leads].sort((a, b) => {
+            const sortedLeads = [...filteredLeads].sort((a, b) => {
                 const aInfo = classifyLead(a);
                 const bInfo = classifyLead(b);
                 if (bInfo.score !== aInfo.score) return bInfo.score - aInfo.score;
