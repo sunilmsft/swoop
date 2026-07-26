@@ -5,6 +5,23 @@ const db = require('../db/database');
 
 const router = express.Router();
 
+function normalizePhone(value) {
+  return String(value || '').replace(/\D/g, '');
+}
+
+function findBusinessByPhone(phone) {
+  const normalized = normalizePhone(phone);
+  if (!normalized) return null;
+
+  // Try exact match first, then normalized match as a fallback.
+  return db.prepare(
+    `SELECT * FROM businesses
+     WHERE phone = ?
+        OR REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(phone, '+', ''), '-', ''), '(', ''), ')', ''), ' ', '') = ?
+     LIMIT 1`
+  ).get(phone, normalized);
+}
+
 /**
  * POST /webhooks/voice — Twilio calls this when a call comes in
  *
@@ -17,7 +34,7 @@ router.post('/voice', validateTwilioRequest, async (req, res) => {
   const VoiceResponse = require('twilio').twiml.VoiceResponse;
   const twiml = new VoiceResponse();
 
-  const business = db.prepare('SELECT * FROM businesses WHERE phone = ?').get(To);
+  const business = findBusinessByPhone(To);
   const businessName = business ? business.name : 'this business';
 
   // Verbal consent disclosure — plays on every inbound call for toll-free verification compliance.
@@ -57,7 +74,7 @@ router.post('/voice-dial-result', validateTwilioRequest, async (req, res) => {
       console.log('📞 Short "completed" call — likely voicemail, treating as missed');
     }
 
-    const business = db.prepare('SELECT * FROM businesses WHERE phone = ?').get(To);
+    const business = findBusinessByPhone(To);
 
     if (business) {
       try {
@@ -86,7 +103,7 @@ router.post('/voice-status', validateTwilioRequest, async (req, res) => {
 
   if (['no-answer', 'busy', 'failed'].includes(CallStatus)) {
     // Find the business by their Twilio number
-    const business = db.prepare('SELECT * FROM businesses WHERE phone = ?').get(To);
+    const business = findBusinessByPhone(To);
 
     if (business) {
       try {
@@ -109,7 +126,7 @@ router.post('/sms', validateTwilioRequest, async (req, res) => {
   const MessagingResponse = require('twilio').twiml.MessagingResponse;
   const twiml = new MessagingResponse();
 
-  const business = db.prepare('SELECT * FROM businesses WHERE phone = ?').get(To);
+  const business = findBusinessByPhone(To);
 
   if (business) {
     try {
