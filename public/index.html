@@ -179,6 +179,7 @@
         .lead-card .info .name { font-weight: 600; font-size: 0.95rem; }
         .lead-card .info .phone { font-size: 0.82rem; color: var(--text-muted); }
         .lead-card .info .last-msg { font-size: 0.82rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 0.15rem; }
+        .lead-card .info .lead-insight { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.1rem; }
         .lead-card .meta { text-align: right; flex-shrink: 0; }
         .lead-card .meta .time { font-size: 0.78rem; color: var(--text-muted); }
 
@@ -196,6 +197,16 @@
         .badge-converted { background: #f0fdf4; color: #15803d; }
         .badge-review { background: var(--yellow-bg); color: var(--yellow); }
         .badge-needs_attention { background: #fef2f2; color: #dc2626; animation: pulse 2s infinite; }
+
+        .status-note {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            margin-top: 0.25rem;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+        .status-note strong { color: var(--text); }
 
         /* Lead Detail Modal */
         .modal-overlay {
@@ -590,10 +601,51 @@
             document.getElementById('journey-note').textContent = `Reply rate ${replyRate}% · Conversion from engaged ${conversionRate}%`;
         }
 
+        function classifyLead(lead) {
+            const updatedMs = new Date(`${lead.updated_at}Z`).getTime();
+            const ageHours = Number.isFinite(updatedMs) ? Math.max(0, (Date.now() - updatedMs) / 3600000) : 0;
+            const isStale = ageHours >= 24;
+
+            if (lead.sms_opt_out) {
+                return { score: 0, label: 'Opted out', detail: 'No more texts', tone: 'muted' };
+            }
+
+            if (lead.lead_status === 'needs_attention') {
+                return { score: 100, label: 'Needs attention', detail: 'Owner should respond now', tone: 'danger' };
+            }
+
+            if (lead.lead_status === 'engaged') {
+                return isStale
+                    ? { score: 82, label: 'Follow-up due', detail: 'Customer replied, waiting on owner', tone: 'warning' }
+                    : { score: 65, label: 'Active conversation', detail: 'Conversation still moving', tone: 'success' };
+            }
+
+            if (lead.lead_status === 'new') {
+                return isStale
+                    ? { score: 72, label: 'Stale new lead', detail: 'No customer reply yet', tone: 'warning' }
+                    : { score: 58, label: 'New lead', detail: 'Auto-text sent, waiting for reply', tone: 'info' };
+            }
+
+            if (lead.lead_status === 'review_sent') {
+                return { score: 18, label: 'Review sent', detail: 'Waiting on customer review', tone: 'info' };
+            }
+
+            if (lead.lead_status === 'converted') {
+                return { score: 10, label: 'Completed', detail: 'Conversation closed', tone: 'success' };
+            }
+
+            return { score: 20, label: lead.lead_status || 'Unknown', detail: 'Needs review', tone: 'muted' };
+        }
+
         function renderOwnerQueue(stats) {
+            const waitingOnCustomer = latestLeads.filter((lead) => {
+                const info = classifyLead(lead);
+                return info.label === 'Follow-up due' || info.label === 'Stale new lead' || info.label === 'Active conversation';
+            }).length;
+
             document.getElementById('owner-queue').innerHTML = `
                 <div class="queue-item"><div class="name">Needs attention</div><div class="count">${stats.needsAttention || 0}</div></div>
-                <div class="queue-item"><div class="name">New leads</div><div class="count">${stats.newLeads || 0}</div></div>
+                <div class="queue-item"><div class="name">Waiting on customer</div><div class="count">${waitingOnCustomer}</div></div>
                 <div class="queue-item"><div class="name">Pending follow-ups</div><div class="count">${stats.pendingFollowUps || 0}</div></div>
             `;
         }
@@ -637,20 +689,31 @@
             }
 
             empty.style.display = 'none';
-            list.innerHTML = leads.map(lead => `
+            const sortedLeads = [...leads].sort((a, b) => {
+                const aInfo = classifyLead(a);
+                const bInfo = classifyLead(b);
+                if (bInfo.score !== aInfo.score) return bInfo.score - aInfo.score;
+                return new Date(b.updated_at + 'Z') - new Date(a.updated_at + 'Z');
+            });
+
+            list.innerHTML = sortedLeads.map(lead => {
+                const info = classifyLead(lead);
+                return `
                 <div class="lead-card" onclick="openLead(${lead.id})">
                     <div class="avatar">${(lead.caller_name || lead.caller_phone).charAt(0).toUpperCase()}</div>
                     <div class="info">
                         <div class="name">${escapeHtml(lead.caller_name || lead.caller_phone)}</div>
                         <div class="phone">${lead.caller_name ? escapeHtml(lead.caller_phone) : ''}</div>
                         <div class="last-msg">${lead.last_message ? escapeHtml(lead.last_message) : 'No messages yet'}</div>
+                        <div class="lead-insight"><strong>${escapeHtml(info.label)}</strong> · ${escapeHtml(info.detail)}</div>
                     </div>
                     <div class="meta">
                         <div class="time">${timeAgo(lead.updated_at)}</div>
                         <div class="badge badge-${lead.lead_status === 'needs_attention' ? 'needs_attention' : lead.lead_status === 'new' ? 'new' : lead.lead_status === 'engaged' ? 'engaged' : lead.lead_status === 'review_sent' ? 'review' : 'converted'}">${lead.lead_status === 'needs_attention' ? '🔔 needs attention' : lead.lead_status}</div>
                     </div>
                 </div>
-            `).join('');
+            `;
+            }).join('');
         }
 
         // ---- Lead Detail ----
@@ -714,7 +777,7 @@
                     <button class="btn btn-primary" onclick="sendManualSMS(${lead.id})" ${disableMessaging ? 'disabled' : ''}>Send</button>
                 </div>
                 <div class="action-bar">
-                    ${lead.lead_status !== 'converted' ? `<button class="btn btn-green" onclick="updateLead(${lead.id}, 'converted')">✅ Mark Converted</button>` : ''}
+                    ${lead.lead_status !== 'converted' ? `<button class="btn btn-green" onclick="closeConversation(${lead.id})">✅ Close Conversation</button>` : ''}
                     ${lead.lead_status === 'converted' && lead.lead_status !== 'review_sent' ? `<button class="btn" onclick="requestReview(${lead.id})" ${disableMessaging ? 'disabled' : ''}>⭐ Request Review After Completion</button>` : ''}
                 </div>
             `;
@@ -731,6 +794,10 @@
             });
             document.getElementById('modal-overlay').classList.remove('active');
             loadDashboard();
+        }
+
+        async function closeConversation(id) {
+            await updateLead(id, 'converted');
         }
 
         async function requestReview(id) {
