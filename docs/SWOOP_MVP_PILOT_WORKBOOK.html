@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Swoop MVP and controlled pilot planning workbook.">
+  <title>Swoop MVP &amp; Pilot Workbook</title>
+  <style>
+    :root {
+      --ink: #17212b;
+      --muted: #586875;
+      --paper: #fbfaf7;
+      --panel: #ffffff;
+      --line: #d9e0df;
+      --teal: #086f73;
+      --teal-soft: #e4f3f1;
+      --gold: #a66b16;
+      --gold-soft: #fff3d8;
+      --red: #a13b36;
+      --red-soft: #fce8e4;
+      --blue: #315b89;
+      --blue-soft: #e8f0fa;
+      --green: #2d6a4f;
+      --green-soft: #e7f3eb;
+      --shadow: 0 10px 28px rgba(23, 33, 43, .07);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; color: var(--ink); background: var(--paper); font: 16px/1.55 Georgia, 'Times New Roman', serif; }
+    a { color: var(--teal); }
+    .shell { max-width: 1440px; margin: 0 auto; padding: 0 24px 64px; }
+    header { padding: 56px 0 34px; border-bottom: 1px solid var(--line); }
+    .eyebrow, .label, nav, th, .chip, summary { font-family: 'Trebuchet MS', Arial, sans-serif; }
+    .eyebrow { color: var(--teal); font-size: .78rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+    h1, h2, h3, h4 { font-family: 'Trebuchet MS', Arial, sans-serif; line-height: 1.15; }
+    h1 { max-width: 850px; margin: 10px 0 8px; font-size: clamp(2.3rem, 5vw, 4.4rem); letter-spacing: -.04em; }
+    h2 { margin: 52px 0 18px; padding-top: 18px; border-top: 3px solid var(--teal); font-size: 2rem; }
+    h3 { margin: 30px 0 12px; font-size: 1.3rem; }
+    h4 { margin: 20px 0 8px; font-size: 1rem; }
+    p { max-width: 900px; }
+    .subtitle { color: var(--muted); font-size: 1.25rem; margin: 0 0 24px; }
+    .notice { padding: 16px 20px; border-left: 5px solid var(--gold); background: var(--gold-soft); margin: 24px 0; }
+    .meta { display: grid; grid-template-columns: repeat(5, minmax(130px, 1fr)); gap: 10px; margin-top: 28px; }
+    .meta div { padding: 12px 14px; background: var(--panel); border: 1px solid var(--line); box-shadow: var(--shadow); }
+    .label { display: block; color: var(--muted); font-size: .72rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
+    .toc { position: sticky; top: 0; z-index: 2; margin: 22px 0; padding: 14px 18px; background: rgba(251,250,247,.96); border: 1px solid var(--line); box-shadow: 0 4px 14px rgba(23,33,43,.05); }
+    .toc summary { cursor: pointer; font-weight: 700; }
+    .toc ul { columns: 3; margin: 12px 0 0; padding-left: 20px; }
+    .toc li { margin: 4px 0; }
+    .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+    .grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .card { padding: 20px; background: var(--panel); border: 1px solid var(--line); box-shadow: var(--shadow); }
+    .card h3 { margin-top: 0; }
+    .card ul, .card ol { padding-left: 22px; }
+    .tagline { color: var(--teal); font-weight: 700; }
+    .chip { display: inline-block; padding: 3px 8px; border-radius: 999px; font-size: .7rem; font-weight: 700; white-space: nowrap; }
+    .confirmed { color: var(--green); background: var(--green-soft); }
+    .recommendation { color: var(--blue); background: var(--blue-soft); }
+    .question { color: var(--gold); background: var(--gold-soft); }
+    .gap { color: var(--red); background: var(--red-soft); }
+    .future { color: #6d527f; background: #f2eafa; }
+    .flow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 22px 0; }
+    .step { position: relative; min-height: 112px; padding: 16px; background: var(--teal-soft); border: 1px solid #b9ded9; }
+    .step strong { display: block; color: var(--teal); font-family: 'Trebuchet MS', Arial, sans-serif; }
+    .step small { color: var(--muted); }
+    .step::after { content: '→'; position: absolute; right: -11px; top: 40%; color: var(--teal); font: 700 1.3rem Arial, sans-serif; }
+    .step:nth-child(4n)::after { display: none; }
+    .demo-flow .step { background: var(--red-soft); border-color: #edc0b9; }
+    .demo-flow .step strong { color: var(--red); }
+    .table-wrap { overflow-x: auto; margin: 16px 0 24px; border: 1px solid var(--line); }
+    table { width: 100%; min-width: 920px; border-collapse: collapse; background: var(--panel); }
+    caption { padding: 12px; text-align: left; color: var(--muted); font-style: italic; }
+    th, td { padding: 11px 12px; vertical-align: top; border-bottom: 1px solid var(--line); text-align: left; }
+    th { color: #fff; background: var(--teal); font-size: .76rem; letter-spacing: .04em; text-transform: uppercase; }
+    tr:last-child td { border-bottom: 0; }
+    tr:nth-child(even) td { background: #f7faf9; }
+    .decision { border-left: 4px solid var(--teal); padding: 14px 18px; margin: 16px 0; background: var(--panel); box-shadow: var(--shadow); }
+    .decision h3 { margin: 0 0 8px; }
+    .decision dl { display: grid; grid-template-columns: 130px 1fr; gap: 4px 16px; margin: 0; }
+    dt { color: var(--muted); font-weight: 700; }
+    dd { margin: 0; }
+    code { padding: 1px 4px; color: #29454b; background: #edf2f1; font: .9em Consolas, monospace; }
+    .checklist { columns: 2; padding-left: 22px; }
+    .checklist li { break-inside: avoid; margin: 6px 0; }
+    .open { padding: 16px 20px; margin: 16px 0; background: var(--gold-soft); border: 1px solid #edcf91; }
+    .footer { margin-top: 60px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--muted); }
+    @media (max-width: 900px) { .meta { grid-template-columns: repeat(2, 1fr); } .grid, .grid.two { grid-template-columns: 1fr 1fr; } .flow { grid-template-columns: repeat(2, 1fr); } .step:nth-child(2n)::after { display: none; } .step:nth-child(2n+1)::after { display: block; } .toc ul { columns: 2; } }
+    @media (max-width: 620px) { .shell { padding: 0 14px 42px; } header { padding-top: 34px; } h2 { margin-top: 38px; font-size: 1.65rem; } .meta, .grid, .grid.two, .flow { grid-template-columns: 1fr; } .toc { position: static; } .toc ul { columns: 1; } .step::after, .step:nth-child(2n+1)::after { display: none; } .checklist { columns: 1; } .decision dl { display: block; } dt { margin-top: 10px; } }
+    @media print { body { color: #000; background: #fff; font-size: 10pt; } .shell { max-width: none; padding: 0; } .toc { position: static; box-shadow: none; } h2 { page-break-before: always; } #framing h2 { page-break-before: auto; } .card, .decision, .step { box-shadow: none; } a { color: #000; text-decoration: none; } .chip { border: 1px solid #999; } .table-wrap { overflow: visible; } table { min-width: 0; font-size: 8pt; } th { color: #000; background: #eee; } .no-print { display: none; } }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header id="top">
+      <div class="eyebrow">Swoop / living product workbook</div>
+      <h1>Swoop MVP &amp; Pilot Workbook</h1>
+      <p class="subtitle">From working demo to a safe, learnable first-business pilot</p>
+      <div class="meta">
+        <div><span class="label">Last updated</span>August 19, 2026</div>
+        <div><span class="label">Phase</span>MVP and controlled-pilot definition</div>
+        <div><span class="label">Status</span>Active working document</div>
+        <div><span class="label">Branch reviewed</span><code>master</code></div>
+        <div><span class="label">Checkpoint</span><code>eb8eb5d</code></div>
+      </div>
+      <div class="notice"><strong>This is a living product workbook.</strong> It separates confirmed decisions from recommendations, open questions, implementation gaps, and future ideas. Update this file in place rather than creating multiple versioned copies.</div>
+    </header>
+
+    <details class="toc" open>
+      <summary>Workbook contents</summary>
+      <nav aria-label="Table of contents"><ul>
+        <li><a href="#framing">Product framing</a></li><li><a href="#gates">Readiness gates</a></li><li><a href="#decisions">Confirmed decisions</a></li><li><a href="#architecture">Pilot architecture</a></li><li><a href="#journeys">Experience journeys</a></li><li><a href="#onboarding">Onboarding journey</a></li><li><a href="#onboarding-data">Business onboarding information</a></li><li><a href="#urgency">Urgency architecture</a></li><li><a href="#matrix">MVP requirement matrix</a></li><li><a href="#gaps">Current-product gaps</a></li><li><a href="#out-of-scope">Out of scope</a></li><li><a href="#outreach">Outreach and recruitment</a></li><li><a href="#pilot">Pilot design</a></li><li><a href="#self-service">Self-service evolution</a></li><li><a href="#questions">Open questions</a></li><li><a href="#parking">Idea parking lot</a></li><li><a href="#history">Session history</a></li><li><a href="#updates">How to update</a></li>
+      </ul></nav>
+    </details>
+
+    <main>
+      <section id="framing"><h2>Product framing</h2>
+        <p class="tagline">Swoop helps a small business recover missed opportunities without changing how customers already know and contact the business.</p>
+        <p>When an existing business number goes unanswered, the call is conditionally forwarded behind the scenes to Swoop. Swoop sends a warm, clearly branded text, gathers useful information through a short multi-turn conversation, and hands the qualified request to the business owner.</p>
+        <div class="grid">
+          <article class="card"><h3>Caller</h3><ul><li>Receives a fast acknowledgment after an unanswered call.</li><li>Understands which business is texting and why.</li><li>Can describe the need without calling repeatedly.</li><li>Reaches a human owner when judgment or action is required.</li><li>Can opt out easily.</li></ul></article>
+          <article class="card"><h3>Business owner</h3><ul><li>Keeps the existing customer-facing number.</li><li>Avoids losing customers because a call was missed.</li><li>Receives a concise, qualified lead rather than a raw notification.</li><li>Can see what the customer needs and what action to take.</li><li>Can enable, pause, or disable Swoop without disrupting the public identity.</li></ul></article>
+          <article class="card"><h3>Swoop operator</h3><ul><li>Onboards and supports a deliberately small pilot cohort.</li><li>Sees whether each business is functioning.</li><li>Troubleshoots calls, SMS, AI, and handoff failures.</li><li>Manages the pilot without routine production-data edits.</li><li>Learns which steps should become self-service.</li></ul></article>
+        </div>
+      </section>
+
+      <section id="gates"><h2>Two readiness gates</h2>
+        <div class="grid two">
+          <article class="card"><h3><span class="chip recommendation">Gate 1</span> Controlled Pilot MVP</h3><p>Safe enough for a small number of selected businesses to use free for approximately 3–4 weeks with concierge onboarding, active monitoring, and direct support from Swoop.</p><p><strong>Current objective.</strong> The pilot is a learning environment, not a fully scalable SaaS launch.</p></article>
+          <article class="card"><h3><span class="chip future">Gate 2</span> Repeatable Business MVP</h3><p>Stable and simple enough to onboard additional businesses through a repeatable process with less manual technical intervention.</p><p><strong>Not the current objective.</strong> Self-service, automation, and scale should be earned through pilot evidence.</p></article>
+        </div>
+      </section>
+
+      <section id="decisions"><h2>Confirmed decisions</h2>
+        <p>These are working product decisions for the pilot. Revisit only when the stated trigger occurs.</p>
+        <article class="decision"><h3>D-001 — Toll-free number remains internal-only <span class="chip confirmed">Confirmed</span></h3><dl><dt>Date</dt><dd>August 19, 2026</dd><dt>Decision</dt><dd>The currently verified toll-free number is exclusively for internal development, validation, and testing. It must not be advertised, shared with external testers, prospects, or pilot businesses.</dd><dt>Rationale</dt><dd>Verification required significant time and effort, so it is a protected internal test asset. A tester's device also flagged the number as possible fraud.</dd><dt>Implication</dt><dd>External pilot businesses require separate appropriate Twilio numbers.</dd><dt>Revisit when</dt><dd>Revisit only if the internal testing strategy changes.</dd></dl></article>
+        <article class="decision"><h3>D-002 — Pilot supports existing-number forwarding only <span class="chip confirmed">Confirmed</span></h3><dl><dt>Date</dt><dd>August 19, 2026</dd><dt>Decision</dt><dd>Pilot businesses retain their current customer-facing number. Only unanswered or busy calls are conditionally forwarded to a dedicated Twilio number. Forwarding must be reversible.</dd><dt>Rationale</dt><dd>Owners should not change Google listings, websites, vehicles, business cards, directories, or existing customer communications.</dd><dt>Implication</dt><dd>A new Twilio number as the publicly advertised number is outside Gate 1 and remains a possible future model.</dd><dt>Revisit when</dt><dd>Pilot evidence shows a public new-number model materially improves outcomes without harming trust.</dd></dl></article>
+        <article class="decision"><h3>D-003 — One dedicated Twilio number per pilot business <span class="chip confirmed">Confirmed</span></h3><dl><dt>Date</dt><dd>August 19, 2026</dd><dt>Decision</dt><dd>The pilot assumes a 1:1 mapping between each business and its assigned Twilio number. It is a behind-the-scenes routing and texting number, not the advertised number.</dd><dt>Rationale</dt><dd>The mapping identifies business profile, AI instructions, sender identity, owner, dashboard, and handoff destination.</dd><dt>Implication</dt><dd>Shared toll-free or shared sender behavior is not an acceptable pilot architecture.</dd><dt>Revisit when</dt><dd>There is evidence that a different isolation model is equally understandable and safe.</dd></dl></article>
+        <article class="decision"><h3>D-004 — Concierge onboarding is acceptable <span class="chip confirmed">Confirmed</span></h3><dl><dt>Date</dt><dd>August 19, 2026</dd><dt>Decision</dt><dd>Initial onboarding can be completed manually. Automated signup, purchasing, fully self-service carrier setup, and automated billing are not required for Gate 1.</dd><dt>Rationale</dt><dd>A deliberately small cohort lets Swoop learn the real setup burden before automating it.</dd><dt>Implication</dt><dd>Every manual step must be recorded so future self-service candidates are visible.</dd><dt>Revisit when</dt><dd>Concierge support becomes the limiting factor for pilot quality or cohort growth.</dd></dl></article>
+        <article class="decision"><h3>D-005 — Scheduling preference capture is MVP; guaranteed booking is not <span class="chip confirmed">Confirmed</span></h3><dl><dt>Date</dt><dd>August 19, 2026</dd><dt>Decision</dt><dd>Swoop may ask for a preferred callback or service window and include it in the owner handoff. It must not claim an appointment is booked unless a reliable integration confirms it.</dd><dt>Rationale</dt><dd>Capturing intent helps owners without creating a false promise.</dd><dt>Implication</dt><dd>Full scheduling integrations are outside the initial pilot. A reliable public scheduling link may later be an optional configured behavior.</dd><dt>Revisit when</dt><dd>A pilot business requests booking often enough to justify a defined integration.</dd></dl></article>
+        <article class="decision"><h3>D-006 — Emergency routing is an MVP safety requirement <span class="chip confirmed">Confirmed</span></h3><dl><dt>Date</dt><dd>August 19, 2026</dd><dt>Decision</dt><dd>Emergency and urgent service requests are treated differently from routine qualification. Safety emergencies stop normal qualification; urgent property issues use minimal intake and immediate owner escalation.</dd><dt>Rationale</dt><dd>Slow conversational handling can create physical or property risk.</dd><dt>Implication</dt><dd>Swoop must not promise arrival or resolution times the owner has not confirmed. Exact safety language remains an open launch question.</dd><dt>Revisit when</dt><dd>Industry-specific safety review changes the approved routing rules.</dd></dl></article>
+      </section>
+
+      <section id="architecture"><h2>Supported pilot architecture</h2>
+        <div class="flow">
+          <div class="step"><strong>1. Familiar call</strong><small>Customer calls the existing business number.</small></div><div class="step"><strong>2. Normal ring</strong><small>The business phone rings normally.</small></div><div class="step"><strong>3. Answered</strong><small>If answered, Swoop does nothing.</small></div><div class="step"><strong>4. No answer</strong><small>Provider conditionally forwards unanswered or busy calls.</small></div>
+          <div class="step"><strong>5. Identify</strong><small>Twilio/Swoop maps the dedicated number to one business.</small></div><div class="step"><strong>6. Do not redial</strong><small>Swoop avoids dialing the owner a second time.</small></div><div class="step"><strong>7. Record once</strong><small>One missed-call event is recorded.</small></div><div class="step"><strong>8. Text once</strong><small>Exactly one warm initial text is sent.</small></div>
+          <div class="step"><strong>9. Conversation</strong><small>Customer replies through the assigned Twilio number.</small></div><div class="step"><strong>10. Qualify or escalate</strong><small>Urgency changes the path.</small></div><div class="step"><strong>11. Handoff</strong><small>Owner receives a concise request and takes over.</small></div><div class="step"><strong>12. Disable</strong><small>Owner turns off conditional forwarding to pause.</small></div>
+        </div>
+        <h3>Internal toll-free demo flow is not the pilot architecture</h3>
+        <div class="flow demo-flow"><div class="step"><strong>Direct call</strong><small>Caller dials the internal toll-free test number.</small></div><div class="step"><strong>Disclosure</strong><small>Current code plays the compliance disclosure.</small></div><div class="step"><strong>Owner dial</strong><small>Current demo code dials the configured owner phone.</small></div><div class="step"><strong>SMS</strong><small>Unanswered calls can produce a second voice message and SMS.</small></div></div>
+        <div class="notice"><strong>Architecture gap:</strong> the pilot mode must recognize or be explicitly configured for a carrier-forwarded call, avoid the second owner dial, and avoid repeating a long disclosure after the caller has already experienced the business number.</div>
+      </section>
+
+      <section id="journeys"><h2>Experience journeys</h2>
+        <div class="grid">
+          <article class="card"><h3>Caller journey</h3><ul><li>Calls the familiar business number.</li><li>Receives no confusing second call flow.</li><li>Gets a warm, identified text explaining the missed call.</li><li>Answers one short question at a time.</li><li>Understands when an automated assistant is helping.</li><li>Can request a human or opt out.</li><li>Receives special emergency handling.</li><li>Is not told an appointment is booked unless confirmed.</li></ul></article>
+          <article class="card"><h3>Business-owner journey</h3><ul><li>Keeps the existing public number.</li><li>Enables conditional forwarding with guided instructions.</li><li>Completes a test-call verification before go-live.</li><li>Sees missed calls, conversation status, need, location, urgency, timing, and next action.</li><li>Receives immediate intervention notification.</li><li>Takes over without reading an entire transcript.</li><li>Can pause or disable the pilot.</li><li>Sees only that business's data.</li></ul></article>
+          <article class="card"><h3>Swoop-operator journey</h3><ul><li>Creates the business profile and maps its dedicated number.</li><li>Provides carrier-specific forwarding instructions.</li><li>Runs answered and missed-call tests.</li><li>Verifies first SMS, reply flow, urgency, notification, and opt-out.</li><li>Monitors health and usage.</li><li>Troubleshoots call, SMS, AI, and forwarding failures.</li><li>Pauses or offboards safely.</li><li>Tracks outcomes and costs.</li></ul></article>
+        </div>
+        <h3 id="onboarding">Onboarding journey</h3><ol><li>Select and qualify a business.</li><li>Complete intake and privacy acknowledgement.</li><li>Provision and map one dedicated Twilio number.</li><li>Configure business and AI profile.</li><li>Set up reversible conditional forwarding.</li><li>Run answered-call, missed-call, SMS, reply, urgency, handoff, and opt-out tests.</li><li>Set up owner dashboard/access and notification path.</li><li>Review pilot expectations and support channel.</li><li>Record go-live approval and schedule check-ins.</li></ol>
+        <h3>Offboarding journey</h3><ol><li>Disable conditional forwarding.</li><li>Stop Swoop messaging.</li><li>Release or retain the Twilio number according to policy.</li><li>Revoke owner access.</li><li>Export, delete, or retain data according to the agreed policy.</li><li>Collect final feedback and decide continuation.</li></ol>
+      </section>
+
+      <section id="onboarding-data"><h2>Business information required during onboarding</h2>
+        <ul class="checklist"><li>Business name</li><li>Owner/contact name</li><li>Existing customer-facing number</li><li>Phone carrier/provider</li><li>Owner/employee destination number</li><li>Services offered</li><li>Services not offered</li><li>Service area</li><li>Business hours</li><li>Emergency and after-hours policy</li><li>Approved pricing</li><li>FAQs</li><li>Topics the AI must avoid</li><li>Communication tone</li><li>Preferred handoff time</li><li>Backup contact</li><li>Preferred notification method</li><li>Current scheduling method</li><li>Existing scheduling link, if any</li><li>Data/privacy acknowledgement</li><li>Forwarding activation/deactivation instructions</li><li>Test-call completion status</li></ul>
+      </section>
+
+      <section id="urgency"><h2>Urgency architecture</h2>
+        <div class="grid three">
+          <article class="card"><h3>Level 1 — Safety emergency</h3><p><strong>Examples:</strong> gas smell, fire or smoke, electrical danger around water, immediate danger to people.</p><p><strong>Expected:</strong> stop normal qualification; tell the caller not to wait for a text response; use approved safety language; direct to the appropriate emergency service; alert the owner immediately; do not improvise repair instructions.</p></article>
+          <article class="card"><h3>Level 2 — Urgent property issue</h3><p><strong>Examples:</strong> burst pipe, active flooding, major leak, complete loss of water, no heat during dangerous weather.</p><p><strong>Expected:</strong> mark urgent; collect only name, location, and best callback number; alert the owner immediately; confirm escalation without promising arrival time.</p></article>
+          <article class="card"><h3>Level 3 — Routine request</h3><p><strong>Examples:</strong> slow drain, fixture replacement, estimate, maintenance.</p><p><strong>Expected:</strong> use the short qualification flow; capture scheduling preference; hand off when enough information exists.</p></article>
+        </div>
+        <div class="open"><span class="chip question">Q-009</span> Exact safety and emergency language must be approved before pilot launch, potentially per business and industry.</div>
+      </section>
+
+      <section id="matrix"><h2>MVP requirement matrix</h2>
+        <p>Current-product state is based on the implementation reviewed in this repository, not on aspirational documentation. “Gate 1 expectation” describes what must be true before a controlled pilot is approved.</p>
+        <div class="table-wrap"><table><caption>Gate 1 requirements and evidence</caption><thead><tr><th>ID / capability</th><th>Gate 1 expectation</th><th>Current-product state</th><th>Gap / priority</th><th>Evidence / acceptance criterion</th></tr></thead><tbody>
+          <tr><td>M-001 Internal-only TFN separation</td><td>Never advertise or use the verified toll-free line with pilot businesses.</td><td><span class="chip confirmed">Partial</span> Code has the test number as default; policy is documented.</td><td><span class="chip gap">High</span> Remove it from external test instructions and add guardrails.</td><td><code>server/services/bootstrap.js</code>, seed data, current Twilio state. No external pilot uses the TFN.</td></tr>
+          <tr><td>M-002 Dedicated Twilio number per business</td><td>One number maps to one business.</td><td><span class="chip recommendation">Partial</span> Business rows have a unique phone field; manual creation exists.</td><td><span class="chip gap">High</span> Provisioning and mapping workflow missing.</td><td><code>businesses.phone</code> unique. Pilot record has one dedicated number and webhook test.</td></tr>
+          <tr><td>M-003 Existing-number conditional forwarding</td><td>Existing public number stays unchanged; busy/no-answer forwarding is reversible.</td><td><span class="chip gap">Missing</span> Webhook supports inbound calls but not carrier-forwarding setup.</td><td><span class="chip gap">Blocker</span> Manual carrier instructions and tested path required.</td><td>Owner can switch forwarding off and the public number still works normally.</td></tr>
+          <tr><td>M-004 Forwarded-call detection or explicit mode</td><td>Identify forwarded calls reliably or configure mode per business.</td><td><span class="chip gap">Missing</span> Current webhook uses the called number and always follows demo behavior.</td><td><span class="chip gap">Blocker</span> Add metadata capture plus explicit fallback mode.</td><td>Forwarded test reaches the correct business without a second owner dial.</td></tr>
+          <tr><td>M-005 Prevent second owner dial</td><td>Forwarded call must not dial owner again.</td><td><span class="chip gap">Missing</span> <code>&lt;Dial&gt;</code> currently rings <code>forward_phone</code>.</td><td><span class="chip gap">Blocker</span> Separate demo and pilot call modes.</td><td>Owner receives no second ring; caller receives concise response/hangup.</td></tr>
+          <tr><td>M-006 Exactly-once missed-call SMS</td><td>One initial SMS per missed attempt.</td><td><span class="chip gap">Risk</span> Duplicate status paths were patched, but repeat and retry behavior is not fully idempotent.</td><td><span class="chip gap">High</span> Add call/message idempotency tests.</td><td>Repeated Twilio callbacks produce one event and one initial message.</td></tr>
+          <tr><td>M-007 Business-number mapping</td><td>Every call and lead is scoped to the correct business.</td><td><span class="chip recommendation">Partial</span> Lookup by phone and explicit callback business ID exist.</td><td><span class="chip gap">High</span> Forwarded metadata and authenticated data scope missing.</td><td>Two pilot businesses cannot cross-route calls, messages, or dashboards.</td></tr>
+          <tr><td>M-008 Secure owner authentication</td><td>Only the owner sees their dashboard.</td><td><span class="chip gap">Missing</span> No auth middleware.</td><td><span class="chip gap">Blocker</span></td><td>Unauthenticated request redirects or returns 401.</td></tr>
+          <tr><td>M-009 Business-level data isolation</td><td>Owner sees only their business records.</td><td><span class="chip gap">Missing</span> List routes query all businesses.</td><td><span class="chip gap">Blocker</span></td><td>Owner A cannot fetch owner B's lead by list or ID.</td></tr>
+          <tr><td>M-010 Secure admin/operator access</td><td>Operator tools are restricted and auditable.</td><td><span class="chip gap">Missing</span> Admin endpoints are public.</td><td><span class="chip gap">Blocker</span></td><td>Admin routes require operator auth and log changes.</td></tr>
+          <tr><td>M-011 Unsafe public API protection</td><td>Mutation and SMS routes are protected.</td><td><span class="chip gap">Missing</span> Public APIs can modify records and send SMS; <code>/api/proxy</code> is unauthenticated.</td><td><span class="chip gap">Blocker</span></td><td>Unauthorized mutation, SMS, purge, and proxy attempts are denied.</td></tr>
+          <tr><td>M-012 Warm initial SMS</td><td>Branded, clear, service-reply text sent once.</td><td><span class="chip recommendation">Partial / needs validation</span> Branded initial-message behavior exists, but multiple template sources have drifted and the effective production template must be confirmed.</td><td><span class="chip gap">High</span> Template drift must be eliminated.</td><td>One canonical, approved template passes content review and is verified for every pilot business.</td></tr>
+          <tr><td>M-013 Single canonical message template</td><td>One approved template source and version.</td><td><span class="chip gap">Risk</span> Defaults, bootstrap, seed, and persistent records differ.</td><td><span class="chip gap">High</span></td><td>Template version is visible and all new sends match it.</td></tr>
+          <tr><td>M-014 Multi-turn qualification</td><td>Short one-question-at-a-time conversation.</td><td><span class="chip recommendation">Partial</span> OpenAI and fallback flows exist; max turns are configurable.</td><td><span class="chip gap">High</span> Validate production AI and conversation history.</td><td>Three realistic conversations qualify or hand off without overpromising.</td></tr>
+          <tr><td>M-015 Emergency routing</td><td>Safety, urgent, and routine paths differ.</td><td><span class="chip gap">Incomplete</span> Regex urgency exists; no approved safety route or immediate alert.</td><td><span class="chip gap">Blocker</span></td><td>Approved test phrases trigger the right language and owner escalation.</td></tr>
+          <tr><td>M-016 Owner handoff summary</td><td>Concise need, location, urgency, timing, and next action.</td><td><span class="chip recommendation">Partial</span> Notes summary exists but is basic.</td><td><span class="chip gap">High</span> Include all required fields.</td><td>Owner can act without reading the transcript.</td></tr>
+          <tr><td>M-017 Immediate owner notification</td><td>Notify owner when intervention is required.</td><td><span class="chip gap">Missing</span> No handoff alert path.</td><td><span class="chip gap">Blocker</span></td><td>Urgent/handoff lead creates an immediate configured notification.</td></tr>
+          <tr><td>M-018 Owner takeover</td><td>Owner can reply or take over quickly.</td><td><span class="chip recommendation">Partial</span> Manual SMS endpoint exists; dashboard is unauthenticated.</td><td><span class="chip gap">High</span> Secure and test takeover.</td><td>Owner reply is sent from correct business number and logged.</td></tr>
+          <tr><td>M-019 STOP/START/HELP</td><td>Keywords work and suppress sends.</td><td><span class="chip confirmed">Implemented but unverified</span> Keyword handlers and outbound opt-out guards exist.</td><td><span class="chip gap">High</span> Gate 1 requires automated tests across initial reply, AI reply, follow-up, owner/manual SMS, and review-request paths. Documentation or manual testing alone is insufficient to close this requirement.</td><td>Automated tests pass across initial reply, AI reply, follow-up, owner/manual SMS, and review-request paths.</td></tr>
+          <tr><td>M-020 Automated compliance tests</td><td>Controls are provable before pilot.</td><td><span class="chip gap">Missing</span> Manual Test Console only.</td><td><span class="chip gap">Blocker</span></td><td><code>npm test</code> covers STOP/START/HELP and send blocking.</td></tr>
+          <tr><td>M-021 Scheduling preference capture</td><td>Capture preferred window without claiming booking.</td><td><span class="chip recommendation">Partial</span> AI prompt asks callback timing; no structured field/integration.</td><td><span class="chip gap">Medium</span></td><td>Handoff contains preference and never says booked without confirmation.</td></tr>
+          <tr><td>M-022 Failure/fallback behavior</td><td>Call, SMS, and AI failures are visible and recoverable.</td><td><span class="chip gap">Risk</span> AI fallback exists; failed AI sends may still be logged as sent.</td><td><span class="chip gap">High</span></td><td>Failed delivery state is distinct and operator is alerted.</td></tr>
+          <tr><td>M-023 Delivery-state accuracy</td><td>Messages reflect queued, sent, failed, and unknown states.</td><td><span class="chip gap">Missing</span> Message rows are inserted after attempts without delivery callbacks.</td><td><span class="chip gap">High</span></td><td>Dashboard does not claim delivered when Twilio reports failure.</td></tr>
+          <tr><td>M-024 Repeat-caller behavior</td><td>Repeat callers have a coherent current conversation.</td><td><span class="chip gap">Risk</span> Existing leads can retain stale handoff/conversation state.</td><td><span class="chip gap">High</span></td><td>Repeat call policy is tested and documented.</td></tr>
+          <tr><td>M-025 Duplicate follow-up prevention</td><td>One sequence per missed attempt or defined repeat policy.</td><td><span class="chip gap">Risk</span> Repeated missed calls can schedule duplicate sequences.</td><td><span class="chip gap">High</span></td><td>Retries and repeat calls do not create unintended duplicate texts.</td></tr>
+          <tr><td>M-026 Pause/disable capability</td><td>Owner can turn off forwarding and operator can pause safely.</td><td><span class="chip recommendation">Partial</span> Forwarding is externally reversible; no in-product pause state.</td><td><span class="chip gap">Medium</span></td><td>Forwarding off stops new Swoop calls without changing public number.</td></tr>
+          <tr><td>M-027 Concierge onboarding checklist</td><td>Operator can repeat setup manually.</td><td><span class="chip recommendation">Partial</span> Documentation exists; no single operational checklist UI.</td><td><span class="chip recommendation">Pilot work</span></td><td>Every pilot has a completed intake and go-live record.</td></tr>
+          <tr><td>M-028 Test-call verification</td><td>Answered, missed, SMS, reply, urgency, handoff, and opt-out verified.</td><td><span class="chip recommendation">Partial</span> Direct demo call passed; forwarded pilot test not done.</td><td><span class="chip gap">Blocker</span></td><td>Operator signs off each test before go-live.</td></tr>
+          <tr><td>M-029 Pilot monitoring</td><td>Operator sees health, usage, and failures per business.</td><td><span class="chip recommendation">Partial</span> Dashboard metrics and Render logs exist; no secure per-business health view.</td><td><span class="chip gap">High</span></td><td>Daily check identifies failures without database editing.</td></tr>
+          <tr><td>M-030 Feedback capture</td><td>Structured owner and caller learning is recorded.</td><td><span class="chip gap">Missing</span> No pilot feedback instrument.</td><td><span class="chip recommendation">Pilot work</span></td><td>Weekly check-in captures outcomes, support time, and quotes.</td></tr>
+          <tr><td>M-031 Offboarding/data handling</td><td>Forwarding, access, number, and data disposition are documented.</td><td><span class="chip recommendation">Partial</span> Purge endpoint exists but auth is missing; no policy.</td><td><span class="chip gap">High</span></td><td>Offboarding checklist records disablement and data decision.</td></tr>
+          <tr><td>M-032 Cost controls</td><td>Small cohort costs are visible and bounded.</td><td><span class="chip recommendation">Partial</span> Render Starter and Twilio paid account are known; no per-business cost view.</td><td><span class="chip recommendation">Pilot work</span></td><td>Weekly cost estimate and support time are recorded.</td></tr>
+          <tr><td>M-033 Basic mobile owner experience</td><td>Owner can scan and act from a phone.</td><td><span class="chip recommendation">Partial</span> Mobile polish exists; security and alerting do not.</td><td><span class="chip gap">High</span></td><td>Owner can open a secure handoff and reply on mobile.</td></tr>
+        </tbody></table></div>
+      </section>
+
+      <section id="gaps"><h2>Current-product gaps requiring validation or remediation</h2>
+        <div class="table-wrap"><table><thead><tr><th>Finding</th><th>Current evidence</th><th>Why it matters for Gate 1</th><th>Status</th></tr></thead><tbody>
+          <tr><td>Dashboard/admin lack authentication</td><td><code>server/index.js</code> serves pages without auth; API has no session middleware.</td><td>Owners could see or change another business's data.</td><td><span class="chip gap">Blocker</span></td></tr>
+          <tr><td>Underlying APIs are unauthenticated</td><td><code>server/routes/api.js</code> exposes reads, writes, purge, review, and SMS endpoints.</td><td>Production records and messaging are exposed.</td><td><span class="chip gap">Blocker</span></td></tr>
+          <tr><td><code>/api/proxy</code> is unauthenticated</td><td>Route accepts arbitrary base/path values and forwards requests.</td><td>Security and abuse concern.</td><td><span class="chip gap">Blocker</span></td></tr>
+          <tr><td>Production forwarded-call mode is not implemented</td><td>Voice route currently discloses and dials <code>forward_phone</code>.</td><td>Creates the repeated, long caller experience the pilot is designed to avoid.</td><td><span class="chip gap">Blocker</span></td></tr>
+          <tr><td>AI history appears to include newest inbound twice</td><td><code>handleInboundSMS</code> logs inbound, then <code>generateReply</code> loads history and appends the same <code>inboundMessage</code>.</td><td>Can distort AI context and cause repeated questions.</td><td><span class="chip gap">High</span></td></tr>
+          <tr><td>Urgency can be overwritten</td><td>Urgent status is set before AI, then AI handoff update can set status to engaged/needs_attention based on reply.</td><td>Urgent requests may lose priority.</td><td><span class="chip gap">High</span></td></tr>
+          <tr><td>Owner notification at handoff is missing</td><td>Handoff writes notes and logs to console; no SMS/email/push alert.</td><td>Owner may not know to act.</td><td><span class="chip gap">Blocker</span></td></tr>
+          <tr><td>Failed outbound AI sends may be logged as sent</td><td>Catch block leaves a null SID but inserts an outbound message row.</td><td>Dashboard can overstate delivery.</td><td><span class="chip gap">High</span></td></tr>
+          <tr><td>Repeat calls can duplicate follow-up sequences</td><td><code>handleMissedCall</code> schedules three follow-ups each time it processes a lead without a sequence guard.</td><td>Customers may receive unwanted repeated texts.</td><td><span class="chip gap">High</span></td></tr>
+          <tr><td>Returning callers can retain stale handoff state</td><td>Existing lead is reused by business/phone and does not reset handoff context.</td><td>New request may be treated as already handed off.</td><td><span class="chip gap">High</span></td></tr>
+          <tr><td>Message-template drift</td><td>Database default, bootstrap, seed, and persistent records have different templates.</td><td>Brand/compliance behavior can vary by business.</td><td><span class="chip gap">High</span></td></tr>
+          <tr><td>Emergency handling incomplete</td><td>Urgency regex detects words but no approved safety language or emergency service escalation exists.</td><td>Safety risk.</td><td><span class="chip gap">Blocker</span></td></tr>
+          <tr><td>Structured scheduling-preference capture is incomplete</td><td>The AI can ask about callback timing conversationally, but the preference is not reliably stored as a structured field or guaranteed to appear in the owner handoff.</td><td>Gate 1 needs a clear preferred callback/service window without claiming that an appointment has been booked. Capture timing preference during the pilot and include it in the owner handoff; do not guarantee or claim a booking without a reliable integration. Full scheduling/calendar integration remains outside Gate 1.</td><td><span class="chip gap">MVP gap — full booking integration intentionally deferred</span></td></tr>
+          <tr><td>Automated compliance tests missing</td><td>Manual Test Console exists; no test script in <code>package.json</code>.</td><td>STOP/START/HELP controls are not provable.</td><td><span class="chip gap">Blocker</span></td></tr>
+          <tr><td>Toll-free caller reputation is poor</td><td>Tester device flagged possible fraud and disconnected; TFN is documented internal-only.</td><td>External testers may never reach the demo.</td><td><span class="chip confirmed">Decision made</span></td></tr>
+          <tr><td><code>render.yaml</code> and Render-plan configuration drifted</td><td>The live Render service is documented as Starter with a 1 GB persistent disk, but <code>render.yaml</code> still declares <code>plan: free</code>.</td><td>The configuration is inconsistent and should be corrected and verified before this gap is marked complete. Do not modify <code>render.yaml</code> in this workbook task.</td><td><span class="chip gap">Open — configuration correction required</span></td></tr>
+          <tr><td>Personal forwarding information is public-repo documented</td><td><code>DEFAULT_FORWARD_PHONE</code> and seed/bootstrap include the cell number.</td><td>Privacy concern; replace with secret/configured pilot data.</td><td><span class="chip gap">Review</span></td></tr>
+          <tr><td>Application version/README drift</td><td><code>package.json</code> remains v0.1.0 while docs describe later milestones; README had old pricing/hosting.</td><td>Confuses operators and future engineering sessions.</td><td><span class="chip recommendation">Docs partly updated</span></td></tr>
+          <tr><td>Live OpenAI behavior needs production validation</td><td>OpenAI path exists with fallback; production behavior and key validity were not revalidated in this workbook task.</td><td>AI quality and failure handling affect pilot safety.</td><td><span class="chip question">Validate</span></td></tr>
+        </tbody></table></div>
+      </section>
+
+      <section id="out-of-scope"><h2>Out of scope for Controlled Pilot</h2>
+        <p>These items do not enter Gate 1 unless an explicit decision moves them into scope.</p>
+        <div class="grid two"><article class="card"><h3><span class="chip future">Post-MVP</span> Product and infrastructure</h3><ul><li>Public adoption of a new Twilio customer-facing number</li><li>Fully automated signup</li><li>Automated billing and Stripe</li><li>Automated Twilio number purchasing</li><li>Fully self-service carrier forwarding setup</li><li>Full scheduling/calendar integration</li><li>Advanced analytics and ROI dashboard</li><li>Multiple staff roles</li><li>CRM integrations</li></ul></article><article class="card"><h3><span class="chip future">Post-MVP</span> Scale and experience</h3><ul><li>Calendar integrations</li><li>Fully automated onboarding</li><li>Broad multi-industry scale</li><li>Large-scale operational monitoring</li><li>Complex subscription plans</li><li>Mobile applications</li><li>Self-service business profile editing for every field</li></ul></article></div>
+      </section>
+
+      <section id="outreach"><h2>Outreach and pilot recruitment</h2>
+        <p>Possible channels are captured without choosing one yet:</p><div class="grid"><article class="card"><ul><li>Local Facebook groups</li><li>Small-business and trade groups</li><li>WhatsApp groups</li></ul></article><article class="card"><ul><li>Personal referrals</li><li>Existing local-business relationships</li><li>Community groups</li></ul></article><article class="card"><ul><li>Direct outreach during non-peak hours</li></ul></article></div>
+        <div class="open"><h3>Recruitment questions</h3><ul><li>Which industry should be first?</li><li>Owner-operated businesses only?</li><li>Minimum missed-call volume?</li><li>Geographic boundary?</li><li>Selection criteria?</li><li>How many businesses?</li><li>How much operational support can Swoop provide concurrently?</li></ul></div>
+      </section>
+
+      <section id="pilot"><h2>Pilot design</h2>
+        <p><span class="chip recommendation">Working recommendation</span> Use 3–4 weeks as a working hypothesis, not a final decision.</p>
+        <div class="flow"><div class="step"><strong>Week 0</strong><small>Onboarding, baseline, forwarding, profile, test calls.</small></div><div class="step"><strong>Week 1</strong><small>Monitored launch and rapid failure correction.</small></div><div class="step"><strong>Week 2</strong><small>Conversation and handoff learning.</small></div><div class="step"><strong>Week 3</strong><small>Stability and owner-value learning.</small></div></div>
+        <div class="card"><h3>Week 4, if used</h3><p>Continuation and willingness-to-pay decision. The final pilot length, cohort size, success thresholds, and founding offer remain open decisions.</p></div>
+        <h3>Proposed measurements</h3><div class="grid two"><article class="card"><ul><li>Missed calls captured</li><li>Successful first texts</li><li>Caller reply rate</li><li>Qualified handoffs</li><li>Urgent leads identified</li><li>Owner response time</li><li>Jobs booked</li><li>Estimated revenue recovered</li></ul></article><article class="card"><ul><li>Opt-out rate</li><li>Failed SMS/calls</li><li>Incorrect AI replies</li><li>Owner overrides</li><li>Owner satisfaction</li><li>Willingness to continue and pay</li><li>Support time per business</li></ul></article></div>
+        <div class="open"><span class="chip question">Open decisions</span> Final pilot length, cohort size, success thresholds, and founding offer are intentionally undecided.</div>
+      </section>
+
+      <section id="self-service"><h2>Self-service evolution</h2>
+        <p>Do not decide final sequencing yet. Use pilot evidence to move work between columns.</p>
+        <div class="table-wrap"><table><thead><tr><th>Concierge during pilot</th><th>Candidate for early self-service</th><th>Later-scale automation</th></tr></thead><tbody>
+          <tr><td>Business intake</td><td>Business profile edits</td><td>Automated intake and qualification</td></tr><tr><td>Number provisioning</td><td>Notification preferences</td><td>Automated Twilio purchasing and mapping</td></tr><tr><td>Carrier forwarding instructions</td><td>Pause/resume</td><td>Carrier-specific setup automation</td></tr><tr><td>Test-call verification</td><td>AI configuration</td><td>Automated test-call verification</td></tr><tr><td>Offboarding</td><td>Team access</td><td>Billing and plan changes</td></tr><tr><td>Manual monitoring</td><td>Basic analytics</td><td>Scaled health monitoring and automated offboarding</td></tr></tbody></table></div>
+      </section>
+
+      <section id="questions"><h2>Open-question register</h2>
+        <p>Questions use stable IDs. Closing a question should add a dated decision entry rather than silently changing history.</p>
+        <div class="table-wrap"><table><thead><tr><th>ID</th><th>Open question</th><th>Why it matters</th><th>Owner / next evidence</th></tr></thead><tbody>
+          <tr><td>Q-001</td><td>What is the pilot cohort size?</td><td>Sets support load and learning quality.</td><td>Sunil; estimate concurrent concierge capacity.</td></tr><tr><td>Q-002</td><td>Which industry or industries go first?</td><td>Determines safety language and profile complexity.</td><td>Sunil; compare local access and missed-call need.</td></tr><tr><td>Q-003</td><td>Are local numbers and A2P 10DLC ready?</td><td>Required for external pilot sender numbers.</td><td>Operator; Twilio compliance check.</td></tr><tr><td>Q-004</td><td>What is the exact free-pilot duration?</td><td>Sets expectations and measurement window.</td><td>Sunil; choose within 3–4 week hypothesis.</td></tr><tr><td>Q-005</td><td>What founding pricing follows the pilot?</td><td>Tests willingness to pay without premature packaging.</td><td>Sunil; use owner interviews.</td></tr><tr><td>Q-006</td><td>What are pilot-business selection criteria?</td><td>Protects pilot quality and safety.</td><td>Sunil; define volume, responsiveness, and fit.</td></tr><tr><td>Q-007</td><td>How does the owner take over?</td><td>Determines notification and reply workflow.</td><td>Operator; test secure dashboard and direct reply options.</td></tr><tr><td>Q-008</td><td>What immediate-notification channel is preferred?</td><td>Urgent leads need a reliable path.</td><td>Owner interview; SMS, call, email, or combination.</td></tr><tr><td>Q-009</td><td>What exact emergency language is approved?</td><td>Safety-critical and potentially industry-specific.</td><td>Owner/compliance review before launch.</td></tr><tr><td>Q-010</td><td>What is backup-contact behavior?</td><td>Prevents urgent requests from going unattended.</td><td>Business intake; define escalation order.</td></tr><tr><td>Q-011</td><td>What is the after-hours behavior?</td><td>Changes promises, alerts, and handoff timing.</td><td>Business profile and owner approval.</td></tr><tr><td>Q-012</td><td>What follow-up cadence and wording are acceptable?</td><td>Balances recovery with customer trust.</td><td>Pilot measurement and opt-out feedback.</td></tr><tr><td>Q-013</td><td>What is the data retention/deletion policy?</td><td>Needed for privacy and offboarding.</td><td>Operator/legal review.</td></tr><tr><td>Q-014</td><td>What happens to the Twilio number after offboarding?</td><td>Affects cost, identity, and data routing.</td><td>Policy decision before first offboarding.</td></tr><tr><td>Q-015</td><td>What pilot support channel and response time are promised?</td><td>Sets concierge boundaries.</td><td>Sunil; choose realistic coverage.</td></tr><tr><td>Q-016</td><td>What are success thresholds?</td><td>Prevents anecdotes from deciding continuation.</td><td>Set before or during Week 0 baseline.</td></tr><tr><td>Q-017</td><td>Is multilingual support needed during the pilot?</td><td>May affect safety and AI testing.</td><td>Ask selected businesses and callers.</td></tr><tr><td>Q-018</td><td>May an existing scheduling link be sent?</td><td>Useful shortcut but can create unsupported promises.</td><td>Business approval and link review.</td></tr><tr><td>Q-019</td><td>What happens when the owner misses the promised response window?</td><td>Protects caller trust and defines fallback.</td><td>Define reminder, backup, or honest update behavior.</td></tr></tbody></table></div>
+      </section>
+
+      <section id="parking"><h2>Idea parking lot</h2><div class="grid two"><article class="card"><ul><li>New Twilio number as public customer-facing number</li><li>Full scheduling and calendar integrations</li><li>Multilingual conversations</li><li>Automated number provisioning</li><li>Self-service onboarding</li><li>ROI dashboard</li><li>CRM integrations</li><li>Team roles</li></ul></article><article class="card"><ul><li>Backup-person routing</li><li>Quiet hours</li><li>Advanced analytics</li><li>Billing automation</li><li>Review automation</li><li>Lifecycle reminders</li><li>Swoop and FrontDesk bundle</li></ul></article></div></section>
+
+      <section id="history"><h2>Session history</h2><article class="decision"><h3>August 19, 2026 — SWOOP-PILOT-WORKBOOK-001</h3><p>Read-only repository review completed. Current demo works but is not external-pilot ready. Brainstorm captured caller, owner, operator, onboarding, support, safety, privacy, measurement, and scaling dimensions. TFN designated internal-only. Existing-number conditional forwarding selected as the only pilot architecture. One dedicated Twilio number per pilot business assumed. Scheduling preference capture retained while full booking integration is deferred. Emergency routing established as an MVP requirement. Controlled Pilot MVP and Repeatable Business MVP separated into two readiness gates.</p></article><article class="decision"><h3>August 19, 2026 — SWOOP-PILOT-WORKBOOK-002</h3><p>Correction pass removed an unsupported TFN-retirement assumption, corrected the Gate 2 status treatment, fixed onboarding navigation, made the initial-SMS and compliance-test statuses more accurate, reopened the Render configuration-drift item, reframed scheduling around structured preference capture rather than full booking integration, and preserved D-004 through D-006 as confirmed controlled-pilot decisions.</p></article></section>
+
+      <section id="updates"><h2>How to update this workbook</h2><div class="card"><ol><li>Keep this file as the single living workbook. Update it in place; do not create versioned copies.</li><li>Use stable IDs for decisions (<code>D-###</code>) and open questions (<code>Q-###</code>). Do not reuse an ID.</li><li>Use status chips consistently: <span class="chip confirmed">Confirmed decision</span> <span class="chip recommendation">Working recommendation</span> <span class="chip question">Open question</span> <span class="chip gap">Current gap</span> <span class="chip future">Post-MVP</span>.</li><li>When a question closes, add a dated decision with rationale and revisit trigger. Preserve the question's history.</li><li>Session history is append-only. Add a dated entry; do not rewrite prior entries to make the story cleaner.</li><li>When implementation changes, reconcile the requirement matrix against code and tests. Documentation alone does not make a capability working.</li><li>Before a pilot decision, record the evidence, acceptance criterion, and owner responsible for the next step.</li></ol></div></section>
+    </main>
+    <footer class="footer"><p><strong>Swoop MVP &amp; Pilot Workbook</strong> · Internal planning document · Reviewed against repository checkpoint <code>eb8eb5d</code> · <a href="#top">Back to top</a></p></footer>
+  </div>
+</body>
+</html>
