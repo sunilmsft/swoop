@@ -34,6 +34,8 @@ const businesses = [
   },
 ];
 
+const configuredForwardPhone = process.env.DEFAULT_FORWARD_PHONE;
+
 const insert = db.prepare(`
   INSERT OR IGNORE INTO businesses
     (name, phone, forward_phone, owner_name, auto_reply_message, review_link,
@@ -57,6 +59,13 @@ for (const biz of businesses) {
     console.log(`⏭  Already exists: ${biz.name} (${biz.phone})`);
     skipped++;
   }
+}
+
+if (configuredForwardPhone) {
+  const updated = db.prepare(
+    'UPDATE businesses SET forward_phone = ? WHERE phone = ? AND forward_phone IS NOT ?'
+  ).run(configuredForwardPhone, businesses[0].phone, configuredForwardPhone);
+  console.log(`☎️ Forwarding number ${updated.changes ? 'updated' : 'already current'} for ${businesses[0].phone}`);
 }
 
 console.log(`\nDone. ${inserted} inserted, ${skipped} already existed. Leads untouched.`);

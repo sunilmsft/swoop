@@ -76,6 +76,7 @@
 ---
 
 ## 🟡 v0.2.7 — Follow-up Watch Items
+- [x] 🔴 **Duplicate missed-call SMS fixed** — `/voice-dial-result` and `/voice-status` could both call `handleMissedCall` for one forwarded call; the status fallback now skips businesses with a `forward_phone`.
 - [x] 🟡 **Zoho Mail setup for hello@ + privacy@welcomematdigital.com** ✅ Done June 1.
 - [x] 🟡 **WA LLC approved** ✅ Done June 1 — UBI 606238837.
 - [x] 🟡 **EIN issued** ✅ Done June 1 — 42-2903620.
@@ -143,6 +144,8 @@
 - [x] 🟢 **Calendar reminders (5 total)** ✅ Done June 2 — June 23 2026 (verify BOI status 2 days before India trip), May 29 2027 (Zoho renewal), May 30 2027 (WA + Sammamish license renewal warning), June 1 2027 (30-day Annual Report warning), **June 30 2027 (HARD deadline WA Annual Report)**. ⚠️ Original BOI reminder was set for June 15 assuming earlier trip date — India departure now confirmed for June 25, so move BOI check reminder to June 23.
 - [ ] 🔴 **Verify BOI Report status BEFORE India trip (by ~June 23, departure June 25)** — fincen.gov/boi. CTA 30-day rule would mean deadline ~July 1 2026 (during travel). March 2025 FinCEN interim rule may exempt US LLCs. If required, file at boiefiling.fincen.gov (free, EIN + UBI + personal ID).
 - [ ] 🟢 **Voice webhook URL refresh** — Toll-free 833-783-0902 voice webhook still points to `swoop-x79g.onrender.com/webhooks/voice`. Eventually swap to `welcomematdigital.com` for consistency. Non-blocking.
+- [ ] 🔴 **Verify live forwarding configuration** — Set Render `DEFAULT_FORWARD_PHONE` to the owner's current E.164 number and place a call after deploy; a stale or blank business row can send the text while failing to ring the owner. — _Priya: "The caller got a text, but nobody answered the phone."_
+- [ ] 🔴 **Verify forwarded-call callback** — Place a live call after the callback business-ID fix deploys; confirm the caller hears a normal missed-call message instead of Twilio's generic application error. — _Morgan: "A callback failure must not create an unexplained caller-facing failure."_
 
 ---
 

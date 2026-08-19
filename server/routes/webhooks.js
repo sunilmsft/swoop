@@ -22,6 +22,14 @@ function findBusinessByPhone(phone) {
   ).get(phone, normalized);
 }
 
+function webhookUrl(req, route) {
+  return `${req.protocol}://${req.get('host')}/webhooks/${route}`;
+}
+
+function findBusinessById(id) {
+  return id ? db.prepare('SELECT * FROM businesses WHERE id = ?').get(id) : null;
+}
+
 function logCallEvent({
   businessId,
   fromPhone,
@@ -76,7 +84,11 @@ router.post('/voice', validateTwilioRequest, async (req, res) => {
   if (business && business.forward_phone) {
     // Ring the business owner's cell phone for 20 seconds
     console.log(`📞 Forwarding call to ${business.forward_phone}`);
-    twiml.dial({ timeout: 20, action: '/webhooks/voice-dial-result' }, business.forward_phone);
+    twiml.dial({
+      timeout: 20,
+      action: `${webhookUrl(req, 'voice-dial-result')}?businessId=${business.id}`,
+      method: 'POST',
+    }, business.forward_phone);
   }
   // If no forwarding number, call ends after the disclosure; voice-status callback handles the missed-call SMS.
 
@@ -99,7 +111,7 @@ router.post('/voice-dial-result', validateTwilioRequest, async (req, res) => {
 
   const isMissed = ['no-answer', 'busy', 'failed', 'canceled'].includes(DialCallStatus);
   const isVoicemail = DialCallStatus === 'completed' && Number(DialCallDuration || 0) < 15;
-  const business = findBusinessByPhone(To);
+  const business = findBusinessById(req.query.businessId) || findBusinessByPhone(To);
 
   let outcome = 'answered';
   if (isVoicemail) outcome = 'voicemail';
@@ -161,7 +173,9 @@ router.post('/voice-status', validateTwilioRequest, async (req, res) => {
     });
   }
 
-  if (['no-answer', 'busy', 'failed'].includes(CallStatus)) {
+  // A forwarded call is handled by /voice-dial-result. The parent call's
+  // status callback must not send a second auto-reply for the same attempt.
+  if (!business?.forward_phone && ['no-answer', 'busy', 'failed'].includes(CallStatus)) {
     if (business) {
       try {
         await handleMissedCall(business.id, From);
