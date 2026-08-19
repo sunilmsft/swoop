@@ -4,14 +4,14 @@
 
 ---
 
-## Now (first week after return)
+## Now (after the August 19, 2026 demo milestone)
 
-### N-1. Validate production runtime config with one live call test
-- **Why:** TFV is approved and pushed, but reliable pilot testing depends on config correctness (`TWILIO_MOCK_MODE`, OpenAI key, webhooks).
-- **How:** Confirm `https://swoop-x79g.onrender.com/api/test/status` returns `{"mockMode":false}`. Place one missed call from QA phone and verify first SMS delivery + second-turn reply path.
-- **Success:** Missed-call SMS delivers and customer reply receives either AI response or fallback response within one turn.
+### N-1. Implement forwarded-call production mode (🔴 blocker)
+- **Why:** The direct demo call works, but a customer's existing number should forward only unanswered calls to Twilio. Twilio must send the SMS and end the call without ringing the owner again or repeating a long disclosure.
+- **How:** Add a per-business call mode; capture/test Twilio forwarded-call metadata such as `ForwardedFrom`; use an explicit mode as fallback; skip `<Dial>` for forwarded calls; send one SMS and log one call event.
+- **Success:** Business number rings normally, unanswered call reaches Twilio, caller hears a short response or clean hangup, exactly one SMS is sent, and the owner does not receive a second call.
 
-### N-2. Fix/rotate OpenAI key and confirm AI reply path
+### N-2. Validate the live runtime and AI reply path
 - **Why:** Current testing surfaced intermittent 401 key failures; fallback response now prevents silence but AI should be restored for pilot quality.
 - **How:** Update `OPENAI_API_KEY` in Render, redeploy, send customer-style inbound text, verify AI-generated reply appears in logs/messages.
 - **Success:** Two-turn conversation works with AI on primary path (fallback only used on exception).
@@ -21,12 +21,17 @@
 - **How:** Twilio Console → Messaging → Regulatory Compliance → A2P 10DLC: brand registration, then shared campaign for missed-call response.
 - **Success:** Brand and campaign approved and ready for per-customer number attachment.
 
-### N-4. Implement landline/non-textable fallback
+### N-4. Fix toll-free caller reputation for demos
+- **Why:** A tester's phone flagged the `833` demo number as possible fraud and disconnected the call.
+- **How:** Open a Twilio caller-ID reputation request and submit correction requests to the relevant carrier/reputation providers. Keep production positioning on local customer numbers.
+- **Success:** Test phones no longer show the warning, or the demo process clearly uses a different verified local number.
+
+### N-5. Implement landline/non-textable fallback
 - **Why:** Home phone callers may not be SMS reachable; current flow needs callback routing when SMS is not viable.
 - **How:** Twilio Lookup line-type check before first SMS; if landline/non-textable, create callback-needed lead state and owner alert.
 - **Success:** Non-textable callers are never dropped; owner gets clear callback action.
 
-### N-5. Repo hygiene — move out of OneDrive (recommended)
+### N-6. Repo hygiene — move out of OneDrive (recommended)
 - **Why:** Repo lives in OneDrive sync folder. If OneDrive is corporate-tied, `.env` with live secrets is in M365 cloud.
 - **How:** `git clone https://github.com/sunilmsft/swoop.git C:\dev\swoop`, copy `.env`, point VS Code there, delete the OneDrive copy.
 - **Success:** New working tree under `C:\dev\swoop`, `.env` no longer sync'd anywhere.

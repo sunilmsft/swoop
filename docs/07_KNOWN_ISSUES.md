@@ -34,7 +34,7 @@
 
 ### KI-5 — No rate limiting on webhooks or API
 - **Impact:** Any actor with the webhook URL can hammer `/webhooks/sms`. Twilio signature validation rejects unsigned requests in production, so this is partially mitigated. But `/api/*` endpoints have no protection at all (related to KI-2).
-- **Today's mitigation:** Render free tier has its own DDoS protection upstream.
+- **Today's mitigation:** Render provides upstream traffic protection; Twilio signature validation protects webhook routes in production.
 - **Fix:** `express-rate-limit` on `/api/*`. Twilio signature validation already protects webhooks.
 
 ### KI-6 — Phone numbers not strictly validated as E.164
@@ -61,15 +61,26 @@
 - **Today's mitigation:** Nothing meaningful. Loss would be limited because there are no paying customers.
 - **Fix:** Cron job that copies `swoop.db` to a daily file in another path on disk (or to S3-compatible storage). Restore by swapping files and restarting.
 
-### KI-10 — Render free tier cold starts
-- **Impact:** App spins down after 15 minutes of idle. First request after spin-down takes ~30 seconds. A Twilio webhook timing out at the cold start window has been observed.
-- **Today's mitigation:** Twilio retries failed webhooks, so a single cold-start miss usually self-heals. Twilio reviewers don't hit `swoop-x79g.onrender.com` directly anymore — they hit `welcomematdigital.com` which is a separate Render app with its own warm-up.
-- **Fix:** Upgrade to Render paid tier ($7/mo) when first paying customer signs up. OR add a tiny uptime ping (UptimeRobot free) to keep the dyno warm.
+### KI-10 — Render paid runtime still has cold-start watch risk
+- **Impact:** The service is now on Render Starter ($7/mo), so the Free-plan sleep warning is gone, but startup and webhook timing still need observation during real traffic.
+- **Today's mitigation:** A 1 GB persistent disk is mounted at `/var/data`; direct voice and SMS testing passed after the upgrade.
+- **Fix:** Monitor the first real pilot calls and add uptime/error monitoring if webhook latency or startup failures recur.
 
 ### KI-11 — Voice webhook URL still points at `swoop-x79g.onrender.com`
 - **Impact:** Cosmetic / brand consistency. If the Render URL ever changes, the voice webhook breaks.
 - **Today's mitigation:** Render URLs don't randomly change.
 - **Fix:** Point Twilio voice webhook at `welcomematdigital.com/webhooks/voice` (requires routing in the frontdesk-ai app, or a Cloudflare worker shim).
+
+### KI-21 — Demo voice flow is not the production forwarded-call flow
+- **Impact:** A direct call to the demo Twilio number plays the disclosure, dials the owner's cell, and may play a second missed-call confirmation. If a customer's existing number forwards an unanswered call to Twilio, repeating that flow would feel long and confusing.
+- **Today's mitigation:** The `833` line is explicitly demo/test only. No real customer should be onboarded to this voice behavior yet.
+- **Fix:** Add a per-business forwarded-call mode. Detect or explicitly configure carrier-forwarded calls, send the SMS, and end the call without dialing `forward_phone` again. Keep the compliance language appropriate to the actual call path and test that exactly one SMS is sent.
+- **Flagged by:** Ray, Priya, Morgan. 🔴 Blocker before first customer.
+
+### KI-22 — Toll-free caller reputation warning
+- **Impact:** A tester's phone classified `(833) 783-0902` as possible fraud and recommended hanging up. This can prevent a demo caller from reaching Swoop even though Twilio voice webhooks are configured correctly.
+- **Today's mitigation:** Treat the number as internal demo/test only and use local numbers for production customers.
+- **Fix:** Submit a caller-ID reputation correction through Twilio and relevant carrier reputation providers; do not rely on toll-free voice as the customer-facing number.
 
 ---
 
@@ -125,7 +136,7 @@
 
 ## Open Bugs (none currently confirmed)
 
-No confirmed bugs as of June 15, 2026. If you find one, log it inline in `BACKLOG.md` with prefix `🔴 Bug:` per the Copilot Instructions backlog sync rule.
+No untriaged runtime bug is currently confirmed after the August 19 deployment. KI-21 and KI-22 are product/operational blockers and remain open by design until the production architecture is implemented.
 
 ---
 
@@ -137,5 +148,5 @@ No confirmed bugs as of June 15, 2026. If you find one, log it inline in `BACKLO
 | AI replies stop working | OpenAI dashboard — out of credits? Then `services/ai-agent.js` error logging. |
 | Dashboard 500s | Render logs. Most often: SQLite locked (concurrent write), missing env var, or template rendering on a freshly-added column. |
 | Twilio webhook 403 | Signature validation failure. Check `trust proxy = 1` is still set and `TWILIO_MOCK_MODE` is not accidentally `true` in prod. |
-| Cold-start timeouts | Render free tier idle. Hit `/health` to warm. |
+| Cold-start timeouts | Render Starter is active; inspect Render logs and `/health` if startup latency recurs. |
 | Consent URL 404 | Cloudflare DNS or frontdesk-ai Render app. NOT this repo. |

@@ -37,14 +37,14 @@ Don't skip this. The whole project hinges on a small ring of third-party account
 - [ ] Log into `dashboard.render.com` via Google (`sunil1308@gmail.com`)
 - [ ] Confirm both services visible: `swoop` and `frontdesk-ai` (or whatever the welcomematdigital.com service is named)
 - [ ] **Export environment variables** from each service to a password manager. The Render dashboard is the only copy.
-- [ ] Note the persistent disk on the `swoop` service: `swoop-data`, mounted at `/var/data`, 1 GB
+- [x] Note the persistent disk on the `swoop` service: `swoop-data`, mounted at `/var/data`, 1 GB; service is on Render Starter
 
 ### 2.3 Twilio
 - [ ] Log into `console.twilio.com` via Google
 - [ ] Account name: should reference WelcomeMat Digital LLC
 - [ ] Confirm number `+1 (833) 783-0902` is owned by the account
 - [ ] Trust Hub → Business Profile bundle `BUf71fa573b0fd6173b0cc31daba2ba41b` → status should be **Approved** (since June 11, 2026)
-- [ ] Trust Hub → Toll-Free Verification → status check. As of June 17, 2026: Round 3 was rejected June 16 (code `30527`), Ignacio confirmed appeal opened to the toll-free team, awaiting response. Ticket `27236005`.
+- [x] Trust Hub → Toll-Free Verification → status check. Approved June 23, 2026 via API update on ticket `27236005`; the `833` number remains demo/test only.
 - [ ] **Rotate `TWILIO_AUTH_TOKEN`** (Account → API keys & tokens → "Request a secondary token") if there's any chance the current one has been exposed
 
 ### 2.4 OpenAI
@@ -144,7 +144,7 @@ git commit -m "chore: <what you did>"
 
 ### 4.4 Push
 ```powershell
-git push origin master:main
+git push origin master
 ```
 
 ### 4.5 Watch deploy

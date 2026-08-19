@@ -17,7 +17,7 @@
 
 These are non-negotiable. Violating any of them has burned past sessions.
 
-1. **NEVER auto-push to remote.** Render auto-deploys from `main`. `git push` = instant production. The flow is always: make changes → commit locally → user reviews on localhost → user says "push it" → THEN push. Never combine commit + push in one command.
+1. **NEVER auto-push to remote.** Render auto-deploys from `master`. `git push` = instant production. The flow is always: make changes → commit locally → user reviews on localhost → user says "push it" → THEN push. Never combine commit + push in one command.
 
 2. **Always state LOCAL vs PUSHED.** After any change, explicitly tell the user whether it's local-only or live. They will assume the worst (and check the wrong URL) otherwise.
 
@@ -38,9 +38,9 @@ These are non-negotiable. Violating any of them has burned past sessions.
 ```
 What:    AI missed-call text-back SaaS for small home-service businesses
 Who:     Solo founder, target customers = plumbers/electricians/HVAC at $29–$49/mo
-Where:   Node + Express + SQLite + Twilio + OpenAI, hosted on Render free tier
-Status:  v0.2.7 shipped. Twilio TFV Round 3 rejected June 16; appeal opened June 17 via Ignacio and now awaiting toll-free team response.
-          Two blockers before first paying customer: TFV approval + owner auth.
+Where:   Node + Express + SQLite + Twilio + OpenAI, hosted on Render Starter with a 1 GB disk
+Status:  Direct demo call verified August 19, 2026. TFV approved June 23. Latest deployed commit: 77c52d1.
+          Blockers before first paying customer: owner auth, A2P 10DLC/local numbers, and production forwarded-call mode.
 Brand:   "Swoop." — product under "WelcomeMat Digital LLC" (the holding entity)
 ```
 
@@ -124,7 +124,7 @@ curl -s -X POST http://localhost:3000/webhooks/sms -d "From=%2B14255551234&To=%2
 
 ### Deploy
 ```bash
-git push origin master:main   # only after user explicitly says "push it"
+  git push origin master   # only after user explicitly says "push it"
 # Render auto-deploys. Watch logs at dashboard.render.com
 ```
 

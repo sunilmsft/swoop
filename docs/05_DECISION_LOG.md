@@ -6,6 +6,17 @@ Major architecture, product, and compliance decisions in chronological order. Ea
 
 ## Compliance & TFV (May–June 2026)
 
+### August 19, 2026 — Demo line proven; production voice flow remains separate
+- **What:** Verified a direct call to toll-free `+1 (833) 783-0902` after moving Swoop to Render Starter with a 1 GB disk. The caller hears the disclosure, the configured owner phone rings, and an unanswered call produces the SMS.
+- **Why:** This confirms the demo/test path and persistent runtime are operational, but it also exposed the difference between a direct demo call and the intended customer forwarding flow.
+- **Decision:** Keep the 833 number as an internal demo/test line. Before onboarding customers, implement a per-business forwarded-call mode that does not dial the owner a second time or repeat a long voice disclosure after a customer's business number forwards an unanswered call.
+- **Revisit if:** A local production number and A2P 10DLC campaign are approved, or a carrier-forwarding test shows Twilio metadata is insufficient and requires explicit per-business configuration.
+
+### August 19, 2026 — Render Starter and persistent storage
+- **What:** Upgraded the Swoop Render service from Free to Starter ($7/month) and mounted the existing 1 GB `swoop-data` disk at `/var/data`.
+- **Why:** The production guard in `server/db/database.js` correctly refused to start when `/var/data` was absent; Free instances cannot use persistent disks.
+- **Decision:** Keep `DB_PATH=/var/data/swoop.db` in production. Do not use an ephemeral `/tmp` database for live Twilio traffic.
+
 ### June 14, 2026 — Privacy page hardened with explicit no-share clause
 - **What:** Added three coverage points of Twilio's exact "magic phrase" to `frontdesk-ai/public/swoop/privacy.html` (top callout, expanded Section 5, new dedicated Section 6).
 - **Why:** Ignacio (Twilio TFV reviewer) sent an advisory email about Mixed-Use-Case pitfalls. Web-form opt-in templates often get pattern-matched against missing no-share language. Preemptive hardening is cheap insurance against next-round rejection.

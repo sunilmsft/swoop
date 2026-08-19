@@ -82,7 +82,7 @@ Twilio is configured (in console.twilio.com → Phone Numbers → +1 833-783-090
 
 | URL | Triggered on |
 |---|---|
-| `/webhooks/voice` | Incoming call — returns TwiML telling Twilio to ring through to `forward_phone`, with a personalized voice greeting |
+| `/webhooks/voice` | Incoming call — returns TwiML with the compliance disclosure and currently rings the configured `forward_phone` |
 | `/webhooks/voice-status` | Final status of that call (`no-answer`, `busy`, `failed`, `canceled`, `completed`) |
 | `/webhooks/voice-dial-result` | After dial attempt completes — when status is `no-answer` or `busy`, triggers `handleMissedCall()` |
 | `/webhooks/sms` | Any inbound SMS — runs STOP/HELP keyword check first, then routes to `handleInboundSMS()` |
@@ -164,13 +164,13 @@ All webhooks validate Twilio's signature in production (`server/services/twilio.
 `render.yaml` declares one web service:
 
 - **Runtime:** node
-- **Plan:** free
-- **Build:** `npm install && npm run seed`  ← seed runs every build, which is fine because it's idempotent on the persistent disk
-- **Start:** `npm start`
+- **Plan:** Starter ($7/month)
+- **Build:** `npm install`
+- **Start:** `npm run seed:businesses && npm start`
 - **Disk:** name `swoop-data`, mounted at `/var/data`, 1 GB
-- **Env vars:** `NODE_ENV=production`, `DB_PATH=/var/data/swoop.db`, then 4 secret env vars (`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER`, `OPENAI_API_KEY`) marked `sync: false` so they're injected from the Render dashboard, not the repo
+- **Env vars:** `NODE_ENV=production`, `DB_PATH=/var/data/swoop.db`, `DEFAULT_FORWARD_PHONE=+14257867232`, then secret env vars injected from the Render dashboard
 
-Auto-deploy on push to `main`. There is no CI — no `.github/workflows/` directory exists.
+Auto-deploy on push to `master`. There is no CI — no `.github/workflows/` directory exists.
 
 ## External Dependencies (transitive failure map)
 
@@ -195,6 +195,24 @@ Auto-deploy on push to `main`. There is no CI — no `.github/workflows/` direct
 - Lose Zoho → can't receive Twilio support emails on `hello@` or `privacy@`
 - Lose Twilio → no SMS; identity intact
 - Lose OpenAI → AI replies fail but missed-call SMS + STOP/HELP still work (graceful degradation in `ai-agent.js`)
+
+## Production forwarding design still needed
+
+The current live test is the demo flow:
+
+```text
+Caller -> Twilio demo number -> disclosure -> owner cell rings -> missed-call SMS
+```
+
+For a real business, the intended flow is:
+
+```text
+Caller -> customer's business number -> business phone rings
+                                  -> no answer -> carrier forwards to Twilio
+                                  -> short response, SMS, and hangup
+```
+
+The production mode needs a per-business setting to distinguish direct demo calls from carrier-forwarded calls. Forwarded calls must not dial `forward_phone` again, and the voice response should not repeat a long disclosure after the caller has already experienced the business number's normal ringing. Twilio's forwarded-call metadata (for example `ForwardedFrom`, where present) should be captured and tested, with an explicit business mode as the fallback.
 
 ## Why No Tests Yet
 

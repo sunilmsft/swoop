@@ -1,4 +1,4 @@
-# 06 — Backlog (Snapshot, June 15 2026)
+# 06 — Backlog (Snapshot, August 19 2026)
 
 > **Source of truth is [`BACKLOG.md`](../BACKLOG.md)** at the repo root. This file is a curated snapshot for preservation purposes — if there's any conflict, the root file wins.
 >
@@ -8,9 +8,10 @@
 
 ## Open — Blockers Before First Paying Customer
 
-### 🔴 Twilio TFV decision (external, awaiting)
-- Status: Round 3 rejected June 16 (code `30527`); Ignacio confirmed on June 17 that an appeal was opened with the toll-free team. Awaiting response at `hello@welcomematdigital.com`
-- Path forward if rejected: see [12_TWILIO_VERIFICATION_HISTORY.md](12_TWILIO_VERIFICATION_HISTORY.md) → "If This Round Is Rejected"
+### 🔴 Production forwarded-call mode
+- Status: Direct demo call verified August 19, but the customer-facing carrier-forwarding flow is not implemented.
+- Required behavior: customer business number rings normally; on no-answer, carrier forwards to Twilio; Twilio sends one SMS and ends the call without dialing the owner again or repeating the demo disclosure.
+- Acceptance test: exactly one SMS, one call event, no second owner ring, and no generic Twilio application-error message.
 
 ### 🔴 Per-business auth on dashboard and admin
 - Today: `swoop-x79g.onrender.com` and `/admin` are publicly reachable; anyone with the URL sees ALL leads
@@ -26,6 +27,10 @@
 - Approx $4 brand vetting + ~$10/mo campaign
 - Single shared "missed-call response" campaign — every new customer's local number attaches automatically
 - Decided June 13 as the production path; toll-free stays demo-only
+
+### 🟡 Toll-free caller reputation
+- A tester's device classified `(833) 783-0902` as possible fraud and disconnected the call.
+- Submit caller-ID reputation correction requests, but keep this number internal/demo-only and use local numbers for production.
 
 ### 🔴 Local-number provisioning per customer
 - Wire into `admin.html` "Add Business" flow: buy Twilio number in customer's area code → attach to 10DLC campaign → set webhooks → write to DB

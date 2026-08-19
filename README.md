@@ -4,7 +4,7 @@
 
 A plumber is under a sink. Phone rings. Can't answer. Customer calls a competitor. That's $300 gone — and it happens 3–5 times a week.
 
-**Swoop fixes this.** Missed call → instant text in 5 seconds → follow-up sequence → Google review request. All automated. $79–$149/mo.
+**Swoop fixes this.** Missed call → instant text in 5 seconds → follow-up sequence → Google review request. All automated. Target pricing: $29–$49/mo.
 
 ---
 
@@ -39,7 +39,7 @@ Job done → Auto Google review request ⭐
 - **Database:** SQLite (via better-sqlite3) — zero setup, file-based
 - **Cron:** node-cron for follow-up scheduling
 - **Dashboard:** Single HTML file (no framework)
-- **Hosting:** Render free tier
+- **Hosting:** Render Starter with a 1 GB persistent disk
 
 ## Quick Start
 
@@ -89,14 +89,18 @@ curl -s -X POST http://localhost:3000/webhooks/sms -d "From=%2B14255551234&To=%2
 
 All sends are logged as `MOCK SMS` in server logs and still flow through lead/message/follow-up logic.
 
-## Deploy to Render (Free)
+## Deploy to Render
 
 1. Push this repo to GitHub
 2. Go to [render.com](https://render.com) → New Web Service
 3. Connect your GitHub repo
 4. Settings:
    - **Build Command:** `npm install`
-   - **Start Command:** `npm start`
+  - **Start Command:** `npm run seed:businesses && npm start`
+  - **Plan:** Starter or another paid plan that supports persistent disks
+  - **Disk:** mount `swoop-data` at `/var/data`
+  - **DB_PATH:** `/var/data/swoop.db`
+  - **DEFAULT_FORWARD_PHONE:** the owner's phone in E.164 format
 5. Add environment variables from `.env.example`
 6. Deploy!
 

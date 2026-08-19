@@ -6,7 +6,7 @@
 
 ---
 
-## Snapshot — Current State (June 23, 2026 — TFV APPROVED)
+## Snapshot — Current State (August 19, 2026 — TFV APPROVED; DEMO CALL VERIFIED)
 
 | Item | Status | Reference |
 |---|---|---|
@@ -15,12 +15,19 @@
 | **Twilio Business Profile** | ✅ **Approved June 11, 2026** | Bundle `BUf71fa573b0fd6173b0cc31daba2ba41b`, manual review by Jennifer |
 | **Toll-Free Number** | `+1 (833) 783-0902` | Demo / test line per June 13 decision |
 | **TFV (Toll-Free Verification)** | ✅ **APPROVED June 23** on SID `HH260e95b417689297554480bd502c5e88` | Direct update via `messaging.v1.tollfreeVerifications(sid).update()` bypassed Console form bugs and moved the record into review. Twilio Consumer Trust Team approval email received the same evening confirming `+1 (833) 783-0902` may now send SMS and MMS through Twilio. |
-| **A2P 10DLC** | ⏳ In parallel — brand vetting running | Production path for customer numbers — see [10_NEXT_STEPS.md](10_NEXT_STEPS.md) N-6 |
+| **A2P 10DLC** | ⏳ Not started | Production path for customer numbers — see [10_NEXT_STEPS.md](10_NEXT_STEPS.md) N-6 |
 | **BOI (FinCEN)** | ✅ Permanently exempt | March 2025 FinCEN final rule |
 | **Privacy page hardened** | ✅ June 14, 2026 | frontdesk-ai commit `5e3dc3c` — three coverage points of Twilio "magic phrase" |
 | **Consent page — Verbal IVR script (June 22 revision)** | ✅ June 22, 2026 | swoop + frontdesk-ai — step-by-step verbatim IVR dialogue with dynamic business name, message types (callback responses, appointment reminders), frequency (up to 7 per missed call) |
 | **Voice webhook — Verbal disclosure** | ✅ June 22, 2026 | `server/routes/webhooks.js` — `twiml.say()` plays on every inbound call with business name, message disclosure, Msg&data, STOP opt-out |
-| **Open compliance issues** | ✅ **CLOSED** — TFV approved. | Direct Messaging API update bypassed all Console form sanitizer bugs and resulted in same-day approval. India trip June 25. |
+| **Open compliance issues** | ✅ **TFV closed; production messaging still needs 10DLC.** | The toll-free number is approved for SMS/MMS demo traffic. It is not the planned customer-number strategy. |
+
+### August 19, 2026 operational note
+
+- Direct calls to `+1 (833) 783-0902` were tested successfully after Render was upgraded to Starter and the 1 GB disk was mounted at `/var/data`.
+- A friend's phone classified the toll-free number as possible fraud and disconnected the call before Swoop could be experienced normally. This is carrier/device caller-reputation behavior, not an application-generated warning.
+- The `833` number is therefore retained as an internal demo/test line. Production customers should receive local numbers under the A2P 10DLC path.
+- The current demo voice flow plays an initial compliance disclosure, rings the owner's configured phone, and may play a second missed-call confirmation before sending the SMS. A separate forwarded-call mode is required before customer onboarding.
 
 ---
 

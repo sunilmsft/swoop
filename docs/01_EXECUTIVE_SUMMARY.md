@@ -6,10 +6,10 @@
 **Tagline:** Never miss a lead again.
 **Owner:** Sunil Venugopal — solo founder, Sammamish WA
 **Legal entity:** WelcomeMat Digital LLC (WA, UBI 606238837, EIN 42-2903620)
-**Repository:** github.com/sunilmsft/swoop (public, `main` branch is deployed)
+**Repository:** github.com/sunilmsft/swoop (public, `master` branch is deployed)
 **Production:** https://swoop-x79g.onrender.com
 **Marketing/identity site:** https://welcomematdigital.com (lives in sibling repo `frontdesk-ai`)
-**This file was created:** June 15, 2026 — as a permanent preservation snapshot. Assume all prior chat history is lost.
+**Last verified:** August 19, 2026 — direct Twilio demo call, Render Starter runtime, and persistent disk are working.
 
 ---
 
@@ -28,19 +28,20 @@ Customer calls business → business misses it (under a sink, on a roof, on anot
 
 The premise: a missed call to a plumber is worth ~$300. Owners miss 3–5 per week. Swoop captures them.
 
-## Status (as of June 15, 2026)
+## Status (as of August 19, 2026)
 
 | Area | State |
 |---|---|
-| **Code** | Working. v0.2.7 deployed. SQLite + Express + Twilio + OpenAI. ~56 commits. |
-| **Hosting** | Render free tier with 1GB persistent disk. Stable. |
+| **Code** | Working demo path. Commit `77c52d1` deployed: forwarded-call callback fix and idempotent forwarding configuration update. |
+| **Hosting** | Render Starter ($7/mo) with 1GB persistent disk mounted at `/var/data`. `DB_PATH=/var/data/swoop.db`. |
 | **Legal entity** | ✅ WA LLC approved. EIN issued. WA Business License filed. Mercury bank account open. |
 | **Twilio Business Profile** | ✅ Approved June 11, 2026. Bundle `BUf71fa573b0fd6173b0cc31daba2ba41b`. |
-| **Twilio Toll-Free Verification (TFV) for `+1 (833) 783-0902`** | ⏳ **Appeal opened June 17, 2026 after Round 3 rejection (code 30527).** Ignacio confirmed escalation to the toll-free team; awaiting response. This remains the single blocker for production SMS. See [12_TWILIO_VERIFICATION_HISTORY.md](12_TWILIO_VERIFICATION_HISTORY.md). |
+| **Twilio Toll-Free Verification (TFV) for `+1 (833) 783-0902`** | ✅ Approved June 23, 2026. SMS/MMS works. The number remains demo/test only because toll-free caller reputation is poor for customer-facing voice. |
 | **A2P 10DLC** | ❌ Not started. Decided June 13: TFV = demo/test only. 10DLC = production path for customer numbers. |
 | **Auth on dashboards** | ❌ Not built. Anyone with the URL sees all leads — biggest open security issue. |
 | **First paying customer** | ❌ Not yet. Outreach playbook exists but no live customer. |
-| **Travel watch** | India trip June 25 — TFV decision may land while I'm away. |
+| **Live demo call** | ✅ Verified August 19: caller reaches the Twilio number, hears the disclosure, the owner cell rings, and an unanswered call produces the SMS. |
+| **Production call architecture** | 🔴 Not ready: forwarded customer calls currently use the demo-style disclosure and owner `<Dial>`, creating a long/repeated voice experience. |
 
 ## The Single Most Important Thing in This Repo
 
@@ -58,7 +59,7 @@ The premise: a missed call to a plumber is worth ~$300. Owners miss 3–5 per we
 - **AI:** OpenAI SDK, model `gpt-4o-mini`
 - **Cron:** `node-cron` — every 15 min, follow-up processor; disabled in `NODE_ENV=development`
 - **Dashboard/Admin UI:** Plain HTML/CSS/vanilla JS — no framework, no build step
-- **Hosting:** Render free tier with 1GB persistent disk
+- **Hosting:** Render Starter with 1GB persistent disk at `/var/data`
 - **Docs:** `PLAYBOOK.html` (single-file 11-tab reference), GitHub Pages mirror at `sunilmsft.github.io/swoop`
 - **Identity site:** sibling repo `frontdesk-ai` → welcomematdigital.com (Cloudflare DNS → Render)
 
@@ -79,9 +80,9 @@ If any of these get lost, the others can survive — but Cloudflare + Zoho + dom
 
 ## Top 3 Risks Right Now (in order)
 
-1. **TFV decision** — if rejected again, production SMS stays blocked. Path forward is documented in [12_TWILIO_VERIFICATION_HISTORY.md](12_TWILIO_VERIFICATION_HISTORY.md).
-2. **No auth on dashboard** — `swoop-x79g.onrender.com` is publicly reachable and shows all leads. Cannot onboard a real customer until this is fixed.
-3. **Repo lives inside OneDrive folder.** If the OneDrive is corporate-tied (likely — verify), the working tree disappears the day Microsoft access is revoked. Git remote is the source of truth, so worst case = re-clone; but `.env` lives here and contains live API keys.
+1. **No auth on dashboard** — `swoop-x79g.onrender.com` is publicly reachable and shows all leads. Cannot onboard a real customer until this is fixed.
+2. **Production forwarding architecture** — customer numbers must forward unanswered calls to Twilio, which should send the SMS and end the call without dialing the owner again.
+3. **A2P 10DLC and local-number provisioning** — required before real customer numbers can be issued and used at scale.
 
 ## What to Read Next
 

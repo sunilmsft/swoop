@@ -1,19 +1,21 @@
-# 03 — Current State (June 23, 2026)
+# 03 — Current State (August 19, 2026)
 
 ## Code Status
 
-- **Latest status milestone:** Toll-free verification approved; live missed-call SMS testing passing
-- **Latest commit on `master` / `origin/main`:** `4b8b60e` — *"Add fallback second-turn SMS reply"*
-- **Branch reality:** local branch is `master`; Render and GitHub Pages deploy from `main`. Push with `git push origin master:main`.
+- **Latest status milestone:** Direct Twilio demo call verified end to end; Render runtime repaired and persistent storage active.
+- **Latest commit on `master` / `origin/master`:** `77c52d1` — *"Fix forwarded Twilio call handling"*
+- **Branch reality:** GitHub and Render are tracking `master` for this service.
 
 ## What's Shipped (working in production today)
 
 ### Backend
 - Express 5 server (`server/index.js`) with static serving, route mounting, 15-min cron for follow-ups
 - SQLite via `better-sqlite3` with WAL journaling — tables: `businesses`, `leads`, `messages`, `follow_ups`
-- Persistent disk on Render mounted at `/var/data`, env var `DB_PATH` points SQLite there
+- Persistent disk on Render Starter mounted at `/var/data`, env var `DB_PATH=/var/data/swoop.db`
 - Twilio webhooks: `/webhooks/voice`, `/webhooks/voice-status`, `/webhooks/voice-dial-result`, `/webhooks/sms`
 - Twilio request signature validation in prod (`TWILIO_MOCK_MODE=true` skips it for local dev)
+- Forwarded-call callback uses an absolute URL and carries the original business ID to avoid lookup failures
+- Deploy seeder updates an existing business's `forward_phone` when `DEFAULT_FORWARD_PHONE` is set
 - `trust proxy = 1` set so signature validation works behind Render's reverse proxy
 - REST API: `/api/dashboard`, `/api/leads/*`, `/api/businesses/*`, `/api/admin/*`, `/api/test/simulate`
 
@@ -70,6 +72,8 @@
 - 🔴 **No A2P 10DLC brand or campaign** — required for customer production numbers
 - 🔴 **No local-number provisioning per customer** — owners need a 425 number, not the 833 demo line
 - 🔴 **No automated STOP/START/HELP compliance tests** — Morgan flagged: "trust controls must be provable, not just implemented"
+- 🔴 **No production forwarded-call mode** — unanswered calls from a customer's existing number still need a mode that sends the SMS and ends the call without a second owner dial or repeated disclosure
+- 🟡 **Toll-free caller reputation** — the `833` demo number was flagged as possible fraud by a friend's carrier/device; use local customer numbers for production
 
 ### High-value missing features
 - 🟡 Inline editing of business profile after creation
@@ -93,7 +97,7 @@ Full list lives in [BACKLOG.md](../BACKLOG.md) and is mirrored to [06_BACKLOG.md
 
 | Component | Where | Cost | Notes |
 |---|---|---|---|
-| App hosting | Render (free tier) | $0 | Cold-starts after 15 min idle. Upgrade to $7/mo when first paying customer lands. |
+| App hosting | Render Starter | $7/mo | Paid runtime; removes the Free-plan restriction and supports the persistent disk. |
 | Persistent disk | Render, 1 GB at `/var/data` | $0 (included) | `DB_PATH=/var/data/swoop.db` |
 | DNS | Cloudflare (proxy disabled on TXT/MX, CNAME DNS-only for Render SSL) | $0 | Critical single point of failure — owns welcomematdigital.com |
 | Mail | Zoho Mail Lite | $12/yr | Renews 05/29/27. Gmail pulls via POP3 + Send-As. Watch Gmail POP3 deprecation. |
@@ -117,6 +121,15 @@ Full list lives in [BACKLOG.md](../BACKLOG.md) and is mirrored to [06_BACKLOG.md
 | Terms page | `frontdesk-ai/public/swoop/terms.html` | Twilio TFV Terms URL |
 
 Any edit to these surfaces requires re-reading [12_TWILIO_VERIFICATION_HISTORY.md](12_TWILIO_VERIFICATION_HISTORY.md).
+
+## Verified August 19, 2026
+
+- Render service is on Starter and reports a 1 GB disk.
+- `DB_PATH` is `/var/data/swoop.db`.
+- `DEFAULT_FORWARD_PHONE` is configured as `+14257867232`.
+- Twilio voice and status callbacks are configured as POST webhooks on the Render service.
+- Direct call to `(833) 783-0902` rings the owner's cell and sends the SMS when unanswered.
+- The caller-facing message is currently repeated: an initial compliance disclosure, then a missed-call confirmation. This is acceptable for the demo but not the desired customer-forwarding experience.
 
 ## Outstanding Watch Items
 

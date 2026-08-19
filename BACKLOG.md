@@ -1,9 +1,13 @@
 # Swoop — Backlog
 
-## 🧭 Post-Trip Restart Checklist (when back from India)
-- [ ] Verify production env on Render: `TWILIO_MOCK_MODE=false`, `OPENAI_API_KEY` valid, `TWILIO_PHONE_NUMBER` set
-- [ ] Run one live missed-call + SMS reply test from dedicated QA phone
-- [ ] Confirm AI second-turn reply path (or fallback) is working for a realistic customer text
+## 🧭 August 19, 2026 Restart Snapshot
+- [x] Render upgraded to Starter; 1 GB `swoop-data` disk mounted at `/var/data`
+- [x] Confirmed `DB_PATH=/var/data/swoop.db` and `DEFAULT_FORWARD_PHONE=+14257867232`
+- [x] Deployed commit `77c52d1` with forwarded-call callback and forwarding configuration fixes
+- [x] Direct call to the Twilio demo number verified: owner cell rings and unanswered call sends SMS
+- [ ] Confirm `TWILIO_MOCK_MODE=false`, `OPENAI_API_KEY` valid, and AI second-turn path in live production
+- [ ] Implement forwarded-call production mode before onboarding a customer
+- [ ] Submit caller-ID reputation correction for the `833` demo number
 - [ ] Start A2P 10DLC brand vetting (production path for customer local numbers)
 - [ ] Implement landline/non-textable fallback path (Twilio Lookup + owner callback alert)
 - [ ] Open auth implementation sprint (magic-link login + business scoping)
@@ -146,6 +150,8 @@
 - [ ] 🟢 **Voice webhook URL refresh** — Toll-free 833-783-0902 voice webhook still points to `swoop-x79g.onrender.com/webhooks/voice`. Eventually swap to `welcomematdigital.com` for consistency. Non-blocking.
 - [ ] 🔴 **Verify live forwarding configuration** — Set Render `DEFAULT_FORWARD_PHONE` to the owner's current E.164 number and place a call after deploy; a stale or blank business row can send the text while failing to ring the owner. — _Priya: "The caller got a text, but nobody answered the phone."_
 - [ ] 🔴 **Verify forwarded-call callback** — Place a live call after the callback business-ID fix deploys; confirm the caller hears a normal missed-call message instead of Twilio's generic application error. — _Morgan: "A callback failure must not create an unexplained caller-facing failure."_
+- [ ] 🔴 **Production forwarded-call mode** — Customer number should forward unanswered calls to Twilio, which sends one SMS and ends the call without dialing the owner again or repeating the demo disclosure. — _Ray: "The caller should not experience two phone systems in one call."_
+- [ ] 🟡 **Toll-free caller-ID reputation** — Friend's phone flagged `(833) 783-0902` as possible fraud and disconnected. Submit reputation correction; keep the number demo-only and use local numbers for production. — _Jordan: "A demo number that scares off testers is not a reliable demo."_
 
 ---
 
