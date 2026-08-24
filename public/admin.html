@@ -315,6 +315,24 @@
                     <label>Business Description</label>
                     <input type="text" id="demo-desc" placeholder="Residential plumbing — repairs, installs, emergencies">
                 </div>
+                <div class="demo-field">
+                    <label>Trade Type</label>
+                    <select id="demo-trade" onchange="applyTradeEmergencyDefault('demo')">
+                        <option value="">— Select —</option>
+                        <option value="plumbing">Plumbing</option>
+                        <option value="electrical">Electrical</option>
+                        <option value="hvac">HVAC</option>
+                        <option value="cleaning">Cleaning</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="demo-field">
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <input type="checkbox" id="demo-emergency-tier" style="width: auto;">
+                        Emergency-tier business (enables 911 safety-emergency detection)
+                    </label>
+                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">Auto-checked for Plumbing/Electrical/HVAC — review before saving. See docs/EMERGENCY_ESCALATION_POLICY.md.</div>
+                </div>
             </div>
             <div class="demo-field" style="margin-bottom: 1rem;">
                 <label>Auto-Reply Message</label>
@@ -393,7 +411,7 @@ Q: Are you licensed? | A: Yes — WA license #XXXXXX, bonded and insured."></tex
                 <div class="demo-grid">
                     <div class="demo-field">
                         <label>Trade Type</label>
-                        <select id="new-biz-trade" onchange="applyTradeEmergencyDefault()">
+                        <select id="new-biz-trade" onchange="applyTradeEmergencyDefault('new-biz')">
                             <option value="">— Select —</option>
                             <option value="plumbing">Plumbing</option>
                             <option value="electrical">Electrical</option>
@@ -594,6 +612,8 @@ Q: Are you licensed? | A: Yes — WA license #XXXXXX, bonded and insured."></tex
                 document.getElementById('demo-forward').value = '';
                 document.getElementById('demo-desc').value = '';
                 document.getElementById('demo-reply').value = '';
+                document.getElementById('demo-trade').value = '';
+                document.getElementById('demo-emergency-tier').checked = false;
                 // Reset new-biz form fields
                 document.getElementById('new-biz-name').value = '';
                 document.getElementById('new-biz-owner').value = '';
@@ -610,6 +630,8 @@ Q: Are you licensed? | A: Yes — WA license #XXXXXX, bonded and insured."></tex
             document.getElementById('demo-forward').value = biz.forward_phone || '';
             document.getElementById('demo-desc').value = biz.description || '';
             document.getElementById('demo-reply').value = biz.auto_reply_message || '';
+            document.getElementById('demo-trade').value = '';
+            document.getElementById('demo-emergency-tier').checked = !!biz.emergency_tier_enabled;
             // Grounding fields
             document.getElementById('demo-services').value = biz.services || '';
             document.getElementById('demo-pricing').value = biz.pricing || '';
@@ -633,10 +655,10 @@ Q: Are you licensed? | A: Yes — WA license #XXXXXX, bonded and insured."></tex
         // Suggests an emergency-tier default from trade type — the operator sees and can
         // override it before Create; the checkbox state at submit time is the real decision.
         const EMERGENCY_TIER_TRADE_DEFAULTS = { plumbing: true, electrical: true, hvac: true, cleaning: false, other: false };
-        function applyTradeEmergencyDefault() {
-            const trade = document.getElementById('new-biz-trade').value;
+        function applyTradeEmergencyDefault(prefix) {
+            const trade = document.getElementById(`${prefix}-trade`).value;
             if (!trade) return;
-            document.getElementById('new-biz-emergency-tier').checked = !!EMERGENCY_TIER_TRADE_DEFAULTS[trade];
+            document.getElementById(`${prefix}-emergency-tier`).checked = !!EMERGENCY_TIER_TRADE_DEFAULTS[trade];
         }
 
         async function createBusiness() {
@@ -692,6 +714,7 @@ Q: Are you licensed? | A: Yes — WA license #XXXXXX, bonded and insured."></tex
                 tone: document.getElementById('demo-tone').value,
                 faqs: document.getElementById('demo-faqs').value,
                 never_say: document.getElementById('demo-never').value,
+                emergency_tier_enabled: document.getElementById('demo-emergency-tier').checked,
             };
             try {
                 const res = await fetch(`/api/businesses/${id}`, {
