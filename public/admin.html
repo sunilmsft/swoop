@@ -630,7 +630,7 @@ Q: Are you licensed? | A: Yes — WA license #XXXXXX, bonded and insured."></tex
             document.getElementById('demo-forward').value = biz.forward_phone || '';
             document.getElementById('demo-desc').value = biz.description || '';
             document.getElementById('demo-reply').value = biz.auto_reply_message || '';
-            document.getElementById('demo-trade').value = '';
+            document.getElementById('demo-trade').value = biz.trade_type || '';
             document.getElementById('demo-emergency-tier').checked = !!biz.emergency_tier_enabled;
             // Grounding fields
             document.getElementById('demo-services').value = biz.services || '';
@@ -671,6 +671,7 @@ Q: Are you licensed? | A: Yes — WA license #XXXXXX, bonded and insured."></tex
                 description: document.getElementById('new-biz-desc').value.trim(),
                 auto_reply_message: document.getElementById('new-biz-reply').value.trim()
                     || `Hey! Sorry we missed your call. What do you need help with? — ${name}`,
+                trade_type: document.getElementById('new-biz-trade').value,
                 emergency_tier_enabled: document.getElementById('new-biz-emergency-tier').checked,
             };
             try {
@@ -714,6 +715,7 @@ Q: Are you licensed? | A: Yes — WA license #XXXXXX, bonded and insured."></tex
                 tone: document.getElementById('demo-tone').value,
                 faqs: document.getElementById('demo-faqs').value,
                 never_say: document.getElementById('demo-never').value,
+                trade_type: document.getElementById('demo-trade').value,
                 emergency_tier_enabled: document.getElementById('demo-emergency-tier').checked,
             };
             try {

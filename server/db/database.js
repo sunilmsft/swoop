@@ -55,6 +55,7 @@ db.exec(`
     handoff_after_hours_msg TEXT DEFAULT 'first thing tomorrow morning',
     ai_enabled INTEGER DEFAULT 1,
     emergency_tier_enabled INTEGER DEFAULT 0,
+    trade_type TEXT,
     created_at TEXT DEFAULT (datetime('now'))
   );
 
@@ -126,6 +127,9 @@ db.exec(`
 const businessColumns = db.prepare('PRAGMA table_info(businesses)').all().map((col) => col.name);
 if (!businessColumns.includes('emergency_tier_enabled')) {
   db.exec('ALTER TABLE businesses ADD COLUMN emergency_tier_enabled INTEGER DEFAULT 0');
+}
+if (!businessColumns.includes('trade_type')) {
+  db.exec('ALTER TABLE businesses ADD COLUMN trade_type TEXT');
 }
 
 const leadColumns = db.prepare('PRAGMA table_info(leads)').all().map((col) => col.name);
