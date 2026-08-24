@@ -390,6 +390,26 @@ Q: Are you licensed? | A: Yes — WA license #XXXXXX, bonded and insured."></tex
                         <input type="text" id="new-biz-owner" placeholder="Dave">
                     </div>
                 </div>
+                <div class="demo-grid">
+                    <div class="demo-field">
+                        <label>Trade Type</label>
+                        <select id="new-biz-trade" onchange="applyTradeEmergencyDefault()">
+                            <option value="">— Select —</option>
+                            <option value="plumbing">Plumbing</option>
+                            <option value="electrical">Electrical</option>
+                            <option value="hvac">HVAC</option>
+                            <option value="cleaning">Cleaning</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="demo-field">
+                        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                            <input type="checkbox" id="new-biz-emergency-tier" style="width: auto;">
+                            Emergency-tier business (enables 911 safety-emergency detection)
+                        </label>
+                        <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">Auto-checked for Plumbing/Electrical/HVAC — review before saving. See docs/EMERGENCY_ESCALATION_POLICY.md.</div>
+                    </div>
+                </div>
                 <div class="demo-field" style="margin-bottom: 0.75rem;">
                     <label>Business Description</label>
                     <input type="text" id="new-biz-desc" placeholder="e.g. Residential HVAC — AC repair, furnace installs, seasonal tune-ups. Serving Dallas metro.">
@@ -610,6 +630,15 @@ Q: Are you licensed? | A: Yes — WA license #XXXXXX, bonded and insured."></tex
             document.getElementById('edit-biz-form').style.display = show ? 'none' : '';
         }
 
+        // Suggests an emergency-tier default from trade type — the operator sees and can
+        // override it before Create; the checkbox state at submit time is the real decision.
+        const EMERGENCY_TIER_TRADE_DEFAULTS = { plumbing: true, electrical: true, hvac: true, cleaning: false, other: false };
+        function applyTradeEmergencyDefault() {
+            const trade = document.getElementById('new-biz-trade').value;
+            if (!trade) return;
+            document.getElementById('new-biz-emergency-tier').checked = !!EMERGENCY_TIER_TRADE_DEFAULTS[trade];
+        }
+
         async function createBusiness() {
             const name = document.getElementById('new-biz-name').value.trim();
             if (!name) { showDemoStatus('❌ Business name is required', true); return; }
@@ -620,6 +649,7 @@ Q: Are you licensed? | A: Yes — WA license #XXXXXX, bonded and insured."></tex
                 description: document.getElementById('new-biz-desc').value.trim(),
                 auto_reply_message: document.getElementById('new-biz-reply').value.trim()
                     || `Hey! Sorry we missed your call. What do you need help with? — ${name}`,
+                emergency_tier_enabled: document.getElementById('new-biz-emergency-tier').checked,
             };
             try {
                 const res = await fetch('/api/businesses', {
@@ -634,6 +664,8 @@ Q: Are you licensed? | A: Yes — WA license #XXXXXX, bonded and insured."></tex
                     document.getElementById('new-biz-owner').value = '';
                     document.getElementById('new-biz-desc').value = '';
                     document.getElementById('new-biz-reply').value = '';
+                    document.getElementById('new-biz-trade').value = '';
+                    document.getElementById('new-biz-emergency-tier').checked = false;
                     loadAdmin();
                     loadDemoBusinesses(created.id);
                 } else {

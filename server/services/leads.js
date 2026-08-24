@@ -14,17 +14,67 @@ function getKeywordIntent(body) {
   return null;
 }
 
+// Per docs/EMERGENCY_ESCALATION_POLICY.md — genuine, immediate danger to life or property.
+const EMERGENCY_PATTERN = /gas smell|smell(?:s|ing)? (?:of )?gas|gas leak|carbon monoxide|\bco\b alarm|co detector|sparking (?:outlet|wire)|spark(?:s|ing)? from|visible smoke|smoke coming|smells like smoke|on fire|caught fire|fire risk|active flooding|flooding.*(?:electrical|outlet|panel)|(?:electrical|outlet|panel).*flooding|sewage backup|sewage.*(?:health|hazard)/;
+
+// Costly or painful if delayed, not life-threatening.
+const URGENT_PATTERN = /no heat\b|no a\/?c\b|no air ?conditioning|no hot water|\bleak(?:ing|s)?\b|locked out|power outage|no power\b|emergency|urgent|asap|right now/;
+
+// Hardcoded, pre-approved — never AI-generated or paraphrased. {business_name} is substituted at send time.
+const EMERGENCY_RESPONSE_TEMPLATE = "That sounds like it could be a safety emergency. Please call 911 right away — if you smell gas, get to fresh air first, then call 911 or your gas company's emergency line. {business_name} will follow up once you're safe.";
+
+/**
+ * Classify inbound text into an urgency tier: 'emergency' | 'urgent' | null (routine).
+ * Pure text classification — does not know about the business's emergency-tier flag.
+ */
 function inferUrgencyLevel(text) {
   const value = String(text || '').toLowerCase();
   if (!value) return null;
 
-  if (/emergency|urgent|asap|right now|flood|flooding|burst|no heat|no water|gas leak|leak now/.test(value)) {
-    return 'high';
-  }
-  if (/today|soon|this afternoon|tonight|tomorrow morning|quick/.test(value)) {
-    return 'medium';
-  }
+  if (EMERGENCY_PATTERN.test(value)) return 'emergency';
+  if (URGENT_PATTERN.test(value)) return 'urgent';
   return null;
+}
+
+/**
+ * Resolve the tier that should actually drive behavior for this business.
+ * A detected emergency downgrades to 'urgent' (never dropped) when the business
+ * hasn't been onboarded as emergency-tier — per docs/EMERGENCY_ESCALATION_POLICY.md,
+ * this is gated on the business record, not a hardcoded trade-name check.
+ */
+function resolveUrgencyTier(text, business) {
+  const detected = inferUrgencyLevel(text);
+  if (detected === 'emergency' && !business.emergency_tier_enabled) {
+    return 'urgent';
+  }
+  return detected;
+}
+
+function formatOwnerNotification(tier, business, summaryText) {
+  if (tier === 'emergency') {
+    return `🚨 EMERGENCY LEAD — ${business.name}\nCaller was told to call 911.\n${summaryText}`;
+  }
+  if (tier === 'urgent') {
+    return `🟡 URGENT lead — ${business.name}\n${summaryText}`;
+  }
+  return `New lead needs attention — ${business.name}\n${summaryText}`;
+}
+
+/**
+ * Text the business owner a lead notification, formatted per urgency tier.
+ * Best-effort: logs and skips rather than throwing if there's no number to reach.
+ */
+async function notifyOwner(business, tier, summaryText) {
+  if (!business.forward_phone) {
+    console.log(`⚠️ No forward_phone on file for ${business.name} — skipping owner notification`);
+    return;
+  }
+
+  try {
+    await sendSMS(business.forward_phone, formatOwnerNotification(tier, business, summaryText));
+  } catch (err) {
+    console.error(`Failed to send owner notification (${tier}) for ${business.name}:`, err.message);
+  }
 }
 
 function inferLocationHint(text) {
@@ -58,7 +108,7 @@ function buildFallbackIntakeQuestion(business, lead) {
     return `${business.name}: Got it, ${lead.caller_name}. What city is the job in?`;
   }
 
-  if (urgency !== 'high') {
+  if (urgency !== 'urgent' && urgency !== 'emergency') {
     return `${business.name}: Thanks ${lead.caller_name}. Is this urgent right now, or can ${owner} call you later today?`;
   }
 
@@ -218,17 +268,45 @@ async function handleInboundSMS(businessId, callerPhone, body) {
   }
 
   const inferredLocation = inferLocationHint(body);
-  const inferredUrgency = inferUrgencyLevel(body);
-  const statusFromUrgency = inferredUrgency === 'high' ? 'needs_attention' : 'engaged';
+  const priorUrgencyLevel = lead.urgency_level;
+  const tier = resolveUrgencyTier(body, business);
+  const statusFromUrgency = (tier === 'emergency' || tier === 'urgent') ? 'needs_attention' : 'engaged';
 
   // Update lead status — they replied, they're engaged
   db.prepare(
     'UPDATE leads SET lead_status = ?, location_hint = COALESCE(?, location_hint), urgency_level = COALESCE(?, urgency_level), updated_at = datetime(\'now\') WHERE id = ?'
-  ).run(statusFromUrgency, inferredLocation, inferredUrgency, lead.id);
+  ).run(statusFromUrgency, inferredLocation, tier, lead.id);
 
   // Cancel pending follow-ups since they replied
   db.prepare('UPDATE follow_ups SET status = ? WHERE lead_id = ? AND status = ?')
     .run('cancelled', lead.id, 'pending');
+
+  // --- Emergency tier: hardcoded safety response only, no AI qualifying, immediate owner alert ---
+  if (tier === 'emergency') {
+    const emergencyReply = EMERGENCY_RESPONSE_TEMPLATE.replace('{business_name}', business.name);
+    let twilioSid = null;
+    try {
+      const twilioMsg = await sendSMS(callerPhone, emergencyReply);
+      twilioSid = twilioMsg.sid;
+    } catch (err) {
+      console.log(`⚠️ Emergency response SMS send failed: ${err.message}`);
+    }
+
+    db.prepare(
+      'INSERT INTO messages (lead_id, direction, body, twilio_sid) VALUES (?, ?, ?, ?)'
+    ).run(lead.id, 'outbound', emergencyReply, twilioSid);
+
+    db.prepare('UPDATE leads SET ai_handoff_done = 1, updated_at = datetime(\'now\') WHERE id = ?').run(lead.id);
+
+    await notifyOwner(business, 'emergency', `Caller said: "${body}"`);
+
+    return db.prepare('SELECT * FROM leads WHERE id = ?').get(lead.id);
+  }
+
+  // First time this lead crosses into 'urgent', alert the owner immediately — don't wait for handoff.
+  if (tier === 'urgent' && priorUrgencyLevel !== 'urgent' && priorUrgencyLevel !== 'emergency') {
+    await notifyOwner(business, 'urgent', `Caller said: "${body}"`);
+  }
 
   // --- AI Reply Agent ---
   if (business && !lead.ai_handoff_done && business.ai_enabled) {
@@ -259,10 +337,11 @@ async function handleInboundSMS(businessId, callerPhone, body) {
     const maxTurns = business.max_ai_turns || 3;
     const ownerCallbackIntent = /have\s+\w+\s+reach\s+out|reach\s+out\s+shortly|call\s+you\s+shortly|owner\s+will\s+reach\s+out/i.test(replyBody);
     const isHandoff = ownerCallbackIntent || newTurnCount >= maxTurns;
+    const statusAfterReply = (isHandoff || tier === 'emergency' || tier === 'urgent') ? 'needs_attention' : 'engaged';
 
     db.prepare(
       'UPDATE leads SET ai_turn_count = ?, ai_handoff_done = ?, lead_status = ?, updated_at = datetime(\'now\') WHERE id = ?'
-    ).run(newTurnCount, isHandoff ? 1 : 0, isHandoff ? 'needs_attention' : 'engaged', lead.id);
+    ).run(newTurnCount, isHandoff ? 1 : 0, statusAfterReply, lead.id);
 
     if (isHandoff) {
       // Build summary for the business owner
@@ -273,6 +352,7 @@ async function handleInboundSMS(businessId, callerPhone, body) {
 
       db.prepare('UPDATE leads SET notes = ? WHERE id = ?').run(summary, lead.id);
       console.log(`🤝 AI handoff complete for lead ${lead.id}: ${summary}`);
+      await notifyOwner(business, tier, summary);
     }
   }
 

@@ -205,7 +205,8 @@ router.get('/businesses/:id/system-prompt', (req, res) => {
 router.post('/businesses', (req, res) => {
   const { name, phone, forward_phone, owner_name, auto_reply_message, review_link,
           description, services, pricing, service_area, hours, emergency_policy,
-          tone, faqs, never_say, max_ai_turns, handoff_minutes, handoff_after_hours_msg } = req.body;
+          tone, faqs, never_say, max_ai_turns, handoff_minutes, handoff_after_hours_msg,
+          emergency_tier_enabled } = req.body;
 
   if (!name || !phone) {
     return res.status(400).json({ error: 'name and phone are required' });
@@ -215,11 +216,12 @@ router.post('/businesses', (req, res) => {
     const result = db.prepare(
       `INSERT INTO businesses (name, phone, forward_phone, owner_name, auto_reply_message, review_link,
         description, services, pricing, service_area, hours, emergency_policy,
-        tone, faqs, never_say, max_ai_turns, handoff_minutes, handoff_after_hours_msg)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        tone, faqs, never_say, max_ai_turns, handoff_minutes, handoff_after_hours_msg, emergency_tier_enabled)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).run(name, phone, forward_phone || null, owner_name || null, auto_reply_message || null, review_link || null,
           description || null, services || null, pricing || null, service_area || null, hours || null, emergency_policy || null,
-          tone || 'friendly', faqs || null, never_say || null, max_ai_turns || 3, handoff_minutes || 120, handoff_after_hours_msg || null);
+          tone || 'friendly', faqs || null, never_say || null, max_ai_turns || 3, handoff_minutes || 120, handoff_after_hours_msg || null,
+          emergency_tier_enabled ? 1 : 0);
 
     const business = db.prepare('SELECT * FROM businesses WHERE id = ?').get(result.lastInsertRowid);
     res.status(201).json(business);
@@ -242,7 +244,8 @@ router.put('/businesses/:id', (req, res) => {
 
   const allowed = ['name', 'phone', 'forward_phone', 'owner_name', 'auto_reply_message', 'review_link',
     'description', 'services', 'pricing', 'service_area', 'hours', 'emergency_policy',
-    'tone', 'faqs', 'never_say', 'max_ai_turns', 'handoff_minutes', 'handoff_after_hours_msg', 'ai_enabled'];
+    'tone', 'faqs', 'never_say', 'max_ai_turns', 'handoff_minutes', 'handoff_after_hours_msg', 'ai_enabled',
+    'emergency_tier_enabled'];
 
   const updates = [];
   const values = [];
@@ -250,7 +253,7 @@ router.put('/businesses/:id', (req, res) => {
   for (const key of allowed) {
     if (req.body[key] !== undefined) {
       updates.push(`${key} = ?`);
-      values.push(req.body[key]);
+      values.push(typeof req.body[key] === 'boolean' ? (req.body[key] ? 1 : 0) : req.body[key]);
     }
   }
 

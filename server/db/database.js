@@ -54,6 +54,7 @@ db.exec(`
     handoff_minutes INTEGER DEFAULT 120,
     handoff_after_hours_msg TEXT DEFAULT 'first thing tomorrow morning',
     ai_enabled INTEGER DEFAULT 1,
+    emergency_tier_enabled INTEGER DEFAULT 0,
     created_at TEXT DEFAULT (datetime('now'))
   );
 
@@ -122,6 +123,11 @@ db.exec(`
 `);
 
 // Lightweight schema migrations for existing local DBs.
+const businessColumns = db.prepare('PRAGMA table_info(businesses)').all().map((col) => col.name);
+if (!businessColumns.includes('emergency_tier_enabled')) {
+  db.exec('ALTER TABLE businesses ADD COLUMN emergency_tier_enabled INTEGER DEFAULT 0');
+}
+
 const leadColumns = db.prepare('PRAGMA table_info(leads)').all().map((col) => col.name);
 if (!leadColumns.includes('sms_opt_out')) {
   db.exec('ALTER TABLE leads ADD COLUMN sms_opt_out INTEGER DEFAULT 0');
