@@ -1,6 +1,8 @@
 # Swoop — Backlog
 
 ## 🧭 August 19, 2026 Restart Snapshot
+- [x] Created a share-safe new-collaborator brief at `docs/SWOOP_ONBOARDING_BRIEF.html` covering vision, opportunity, current status, pilot strategy, blockers, and a first-session path
+- [ ] 🟢 Refresh the onboarding brief's date, repository checkpoint, and status table after each major pilot milestone — _Priya: "A new collaborator needs to know when the snapshot stopped being current."_
 - [x] Render upgraded to Starter; 1 GB `swoop-data` disk mounted at `/var/data`
 - [x] Confirmed `DB_PATH=/var/data/swoop.db` and `DEFAULT_FORWARD_PHONE=+14257867232`
 - [x] Deployed commit `77c52d1` with forwarded-call callback and forwarding configuration fixes
