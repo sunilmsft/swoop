@@ -20,6 +20,7 @@ Swoop doesn't need to determine *why* a call was unanswered — if the carrier f
 - Business name, type, owner's name
 - Existing customer-facing number and carrier
 - Owner's preferred contact number
+- **Physical business address** (required for E911/emergency-address registration on the business's dedicated Twilio number — must be that business's own location, not WelcomeMat's)
 - Services offered and service area
 - Business hours
 - What Swoop should collect from callers
