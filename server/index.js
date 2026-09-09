@@ -12,6 +12,11 @@ const db = require('./db/database');
 
 const app = express();
 app.set('trust proxy', 1); // Trust Render's reverse proxy (fixes req.protocol for Twilio signature validation)
+// Disables Express's automatic ETag on res.json()/res.send()/res.sendFile() (dashboard/admin API
+// responses and our page routes) so there's never a validator for a client to revalidate against —
+// no ETag means no 304 is possible. express.static()'s own ETag handling for real static assets
+// (CSS/JS/images) is independent of this setting and is unaffected.
+app.set('etag', false);
 const PORT = process.env.PORT || 3000;
 
 if (process.env.NODE_ENV === 'production') {
@@ -76,6 +81,14 @@ app.get('/consent', (req, res) => {
 // Everything else under public/ (consent.html, login.html, any shared assets) — not sensitive,
 // stays unauthenticated. index.html/admin.html are shadowed by the explicit gated routes above.
 app.use(express.static(path.join(__dirname, '..', 'public')));
+
+// Live operational data — never conditionally-cacheable. Without this, Express's default weak
+// ETag on every res.json() lets the browser revalidate and get back a 304 with an empty body,
+// which callers' res.ok checks (correctly) treat as a failed fetch.
+app.use('/api', (req, res, next) => {
+  res.set('Cache-Control', 'no-store');
+  next();
+});
 
 // Routes
 app.use('/webhooks', require('./routes/webhooks'));
