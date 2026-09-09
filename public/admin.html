@@ -321,6 +321,13 @@
                     <input type="tel" id="demo-forward" placeholder="Not set — enter +1XXXXXXXXXX">
                 </div>
                 <div class="demo-field">
+                    <label>Call Mode</label>
+                    <select id="demo-call-mode">
+                        <option value="direct_dial">Direct Dial (Swoop dials owner + plays disclosure)</option>
+                        <option value="carrier_forward">Carrier Forward (dedicated local number — owner already missed the call)</option>
+                    </select>
+                </div>
+                <div class="demo-field">
                     <label>Business Description</label>
                     <input type="text" id="demo-desc" placeholder="Residential plumbing — repairs, installs, emergencies">
                 </div>
@@ -438,6 +445,13 @@ Q: Are you licensed? | A: Yes — WA license #XXXXXX, bonded and insured."></tex
                     </div>
                 </div>
                 <div class="demo-field" style="margin-bottom: 0.75rem;">
+                    <label>Call Mode</label>
+                    <select id="new-biz-call-mode">
+                        <option value="direct_dial">Direct Dial (Swoop dials owner + plays disclosure)</option>
+                        <option value="carrier_forward">Carrier Forward (dedicated local number — owner already missed the call)</option>
+                    </select>
+                </div>
+                <div class="demo-field" style="margin-bottom: 0.75rem;">
                     <label>Business Description</label>
                     <input type="text" id="new-biz-desc" placeholder="e.g. Residential HVAC — AC repair, furnace installs, seasonal tune-ups. Serving Dallas metro.">
                 </div>
@@ -486,11 +500,23 @@ Q: Are you licensed? | A: Yes — WA license #XXXXXX, bonded and insured."></tex
     </div>
 
     <script>
+        function apiFetch(path, options = {}) {
+            return fetch(path, options).then((res) => {
+                if (res.status === 401) {
+                    // Session expired/missing while this page was already open — send the
+                    // operator back to log in instead of quietly failing every API call.
+                    window.location.href = '/login';
+                    return new Promise(() => {}); // navigation is underway; don't let callers handle a 401 body
+                }
+                return res;
+            });
+        }
+
         async function loadAdmin() {
             try {
                 const [overviewRes, bizRes] = await Promise.all([
-                    fetch('/api/admin/overview'),
-                    fetch('/api/admin/businesses'),
+                    apiFetch('/api/admin/overview'),
+                    apiFetch('/api/admin/businesses'),
                 ]);
 
                 if (overviewRes.ok) {
@@ -580,7 +606,7 @@ Q: Are you licensed? | A: Yes — WA license #XXXXXX, bonded and insured."></tex
 
         async function loadDemoBusinesses(selectId) {
             try {
-                const res = await fetch('/api/businesses');
+                const res = await apiFetch('/api/businesses');
                 if (res.ok) {
                     demoBizList = await res.json();
                     const sel = document.getElementById('demo-biz-select');
@@ -619,6 +645,7 @@ Q: Are you licensed? | A: Yes — WA license #XXXXXX, bonded and insured."></tex
                 document.getElementById('demo-name').value = '';
                 document.getElementById('demo-owner').value = '';
                 document.getElementById('demo-forward').value = '';
+                document.getElementById('demo-call-mode').value = 'direct_dial';
                 document.getElementById('demo-desc').value = '';
                 document.getElementById('demo-reply').value = '';
                 document.getElementById('demo-trade').value = '';
@@ -626,6 +653,7 @@ Q: Are you licensed? | A: Yes — WA license #XXXXXX, bonded and insured."></tex
                 // Reset new-biz form fields
                 document.getElementById('new-biz-name').value = '';
                 document.getElementById('new-biz-owner').value = '';
+                document.getElementById('new-biz-call-mode').value = 'direct_dial';
                 document.getElementById('new-biz-desc').value = '';
                 document.getElementById('new-biz-reply').value = "Hey! Sorry we missed your call. What do you need help with?";
                 toggleNewBizForm(true);
@@ -637,6 +665,7 @@ Q: Are you licensed? | A: Yes — WA license #XXXXXX, bonded and insured."></tex
             document.getElementById('demo-name').value = biz.name || '';
             document.getElementById('demo-owner').value = biz.owner_name || '';
             document.getElementById('demo-forward').value = biz.forward_phone || '';
+            document.getElementById('demo-call-mode').value = biz.call_mode || 'direct_dial';
             document.getElementById('demo-desc').value = biz.description || '';
             document.getElementById('demo-reply').value = biz.auto_reply_message || '';
             document.getElementById('demo-trade').value = biz.trade_type || '';
@@ -682,9 +711,10 @@ Q: Are you licensed? | A: Yes — WA license #XXXXXX, bonded and insured."></tex
                     || `Hey! Sorry we missed your call. What do you need help with? — ${name}`,
                 trade_type: document.getElementById('new-biz-trade').value,
                 emergency_tier_enabled: document.getElementById('new-biz-emergency-tier').checked,
+                call_mode: document.getElementById('new-biz-call-mode').value,
             };
             try {
-                const res = await fetch('/api/businesses', {
+                const res = await apiFetch('/api/businesses', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(body),
@@ -698,6 +728,7 @@ Q: Are you licensed? | A: Yes — WA license #XXXXXX, bonded and insured."></tex
                     document.getElementById('new-biz-reply').value = '';
                     document.getElementById('new-biz-trade').value = '';
                     document.getElementById('new-biz-emergency-tier').checked = false;
+                    document.getElementById('new-biz-call-mode').value = 'direct_dial';
                     loadAdmin();
                     loadDemoBusinesses(created.id);
                 } else {
@@ -721,6 +752,7 @@ Q: Are you licensed? | A: Yes — WA license #XXXXXX, bonded and insured."></tex
                 name: document.getElementById('demo-name').value,
                 owner_name: document.getElementById('demo-owner').value,
                 forward_phone: document.getElementById('demo-forward').value,
+                call_mode: document.getElementById('demo-call-mode').value,
                 description: document.getElementById('demo-desc').value,
                 auto_reply_message: document.getElementById('demo-reply').value,
                 services: document.getElementById('demo-services').value,
@@ -735,7 +767,7 @@ Q: Are you licensed? | A: Yes — WA license #XXXXXX, bonded and insured."></tex
                 emergency_tier_enabled: document.getElementById('demo-emergency-tier').checked,
             };
             try {
-                const res = await fetch(`/api/businesses/${id}`, {
+                const res = await apiFetch(`/api/businesses/${id}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(body),
@@ -763,7 +795,7 @@ Q: Are you licensed? | A: Yes — WA license #XXXXXX, bonded and insured."></tex
             const name = document.getElementById('demo-name').value || 'this business';
             if (!confirm(`Clear all leads for "${name}"? This cannot be undone.`)) return;
             try {
-                const res = await fetch(`/api/businesses/${id}/leads`, { method: 'DELETE' });
+                const res = await apiFetch(`/api/businesses/${id}/leads`, { method: 'DELETE' });
                 if (res.ok) {
                     const data = await res.json();
                     showDemoStatus(`✅ Cleared ${data.leadsDeleted} leads`);
@@ -946,7 +978,7 @@ Q: Are you licensed? | A: Yes — WA license #XXXXXX, bonded and insured."></tex
             document.getElementById('prompt-modal-content').textContent = 'Loading…';
             document.getElementById('prompt-modal').classList.add('show');
             try {
-                const res = await fetch(`/api/businesses/${id}/system-prompt`);
+                const res = await apiFetch(`/api/businesses/${id}/system-prompt`);
                 if (res.ok) {
                     const data = await res.json();
                     document.getElementById('prompt-modal-content').textContent = data.prompt;

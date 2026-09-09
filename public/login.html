@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Swoop — Sign in</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background: #f8fafc;
+            color: #1e293b;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .login-box {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 340px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        h1 { color: #0f172a; font-size: 1.4rem; font-weight: 700; text-align: center; margin-bottom: 1.5rem; }
+        h1 span { color: #3b82f6; }
+        label { display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 0.4rem; }
+        input[type="password"] {
+            width: 100%;
+            padding: 0.65rem 0.75rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-family: inherit;
+            margin-bottom: 1rem;
+        }
+        input[type="password"]:focus { outline: none; border-color: #3b82f6; }
+        button {
+            width: 100%;
+            padding: 0.7rem;
+            background: #3b82f6;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+        }
+        button:hover { background: #2563eb; }
+        .error {
+            display: none;
+            background: #fef2f2;
+            border-left: 4px solid #ef4444;
+            color: #991b1b;
+            padding: 0.65rem 0.85rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+        }
+        .error.show { display: block; }
+    </style>
+</head>
+<body>
+    <div class="login-box">
+        <h1>🦅 Swoop</h1>
+        <div class="error" id="error-msg">Incorrect password. Try again.</div>
+        <form method="POST" action="/login">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" autofocus required autocomplete="current-password">
+            <button type="submit">Sign in</button>
+        </form>
+    </div>
+    <script>
+        if (new URLSearchParams(location.search).get('error')) {
+            document.getElementById('error-msg').classList.add('show');
+        }
+    </script>
+</body>
+</html>

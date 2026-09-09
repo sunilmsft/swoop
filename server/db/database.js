@@ -131,6 +131,12 @@ if (!businessColumns.includes('emergency_tier_enabled')) {
 if (!businessColumns.includes('trade_type')) {
   db.exec('ALTER TABLE businesses ADD COLUMN trade_type TEXT');
 }
+if (!businessColumns.includes('call_mode')) {
+  // 'direct_dial' (default): Swoop's Twilio number is called directly and dials forward_phone itself.
+  // 'carrier_forward': a business's dedicated local number — the carrier already redialed the owner
+  // on no-answer/busy before this call ever reached Twilio, so no redial/disclosure here.
+  db.exec("ALTER TABLE businesses ADD COLUMN call_mode TEXT NOT NULL DEFAULT 'direct_dial'");
+}
 
 const leadColumns = db.prepare('PRAGMA table_info(leads)').all().map((col) => col.name);
 if (!leadColumns.includes('sms_opt_out')) {
@@ -179,5 +185,18 @@ if (!callEventColumns.includes('event_source')) {
 }
 
 db.exec('CREATE INDEX IF NOT EXISTS idx_call_events_sid_source ON call_events(call_sid, event_source)');
+
+// Enforces that a given Twilio call event (identified by CallSid + which webhook logged it) can only
+// be recorded once, so a Twilio webhook retry can't trigger a second missed-call SMS for the same call.
+// Wrapped defensively: an older DB could already contain accidental duplicate rows from before this
+// guard existed, which would make the index creation fail — don't block startup on that.
+try {
+  db.exec(
+    `CREATE UNIQUE INDEX IF NOT EXISTS idx_call_events_sid_source_unique
+     ON call_events(call_sid, event_source) WHERE call_sid IS NOT NULL`
+  );
+} catch (err) {
+  console.warn('Could not create unique call_events index (likely pre-existing duplicate rows):', err.message);
+}
 
 module.exports = db;

@@ -115,20 +115,41 @@ function buildFallbackIntakeQuestion(business, lead) {
   return `${business.name}: Thanks ${lead.caller_name}. We have your details and ${owner} will reach out shortly. Is this the best number to reach you?`;
 }
 
+// Default consent basis: the caller heard Swoop's verbal TwiML disclosure before the missed-call
+// SMS (the direct_dial path, where the disclosure plays on every inbound call before the dial).
+const IVR_DISCLOSURE_CONSENT = {
+  consentMethod: 'verbal_ivr',
+  consentSource: 'inbound call to published business phone number',
+  consentScriptVersion: '2026-06-23-v1',
+  consentNotes: 'Caller heard the TwiML verbal disclosure before the missed-call SMS; consent metadata is stored on the lead record with the outbound confirmation text.',
+};
+
+// carrier_forward consent basis: no verbal disclosure was played on this call — it arrived at
+// Twilio already forwarded by the carrier after the business's own line didn't answer, so the
+// caller never had a Swoop-controlled call leg to disclose anything on. This only records the
+// factual basis (an inbound call to the business's own published number); it is not a compliance
+// determination — confirm with legal/compliance before relying on this consent basis in production.
+const CARRIER_FORWARD_CONSENT = {
+  consentMethod: 'carrier_forwarded_call',
+  consentSource: "inbound call to business's own published number, forwarded by carrier after no-answer",
+  consentScriptVersion: null,
+  consentNotes: "No verbal IVR disclosure was played on this call — it arrived already carrier-forwarded from the business's published number after the owner did not answer. Consent basis is the caller's inbound call to the business's own published number, not a Swoop-read disclosure.",
+};
+
 /**
  * Handle a missed call:
  * 1. Find or create the lead
  * 2. Send auto-reply text
  * 3. Schedule follow-up sequence (day 1, day 3, day 7)
+ *
+ * consentContext lets callers override the recorded consent basis (see IVR_DISCLOSURE_CONSENT vs.
+ * CARRIER_FORWARD_CONSENT above) — defaults to the IVR-disclosure basis used by the direct_dial path.
  */
-async function handleMissedCall(businessId, callerPhone) {
+async function handleMissedCall(businessId, callerPhone, consentContext = IVR_DISCLOSURE_CONSENT) {
   const business = db.prepare('SELECT * FROM businesses WHERE id = ?').get(businessId);
   if (!business) throw new Error(`Business ${businessId} not found`);
 
-  const consentMethod = 'verbal_ivr';
-  const consentSource = 'inbound call to published business phone number';
-  const consentScriptVersion = '2026-06-23-v1';
-  const consentNotes = 'Caller heard the TwiML verbal disclosure before the missed-call SMS; consent metadata is stored on the lead record with the outbound confirmation text.';
+  const { consentMethod, consentSource, consentScriptVersion, consentNotes } = consentContext;
 
   // Find existing lead or create new one
   let lead = db.prepare(
@@ -441,4 +462,5 @@ module.exports = {
   handleInboundSMS,
   sendReviewRequest,
   processDueFollowUps,
+  CARRIER_FORWARD_CONSENT,
 };

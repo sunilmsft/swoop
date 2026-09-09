@@ -644,7 +644,16 @@
         }
 
         function apiFetch(path, options = {}) {
-            return fetch(apiPath(path), options);
+            return fetch(apiPath(path), options).then((res) => {
+                if (res.status === 401) {
+                    // Session expired/missing (e.g. server restarted, cookie aged out) while this
+                    // page was already open — send the owner back to log in instead of quietly
+                    // showing a stale/broken dashboard.
+                    window.location.href = '/login';
+                    return new Promise(() => {}); // navigation is underway; don't let callers handle a 401 body
+                }
+                return res;
+            });
         }
 
         function showEnvBanner(message) {

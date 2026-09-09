@@ -4,8 +4,14 @@ const db = require('../db/database');
 const { sendReviewRequest } = require('../services/leads');
 const { sendSMS } = require('../services/twilio');
 const { buildSystemPrompt } = require('../services/ai-agent');
+const { requireApiAuth } = require('../middleware/auth');
 
 const router = express.Router();
+
+// Gates the whole owner/admin API surface (dashboard, leads, businesses, admin/*) behind the
+// shared admin session. /webhooks/* and /api/test/* are mounted separately and are NOT covered
+// by this — Twilio and the smoke-test harness hit those directly, outside a browser session.
+router.use(requireApiAuth);
 
 async function proxyRequest(baseUrl, path, req, res) {
   const targetBase = String(baseUrl || '').trim().replace(/\/+$/, '');
@@ -206,7 +212,7 @@ router.post('/businesses', (req, res) => {
   const { name, phone, forward_phone, owner_name, auto_reply_message, review_link,
           description, services, pricing, service_area, hours, emergency_policy,
           tone, faqs, never_say, max_ai_turns, handoff_minutes, handoff_after_hours_msg,
-          emergency_tier_enabled, trade_type } = req.body;
+          emergency_tier_enabled, trade_type, call_mode } = req.body;
 
   if (!name || !phone) {
     return res.status(400).json({ error: 'name and phone are required' });
@@ -216,12 +222,12 @@ router.post('/businesses', (req, res) => {
     const result = db.prepare(
       `INSERT INTO businesses (name, phone, forward_phone, owner_name, auto_reply_message, review_link,
         description, services, pricing, service_area, hours, emergency_policy,
-        tone, faqs, never_say, max_ai_turns, handoff_minutes, handoff_after_hours_msg, emergency_tier_enabled, trade_type)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        tone, faqs, never_say, max_ai_turns, handoff_minutes, handoff_after_hours_msg, emergency_tier_enabled, trade_type, call_mode)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).run(name, phone, forward_phone || null, owner_name || null, auto_reply_message || null, review_link || null,
           description || null, services || null, pricing || null, service_area || null, hours || null, emergency_policy || null,
           tone || 'friendly', faqs || null, never_say || null, max_ai_turns || 3, handoff_minutes || 120, handoff_after_hours_msg || null,
-          emergency_tier_enabled ? 1 : 0, trade_type || null);
+          emergency_tier_enabled ? 1 : 0, trade_type || null, call_mode || 'direct_dial');
 
     const business = db.prepare('SELECT * FROM businesses WHERE id = ?').get(result.lastInsertRowid);
     res.status(201).json(business);
@@ -245,7 +251,7 @@ router.put('/businesses/:id', (req, res) => {
   const allowed = ['name', 'phone', 'forward_phone', 'owner_name', 'auto_reply_message', 'review_link',
     'description', 'services', 'pricing', 'service_area', 'hours', 'emergency_policy',
     'tone', 'faqs', 'never_say', 'max_ai_turns', 'handoff_minutes', 'handoff_after_hours_msg', 'ai_enabled',
-    'emergency_tier_enabled', 'trade_type'];
+    'emergency_tier_enabled', 'trade_type', 'call_mode'];
 
   const updates = [];
   const values = [];
