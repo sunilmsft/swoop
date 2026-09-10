@@ -4,17 +4,19 @@ Captured August 24, 2026. Compares [`docs/PILOT_ONBOARDING_JOURNEY.md`](PILOT_ON
 
 No product code was changed to produce this file.
 
+**Updated Sept 10, 2026:** four items below — "Secure owner access," "Business-level configuration isolation," "Conditional-forwarding behavior," and "Duplicate-event protection" — were revised to reflect what's shipped since the original pass. Everything else in this document is unchanged from August 24 and has not been re-verified against current code.
+
 ## Severity at a glance
 
 | Area | Severity |
 |---|---|
-| Business-level configuration isolation | 🔴 Hard blocker |
-| Secure owner access | 🔴 Hard blocker |
-| Conditional-forwarding behavior | 🔴 Hard blocker |
+| Business-level configuration isolation | 🔴 Hard blocker — top remaining item (Sept 10 update) |
+| Secure owner access | 🟢 Login shipped (Sept 10 update) — see isolation above |
+| Conditional-forwarding behavior | 🟡 Core fix shipped (Sept 10 update) — carrier verification still open |
 | Owner notifications | 🔴 Hard blocker |
 | Emergency escalation | 🔴 Hard blocker |
 | ON/OFF control | 🔴 Hard blocker |
-| Duplicate-event protection | 🟡 Should fix before pilot |
+| Duplicate-event protection | 🟢 Shipped (Sept 10 update) |
 | Dedicated local-number provisioning | 🟡 Operational blocker, not a code blocker |
 | Pilot monitoring / check-in reporting | 🟢 Can wait — needed within the pilot window, not before day one |
 
@@ -34,39 +36,45 @@ No product code was changed to produce this file.
 
 ## Business-level configuration isolation (auth/data separation)
 
-**Currently exists:** A normalized schema (`businesses` → `leads` → `messages`/`follow_ups`) that's structurally ready to be scoped per business. `is_test` flags keep demo data out of production stats.
+**Update (Sept 10, 2026):** A single shared-password, session-based login gate shipped (commits `2e866b2`, `777a71b`, `ca7f7f9`) covering the whole owner/admin console — see "Secure owner access" below. That closed the login half of the twin gap these two sections describe, but not this one: the gate is one password for the entire app, not one identity per business, so an authenticated session still has zero `business_id` scoping. Everything described below as missing is **still missing, unchanged**. This is now the single largest remaining hard blocker before any pilot with more than one business — the shared password stops a stranger from finding the console by URL, but does nothing to stop one business's owner (or anyone else who has the password) from seeing every other business's leads, messages, and settings.
 
-**Missing / broken:** There is no authentication anywhere in the codebase — no login, session, token, or API key on any route. `GET /api/leads`, `GET /api/businesses`, `PUT /api/businesses/:id`, and every admin endpoint are fully public and return data across **all** businesses to anyone with the URL. This is documented in the repo's own `docs/07_KNOWN_ISSUES.md` (KI-2) and `BACKLOG.md` ("Anyone who knows the URL... can see all businesses, all leads, all messages").
+**Currently exists:** A normalized schema (`businesses` → `leads` → `messages`/`follow_ups`) that's structurally ready to be scoped per business. `is_test` flags keep demo data out of production stats. A session now exists (see "Secure owner access" below) but carries no `business_id` — there's nothing yet to scope by.
 
-**Recommended next step (Medium):** Magic-link or phone+code auth that maps a session to a `business_id`, plus middleware that scopes every `/api/leads*` and `/api/businesses/:id*` call to that ID. This is already scoped as a single sprint in `BACKLOG.md` ("Open auth implementation sprint"). Bundle with the Secure Owner Access item below — they're the same build.
+**Missing / broken:** No query anywhere filters by `business_id`. `GET /api/leads`, `GET /api/businesses`, `PUT /api/businesses/:id`, and every admin endpoint return data across **all** businesses to any authenticated session, because there is exactly one shared credential rather than one per business. This is documented in the repo's own `docs/07_KNOWN_ISSUES.md` (KI-2) and `BACKLOG.md` ("Anyone who knows the URL... can see all businesses, all leads, all messages") — the shared-password gate narrows that from "anyone who knows the URL" to "anyone who knows the one password," which is progress, but does not resolve the underlying multi-tenancy gap.
 
-**Severity:** 🔴 Hard blocker. Already flagged 🔴 by two personas in the repo's own review notes and called out repeatedly as the top item before any real (non-demo) customer.
+**Recommended next step (Medium):** Per-business login (magic-link or phone+code) that maps a session to a `business_id`, plus middleware that scopes every `/api/leads*` and `/api/businesses/:id*` call to that ID. Already scoped as a single sprint in `BACKLOG.md` ("Open auth implementation sprint"). The shared-password gate that shipped should be treated as an interim step, not a substitute for this build.
+
+**Severity:** 🔴 Hard blocker — now the top remaining item on this list. It was bundled with "Secure owner access" as one build; that bundling is now half-finished, and this is the unfinished half.
 
 ---
 
 ## Conditional-forwarding behavior for unanswered / declined / busy calls
 
-**Currently exists:** A working *demo* voice flow: Twilio answers the call directly, plays a verbal consent disclosure, `<Dial>`s `business.forward_phone` for 20 seconds, and `/webhooks/voice-dial-result` classifies the outcome (`no-answer`/`busy`/`failed`/`canceled` → missed; short `completed` calls under 15s → treated as voicemail → also missed) and fires `handleMissedCall()`. A `/webhooks/voice-status` fallback exists for the case where there's no `forward_phone` at all, with an explicit guard so it doesn't double-fire when the dial path already handled it (this exact double-send bug was hit and fixed once already, per `BACKLOG.md`).
+**Update (Sept 10, 2026): core fix shipped, one recommended follow-up still open.** A `businesses.call_mode` column now exists (`direct_dial` default = today's demo flow, unchanged; `carrier_forward` = new). `/webhooks/voice` branches on it: a `carrier_forward` business skips the disclosure and the `<Dial>` entirely and goes straight into `handleMissedCall()`, exactly the fix this section recommended. `/webhooks/voice-status` was also updated so it doesn't double-fire for `carrier_forward` businesses, and a real `UNIQUE`-index-backed dedup guard (see "Duplicate-event protection" below, also addressed) stops a Twilio webhook retry from sending a second text for the same call. Settable per business from `admin.html`. **Not done:** this section's other recommendation — logging `ForwardedFrom` and raw Twilio params to build a per-carrier compatibility matrix — was not implemented; `ForwardedFrom` is still not captured anywhere in `webhooks.js`. Per-carrier real-world behavior (see the caveat below) also still hasn't been tested, since that requires live pilot calls, not code.
 
-**Missing / broken:** This is still the *demo* flow, not the *production* flow the pilot journey requires. In production, the caller dials the business's **existing** number (their own cell/landline), that phone rings normally, and only on no-answer/busy/decline does the carrier forward the call to Swoop's Twilio number — Twilio never needs to dial anyone, because the owner's real phone already rang via the carrier. The current `/webhooks/voice` handler doesn't distinguish these two cases: it always plays the disclosure and always tries to `<Dial>` `forward_phone` again, which for a real forwarded call means the caller experiences a second ring and a second disclosure after already hearing the business's normal phone ring once. This is explicitly flagged as `KI-21` (🔴 blocker) in `docs/07_KNOWN_ISSUES.md` and in `docs/04_ARCHITECTURE.md` ("Production forwarding design still needed"). There's no per-business mode flag to switch behavior, and Twilio's `ForwardedFrom` metadata — which could help detect a genuinely carrier-forwarded call — is not currently captured or logged anywhere in `webhooks.js`.
+**Currently exists:** Both flows now: the original *demo* flow (Twilio answers directly, disclosure, `<Dial>` `forward_phone`, `/webhooks/voice-dial-result` classifies the outcome) for `direct_dial` businesses, and the *production* carrier-forwarded flow described below for `carrier_forward` businesses. `/webhooks/voice-status` fallback and its double-send guard (originally described here) still exist and were extended to cover the new mode too.
 
-**What's actually detectable (per the target journey's own caveat):** the pilot journey document itself notes that Twilio's `DialCallStatus`/`CallStatus` may not cleanly distinguish an owner's explicit "Decline" from a generic no-answer, and that this varies by carrier — that's a real constraint, not a code gap. The fix here is to test and document per-carrier behavior, not to assume the code can be made to detect something Twilio/carriers don't expose.
+**Missing / broken:** `ForwardedFrom` and other raw Twilio call params are still not logged anywhere, so there's no data yet to build the per-carrier compatibility matrix this section originally called for. The distinction between an owner's explicit "Decline" and a generic no-answer — which the target journey's own caveat already flags as carrier-dependent and possibly not cleanly detectable — remains untested against real carriers; it can only be validated with live pilot calls, not more code.
 
-**Recommended next step (Medium–Large):** Add an explicit `call_mode` (or similar) column on `businesses` distinguishing `demo_dial` from `carrier_forwarded`. Branch `/webhooks/voice` so a forwarded-call business sends the SMS and ends the call without a second `<Dial>` or repeated disclosure. Log `ForwardedFrom` and all raw Twilio params during the first pilot calls to build a real per-carrier compatibility matrix before promising the "declined/busy/unanswered" distinction to any specific pilot business.
+**What's actually detectable (per the target journey's own caveat):** unchanged from the original pass — Twilio's `DialCallStatus`/`CallStatus` may not cleanly distinguish "Decline" from generic no-answer, and this varies by carrier. That's a real constraint, not a code gap, and still needs to be tested and documented per-carrier during the pilot's first live calls.
 
-**Severity:** 🔴 Hard blocker. Already flagged 🔴 in the repo's own known-issues list; this is the single biggest gap between "demo works" and "a real customer's own number can be used."
+**Recommended next step (Small):** Before relying on this with a real pilot business's dedicated number, log `ForwardedFrom` and the full raw Twilio param set on every `carrier_forward` call for the first pilot business, and use those first real calls to build the per-carrier compatibility notes this section always intended. The code-side blocker is resolved; this is now a verification/logging task, not a build.
+
+**Severity:** 🟡 Core fix shipped — no longer a hard code blocker. Downgraded from 🔴 because the actual branching bug (double disclosure/double ring on a forwarded call) is fixed; kept above 🟢 because the recommended carrier-verification logging hasn't happened yet and shouldn't be skipped before a real pilot business goes live on a dedicated number.
 
 ---
 
 ## Duplicate-event protection — "exactly one text-back, zero for answered calls"
 
-**Currently exists:** One known double-send path was already found and fixed — `/voice-dial-result` and `/voice-status` used to both call `handleMissedCall()` for the same forwarded call; the status-callback path now explicitly skips businesses that have a `forward_phone`, so the two callbacks are mutually exclusive today. `call_events` logs every dial/status callback with a `call_sid` column and an index on `(call_sid, event_source)`.
+**Update (Sept 10, 2026): shipped.** `call_events(call_sid, event_source)` now has a real partial `UNIQUE` index (`WHERE call_sid IS NOT NULL`, wrapped in try/catch at startup so a DB with pre-existing duplicate rows can't crash the boot). `logCallEvent()` reports back whether its insert actually happened or was rejected as a duplicate, and `/voice-dial-result`, `/voice-status`, and the new `carrier_forward` path in `/voice` all now only call `handleMissedCall()` when that insert was the first for that `CallSid`/event-source pair — a retried Twilio webhook delivery is now a no-op instead of a second text. Live-tested by resending the same `CallSid` and confirming exactly one lead/message was created.
 
-**Missing / broken:** That index isn't actually enforced as a uniqueness constraint, and nothing reads it before sending. Twilio is known to retry a webhook delivery if the app's response is slow or comes back non-2xx — if that happens on `/voice-dial-result`, `handleMissedCall()` would run a second time for the identical `CallSid`, because there is no check anywhere ("have I already sent a text for this exact call?") before the SMS goes out. Separately, `call_events` rows are inserted unconditionally with no dedup, so a retried webhook would also double-log the event. This is distinct from — and not covered by — the already-fixed dial-vs-status double-send bug.
+**Currently exists:** Everything described below, now fully addressed — see the mechanism above.
 
-**Recommended next step (Small):** Add a real `UNIQUE` constraint on `call_events(call_sid, event_source)` (or a small dedicated dedupe table) and a guard at the top of the missed-call path: if a row already exists for this `CallSid` with outcome `missed`/`voicemail`, skip the send and just return the existing lead. This is a narrow, well-understood fix — a few lines in `webhooks.js`/`leads.js`.
+**Missing / broken:** Nothing outstanding on this specific item. Not yet reflected in `docs/07_KNOWN_ISSUES.md`, which this section originally noted should be updated — still worth doing, now to mark it resolved rather than open.
 
-**Severity:** 🟡 Should fix before pilot. Not yet flagged in `docs/07_KNOWN_ISSUES.md` — worth adding there. Low probability per call, but a double-text is exactly the kind of visible reliability bug that erodes trust with both the pilot owner and their customer, and sits close to the compliance concerns the rest of the repo already treats seriously.
+**Recommended next step:** None remaining. Original recommendation (a real `UNIQUE` constraint plus a guard before the send) is exactly what shipped.
+
+**Severity:** 🟢 Shipped.
 
 ---
 
@@ -96,13 +104,15 @@ No product code was changed to produce this file.
 
 ## Secure owner access
 
-**Currently exists:** Same underlying schema as the isolation item above; nothing owner-facing requires a login today. Destructive endpoints (e.g., `DELETE /api/businesses/:id/leads`) at least have a production env-var guard (`ALLOW_LEAD_PURGE`), but that protects against accidental data loss, not unauthorized access.
+**Update (Sept 10, 2026): login half shipped.** A single shared-password, session-based gate (`server/middleware/auth.js`, wired into `server/index.js` and `server/routes/api.js`) now sits in front of both `index.html` and `admin.html` and every route they depend on — unauthenticated requests are redirected to `/login` (page routes) or get a `401` (API routes). URL obscurity is no longer the only protection. This was deliberately built as one shared credential, not per-user or per-business auth, so it resolves "who can log in" but not "what they can see once in" — see "Business-level configuration isolation" above, which this did not touch and which is now the more urgent of the two.
 
-**Missing / broken:** No authentication layer exists at all — this is the access-control half of the same gap as "business-level configuration isolation" above, called out separately here because the journey document treats them as distinct concerns (who can log in, vs. what they can see once in). Today, URL obscurity is the only protection, which `docs/07_KNOWN_ISSUES.md` (KI-2) already calls out directly as unacceptable for a real customer.
+**Currently exists:** The login/session layer described above, plus the same underlying schema as the isolation item. Destructive endpoints (e.g., `DELETE /api/businesses/:id/leads`) also still have the production env-var guard (`ALLOW_LEAD_PURGE`), which protects against accidental data loss, not unauthorized access — unchanged by the new login gate.
 
-**Recommended next step (Medium):** Same build as the isolation item — a magic-link or phone+code login is both the authentication and, combined with scoped queries, the authorization. Don't build these as two separate efforts.
+**Missing / broken:** The gate is app-wide, not per-business — every authenticated session can see every business's data, since there's one password rather than one identity per business. That remaining gap is now tracked entirely under "Business-level configuration isolation" above rather than here, since this item was specifically about "who can log in," and that question now has an answer.
 
-**Severity:** 🔴 Hard blocker — identical urgency to the isolation gap above. Repeatedly named as the single biggest blocker across `BACKLOG.md` and `docs/07_KNOWN_ISSUES.md`.
+**Recommended next step:** None remaining under this specific heading — the login mechanism is built. The real remaining work (per-business identity + scoped queries) belongs to, and is now fully described under, "Business-level configuration isolation."
+
+**Severity:** 🟢 Login shipped. The bundled gap this was paired with is not resolved — see "Business-level configuration isolation" (still 🔴, now the top remaining item).
 
 ---
 
