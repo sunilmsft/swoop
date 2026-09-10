@@ -1,5 +1,7 @@
 # Swoop — Copilot Instructions
 
+> **Retired Sept 10, 2026:** The Squad Review process below (the Ray/Priya/Jordan/Morgan approval table, and its nested "Backlog Sync" subsection) is retired/superseded — kept here as historical record, not deleted. `CLAUDE.md`'s commit/push rule (explicit user sign-off each time, no auto-commit, no auto-push) is now the sole process governing commits. `CLAUDE.md` also has its own current "BACKLOG.md maintenance" standing rule, which replaces Backlog Sync below. Project Context, Design Principles, and Code Hygiene elsewhere in this file are unaffected and still current.
+
 ## Project Context
 Swoop is an AI-powered missed-call text-back SaaS for small home-service businesses (plumbers, electricians, HVAC, landscapers, cleaners, etc.). Solo-founder project. Target price: $29-49/mo per business.
 
@@ -10,7 +12,7 @@ Swoop is an AI-powered missed-call text-back SaaS for small home-service busines
 - **SMB-focused**: NOT enterprise. If a feature needs a sales call to explain, it's too complex.
 - **Cheap**: keep infra costs near zero until traction proves otherwise
 
-## Squad Review (Run After Every Implementation)
+## Squad Review — RETIRED Sept 10, 2026 (historical; see note at top of file)
 After completing any feature, fix, or meaningful change — and BEFORE committing — automatically run a Squad Review. Present it as a short table with each persona's verdict.
 
 ### Personas
@@ -59,6 +61,9 @@ After completing any feature, fix, or meaningful change — and BEFORE committin
 If all four give 👍, proceed to commit. If anyone gives 👎, flag the concern and discuss before pushing.
 
 ### Backlog Sync
+
+> Retired along with Squad Review above (its trigger — "after every Squad Review" — no longer applies). See `CLAUDE.md`'s "BACKLOG.md maintenance" standing rule for the current process.
+
 After every Squad Review, update `BACKLOG.md`:
 1. **New issues** → Add as a new item under the right milestone section with a priority label and the persona quote
 2. **Existing items** → Bump priority if the squad flagged it (e.g., 🟢 → 🟡)

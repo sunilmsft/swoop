@@ -6,7 +6,7 @@ After making any change, end the response by clearly stating one of: **local-onl
 
 If a change is not yet pushed, explicitly ask **"want me to commit and push this?"** — never commit or push proactively, even when confident the change is complete and correct. Only commit/push after the user answers that question affirmatively in that turn; a prior general approval does not carry forward to the next change.
 
-See also `.github/copilot-instructions.md` for the Squad Review and Backlog Sync process to run before committing.
+This is now the sole process governing commits. (`.github/copilot-instructions.md`'s Squad Review gate was retired Sept 10, 2026 — see that file for the historical record. Its Backlog Sync guidance is superseded by the "BACKLOG.md maintenance" standing rule below.)
 
 ## docs/STATUS.md maintenance (standing rule)
 
