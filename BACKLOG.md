@@ -1,5 +1,15 @@
 # Swoop — Backlog
 
+## ✅ Done (Sept 9–10, 2026) — Production Forwarding Mode + Admin Auth
+- [x] 🔴 **Carrier-forward call routing** (commit `2e866b2`) — `businesses.call_mode` (`direct_dial`/`carrier_forward`); dedicated local numbers skip the redial-owner step and the verbal disclosure entirely, going straight into the missed-call SMS flow, since the carrier already tried the owner before the call reached Twilio.
+- [x] 🔴 **Duplicate-event protection** (commit `2e866b2`) — real `UNIQUE` index on `call_events(call_sid, event_source)` plus a guard in `/voice`, `/voice-dial-result`, and `/voice-status`; a Twilio webhook retry can no longer trigger a second missed-call text for the same call.
+- [x] 🟡 **Accurate consent metadata per call_mode** (commit `2e866b2`) — fixed a real bug caught during live testing: `carrier_forward` calls were recording `consent_method: 'verbal_ivr'` even though no disclosure was ever played on those calls.
+- [x] 🔴 **Admin console password gate** (commit `2e866b2`) — single shared-password, session-based login (`server/middleware/auth.js`) in front of `admin.html`, `index.html`, and every API route they depend on. Not per-business auth — see the consolidated per-business auth/isolation item under Security & Auth for what this does *not* resolve.
+- [x] 🟡 **401 → redirect-to-login fix** (commit `2e866b2`) — an expired/missing session now redirects the browser to `/login` instead of silently showing a broken/stale dashboard.
+- [x] 🟡 **API response caching bug fix** (commit `777a71b`) — `/api/dashboard`, `/api/leads`, `/api/businesses`, etc. were sometimes served as empty-body `304 Not Modified` responses (Express's default ETag + browser conditional revalidation), which the dashboard misread as "API unreachable." Fixed via `app.set('etag', false)` + explicit `Cache-Control: no-store` on `/api/*`.
+
+---
+
 ## 🧭 August 19, 2026 Restart Snapshot
 - [x] Created a share-safe new-collaborator brief at `docs/SWOOP_ONBOARDING_BRIEF.html` covering vision, opportunity, current status, pilot strategy, blockers, and a first-session path
 - [ ] 🟢 Refresh the onboarding brief's date, repository checkpoint, and status table after each major pilot milestone — _Priya: "A new collaborator needs to know when the snapshot stopped being current."_
@@ -8,11 +18,11 @@
 - [x] Deployed commit `77c52d1` with forwarded-call callback and forwarding configuration fixes
 - [x] Direct call to the Twilio demo number verified: owner cell rings and unanswered call sends SMS
 - [ ] Confirm `TWILIO_MOCK_MODE=false`, `OPENAI_API_KEY` valid, and AI second-turn path in live production
-- [ ] Implement forwarded-call production mode before onboarding a customer
+- [x] Implement forwarded-call production mode before onboarding a customer ✅ Done Sept 9, 2026 (commit `2e866b2`) — `businesses.call_mode`; see "Done (Sept 9–10, 2026)" section above. This item was also duplicate-tracked further down (old line 155); both closed together.
 - [ ] Submit caller-ID reputation correction for the `833` demo number
 - [ ] Start A2P 10DLC brand vetting (production path for customer local numbers)
 - [ ] Implement landline/non-textable fallback path (Twilio Lookup + owner callback alert)
-- [ ] Open auth implementation sprint (magic-link login + business scoping)
+- _(Formerly "Open auth implementation sprint" — merged into the consolidated "Per-business auth + data isolation" item under Security & Auth, Sept 10, 2026. This was scattered across three places, which is exactly how the forwarded-call-mode fix went stale unnoticed in two of them.)_
 
 ## ✅ Done (v0.1.0)
 - [x] Express server with static file serving
@@ -152,7 +162,7 @@
 - [ ] 🟢 **Voice webhook URL refresh** — Toll-free 833-783-0902 voice webhook still points to `swoop-x79g.onrender.com/webhooks/voice`. Eventually swap to `welcomematdigital.com` for consistency. Non-blocking.
 - [ ] 🔴 **Verify live forwarding configuration** — Set Render `DEFAULT_FORWARD_PHONE` to the owner's current E.164 number and place a call after deploy; a stale or blank business row can send the text while failing to ring the owner. — _Priya: "The caller got a text, but nobody answered the phone."_
 - [ ] 🔴 **Verify forwarded-call callback** — Place a live call after the callback business-ID fix deploys; confirm the caller hears a normal missed-call message instead of Twilio's generic application error. — _Morgan: "A callback failure must not create an unexplained caller-facing failure."_
-- [ ] 🔴 **Production forwarded-call mode** — Customer number should forward unanswered calls to Twilio, which sends one SMS and ends the call without dialing the owner again or repeating the demo disclosure. — _Ray: "The caller should not experience two phone systems in one call."_
+- [x] 🔴 **Production forwarded-call mode** ✅ Done Sept 9, 2026 (commit `2e866b2`) — same fix as the Aug 19 Restart Snapshot item near the top of this file; duplicate-tracked in two places, both now closed together. `businesses.call_mode = 'carrier_forward'` skips the redial + disclosure and goes straight to the missed-call SMS. — _Ray: "The caller should not experience two phone systems in one call."_
 - [ ] 🟡 **Toll-free caller-ID reputation** — Friend's phone flagged `(833) 783-0902` as possible fraud and disconnected. Submit reputation correction; keep the number demo-only and use local numbers for production. — _Jordan: "A demo number that scares off testers is not a reliable demo."_
 
 ---
@@ -202,11 +212,13 @@
 - [ ] 🟡 Switch Twilio consent/terms URL to always-on GitHub Pages page (`/consent.html`) to avoid Render cold-start validation failures
 
 ### Security & Auth (🔴 Blocker — Squad Review May 11)
-- [ ] 🔴 Per-business auth (magic link or phone + code) — _Priya: "Anyone with the URL sees ALL businesses' leads"_
-- [ ] 🔴 Business owner dashboard filtered to their leads only
+- [ ] 🔴 **Per-business auth + data isolation — the single top remaining blocker before any multi-business pilot.** Consolidated Sept 10, 2026 from three previously-scattered items (Aug 19 Restart Snapshot, and two separate entries here) to stop them going stale independently — exactly what happened to the forwarded-call-mode fix, which was tracked in two places and only one got marked done at first. Needs: (1) per-business login (magic-link or phone+code) mapping a session to a `business_id`, and (2) middleware scoping every `/api/leads*` and `/api/businesses/:id*` call to that ID — the owner dashboard, admin console, and every API response need to be filtered per business, not just gated behind one shared password. The Sept 9 shared-password gate (commit `2e866b2`) added a login layer but is explicitly **not** this fix — it's one credential for the whole app, so any authenticated session still sees every business's data mixed together. Full writeup: `docs/PILOT_GAP_ANALYSIS.md` → "Business-level configuration isolation." — _Priya: "Anyone with the URL sees ALL businesses' leads"_
 - [ ] 🟡 Rate limiting on webhook and API endpoints
 - [ ] 🟡 Sanitize/validate phone number format (E.164)
 - [ ] 🔴 Add automated compliance tests for STOP/START/HELP and outbound blocking (manual/review/follow-up paths) — _Morgan: "Trust controls must be provable, not just implemented."_
+
+### Owner Dashboard — UX Rethink (flagged Sept 9–10, 2026, not yet scoped)
+- [ ] 🟡 **Dashboard/console UX rethink before onboarding real pilot businesses** — flagged in `docs/STATUS.md` as the next major topic. Current console feels too complex and isn't built mobile-first; needs to be simple, fast to understand at a glance, and genuinely usable on a phone for a busy tradesperson. This is a design/scoping task before it's a build — hasn't been designed yet.
 
 ### Owner Dashboard — Leads
 - [x] 🟡 Send manual SMS from dashboard — _Jordan: "After AI hands off, owner can't reply through Swoop"_
@@ -349,7 +361,7 @@
 - [ ] 🟢 System health (Twilio errors, OpenAI failures, webhook latency)
 - [ ] 🟢 Revenue tracking (when billing exists)
 - [ ] 🟢 Broadcast announcement to all business owners
-- [ ] 🔴 Auth gate on `/admin` — _must not be publicly accessible_
+- [x] 🔴 Auth gate on `/admin` ✅ Done Sept 9, 2026 (commit `2e866b2`) — shared-password session gate covers `/admin` **and** the owner dashboard **and** every backing API route, not just `/admin`. Single shared password, not per-business — see the consolidated "Per-business auth + data isolation" item above (Security & Auth) for what's still open. — _must not be publicly accessible_
 
 ### Billing (Stripe)
 - [ ] Self-service plan selection ($29/$59/$99)
