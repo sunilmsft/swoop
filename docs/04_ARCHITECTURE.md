@@ -35,6 +35,8 @@
 
 Numbers map to the flows below.
 
+**Not shown above (added Sept 10, 2026):** `server/middleware/auth.js` gates `public/*.html` (owner dashboard + admin console) and all of `/api/*` behind a shared-password session — unauthenticated requests redirect to `/login` (pages) or get `401` (API). `/webhooks/*` stays ungated (Twilio's own request-signature validation covers it instead). See "Auth" in Component Detail below.
+
 ## Folder Layout
 
 ```
@@ -51,17 +53,20 @@ swoop/
 │   ├── db/
 │   │   └── database.js                 # SQLite schema + lightweight ALTER migrations
 │   ├── routes/
-│   │   ├── webhooks.js                 # Twilio: /voice /voice-status /voice-dial-result /sms
-│   │   ├── api.js                      # Dashboard + admin REST
+│   │   ├── webhooks.js                 # Twilio: /voice /voice-status /voice-dial-result /sms — branches on businesses.call_mode
+│   │   ├── api.js                      # Dashboard + admin REST — gated by middleware/auth.js
 │   │   └── test.js                     # /api/test/simulate — scenario engine
+│   ├── middleware/
+│   │   └── auth.js                     # Shared-password session gate — requirePageAuth / requireApiAuth
 │   └── services/
 │       ├── twilio.js                   # sendSMS + request validation (mocked in dev)
 │       ├── ai-agent.js                 # OpenAI client, system prompt builder, handoff logic
 │       └── leads.js                    # handleMissedCall, handleInboundSMS, follow-up cron job
 │
 ├── public/
-│   ├── index.html                      # Owner dashboard (SPA, no framework)
-│   ├── admin.html                      # Platform-operator console
+│   ├── index.html                      # Owner dashboard (SPA, no framework) — gated behind login
+│   ├── admin.html                      # Platform-operator console — gated behind login
+│   ├── login.html                      # Shared-password login form
 │   ├── consent.html                    # SMS Consent & Opt-In Policy (mirrored to GitHub Pages)
 │   └── images/                         # logo (currently text-based, no PNGs)
 │
@@ -76,18 +81,26 @@ swoop/
 
 ## Component Detail
 
+### Auth (`server/middleware/auth.js`)
+
+A single shared-password, session-based gate (`express-session`) — not per-user or per-business auth, just enough to stop the console being wide open to anyone with the URL. `requirePageAuth` gates `public/index.html`, `public/admin.html`, and their pretty routes (redirects to `/login` on a missing/expired session); `requireApiAuth` gates the entire `server/routes/api.js` router (`401` JSON). `/webhooks/*` and `/api/test/*` are deliberately **not** gated — Twilio's own signature validation covers webhooks, and the Test Console / smoke-test script need to reach `/api/test/*` without a browser session. `app.set('etag', false)` + `Cache-Control: no-store` on `/api/*` also live in `server/index.js`, unrelated to auth but next to it — they stop `/api/*` JSON responses from ever being served as a false `304`.
+
+This is login only, not data isolation — every authenticated session sees every business's data, since there's one password rather than one identity per business. See `docs/PILOT_GAP_ANALYSIS.md` → "Business-level configuration isolation" for that separate, still-open gap.
+
 ### 1. Twilio webhook flow
 
 Twilio is configured (in console.twilio.com → Phone Numbers → +1 833-783-0902) to POST:
 
 | URL | Triggered on |
 |---|---|
-| `/webhooks/voice` | Incoming call — returns TwiML with the compliance disclosure and currently rings the configured `forward_phone` |
-| `/webhooks/voice-status` | Final status of that call (`no-answer`, `busy`, `failed`, `canceled`, `completed`) |
-| `/webhooks/voice-dial-result` | After dial attempt completes — when status is `no-answer` or `busy`, triggers `handleMissedCall()` |
+| `/webhooks/voice` | Incoming call — branches on `business.call_mode`: `direct_dial` (default, demo/legacy) plays the compliance disclosure and rings `forward_phone`; `carrier_forward` (dedicated local numbers) skips both entirely and goes straight into the missed-call SMS flow, since the carrier already tried the owner before the call reached Twilio |
+| `/webhooks/voice-status` | Final status of that call (`no-answer`, `busy`, `failed`, `canceled`, `completed`) — skipped for `carrier_forward` businesses, which `/webhooks/voice` already fully handles |
+| `/webhooks/voice-dial-result` | After a `direct_dial` dial attempt completes — when status is `no-answer` or `busy`, triggers `handleMissedCall()`. Not used for `carrier_forward` (no `<Dial>` happens) |
 | `/webhooks/sms` | Any inbound SMS — runs STOP/HELP keyword check first, then routes to `handleInboundSMS()` |
 
 All webhooks validate Twilio's signature in production (`server/services/twilio.js`). In `TWILIO_MOCK_MODE=true` validation is skipped and SMS sends are logged but not transmitted.
+
+A real `UNIQUE` index on `call_events(call_sid, event_source)` guards all three voice webhooks against Twilio retrying a delivery — a retried webhook is now a no-op instead of a second text.
 
 ### 2. Missed-call → text-back
 
@@ -168,7 +181,7 @@ All webhooks validate Twilio's signature in production (`server/services/twilio.
 - **Build:** `npm install`
 - **Start:** `npm run seed:businesses && npm start`
 - **Disk:** name `swoop-data`, mounted at `/var/data`, 1 GB
-- **Env vars:** `NODE_ENV=production`, `DB_PATH=/var/data/swoop.db`, `DEFAULT_FORWARD_PHONE=+14257867232`, then secret env vars injected from the Render dashboard
+- **Env vars:** `NODE_ENV=production`, `DB_PATH=/var/data/swoop.db`, `DEFAULT_FORWARD_PHONE=+14257867232`, then secret env vars injected from the Render dashboard — as of Sept 9, 2026 this must also include `ADMIN_PASSWORD` and `SESSION_SECRET` (`server/index.js` refuses to boot in production without them; neither is declared in `render.yaml` since they're secrets, same as the Twilio/OpenAI keys)
 
 Auto-deploy on push to `master`. There is no CI — no `.github/workflows/` directory exists.
 
@@ -196,23 +209,23 @@ Auto-deploy on push to `master`. There is no CI — no `.github/workflows/` dire
 - Lose Twilio → no SMS; identity intact
 - Lose OpenAI → AI replies fail but missed-call SMS + STOP/HELP still work (graceful degradation in `ai-agent.js`)
 
-## Production forwarding design still needed
+## Production forwarding mode — shipped Sept 9, 2026 (commit `2e866b2`)
 
-The current live test is the demo flow:
+`businesses.call_mode` distinguishes the two flows that used to be conflated:
 
 ```text
+direct_dial (default — demo/legacy):
 Caller -> Twilio demo number -> disclosure -> owner cell rings -> missed-call SMS
-```
 
-For a real business, the intended flow is:
-
-```text
+carrier_forward (dedicated local numbers):
 Caller -> customer's business number -> business phone rings
                                   -> no answer -> carrier forwards to Twilio
-                                  -> short response, SMS, and hangup
+                                  -> straight to missed-call SMS — no re-dial, no disclosure
 ```
 
-The production mode needs a per-business setting to distinguish direct demo calls from carrier-forwarded calls. Forwarded calls must not dial `forward_phone` again, and the voice response should not repeat a long disclosure after the caller has already experienced the business number's normal ringing. Twilio's forwarded-call metadata (for example `ForwardedFrom`, where present) should be captured and tested, with an explicit business mode as the fallback.
+For `carrier_forward` businesses, `/webhooks/voice` skips the disclosure and `<Dial>` entirely and calls `handleMissedCall()` directly — the carrier already tried the owner before the call reached Twilio, so redialing or re-disclosing would be wrong and would ring the owner's phone a second time. Set per business via the "Call Mode" dropdown in `admin.html`.
+
+**Still open:** Twilio's `ForwardedFrom` metadata is not captured or logged anywhere, so there's no per-carrier compatibility data yet, and real-carrier behavior (does "Decline" look different from a generic no-answer?) is untested — that needs live pilot calls, not more code. See `docs/PILOT_GAP_ANALYSIS.md` → "Conditional-forwarding behavior" for the full writeup.
 
 ## Why No Tests Yet
 

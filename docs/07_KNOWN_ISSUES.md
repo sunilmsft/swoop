@@ -2,6 +2,8 @@
 
 > Things that work today but a future engineer will trip over. Ordered by impact, not severity.
 
+**Reconciled Sept 10, 2026:** every item below was reviewed against current code, `docs/STATUS.md`, and `docs/PILOT_GAP_ANALYSIS.md`. KI-2 (auth), KI-9 (DB backups), and KI-21 (production forwarding) are marked resolved below. Everything else was checked and is still genuinely open — no other items changed status.
+
 ---
 
 ## Compliance / Risk
@@ -12,11 +14,11 @@
 - **Fix:** Add a small test file (`node:test` or `vitest`, no framework dep) that hits `handleInboundSMS()` directly with each keyword and asserts `sms_opt_out` state + subsequent send blocking. Maybe 15 tests, ~half a day's work.
 - **Flagged by:** Morgan persona. 🔴 Blocker before first paying customer.
 
-### KI-2 — No auth on `/admin` or `/`
-- **Impact:** Anyone who knows the URL `swoop-x79g.onrender.com/admin.html` can see all businesses, all leads, all messages. Right now that's mostly fine because there's only seed data + my own demos, but it's an absolute blocker for onboarding a real customer.
-- **Today's mitigation:** Render URL is not advertised. Robots.txt does not exist (should add one).
-- **Fix:** Magic-link auth tied to owner phone or email. Scope all queries to the authenticated business. Add admin gate to `/admin*`.
-- **Flagged by:** Priya, Morgan. 🔴 Blocker.
+### KI-2 — No auth on `/admin` or `/` — ✅ RESOLVED Sept 9, 2026 (commit `2e866b2`)
+- **What shipped:** A shared-password, session-based gate (`server/middleware/auth.js`) now sits in front of `public/index.html`, `public/admin.html`, and every API route they depend on — unauthenticated requests redirect to `/login` (pages) or get `401` (API). Anonymous URL access to all businesses/leads/messages is closed.
+- **What's still open (a different, ongoing issue — not this one):** The gate is one shared password for the whole app, not per-business auth — anyone who *has* the password still sees every business's data mixed together. That's tracked separately as "Business-level configuration isolation" in `docs/PILOT_GAP_ANALYSIS.md` and the root `BACKLOG.md`, and per `docs/STATUS.md` is currently the #1 remaining blocker. Don't reopen this item for it.
+- **Original fix description (for reference):** "Magic-link auth tied to owner phone or email. Scope all queries to the authenticated business. Add admin gate to `/admin*`." Only the admin-gate portion shipped; magic-link and per-business scoping did not.
+- **Flagged by:** Priya, Morgan.
 
 ### KI-3 — Notification Email on Twilio Trust Hub is still the personal Gmail
 - **Impact:** Future Twilio communication risks "domain mismatch" warnings on edits to the bundle (we hit this exact error code `18606` on June 10).
@@ -33,9 +35,9 @@
 - **Fix:** Either (a) move the entire repo out of OneDrive to `C:\dev\swoop` (preferred), or (b) add `.env` to OneDrive's excluded-files list. Render dashboard remains the source of truth for production env vars.
 
 ### KI-5 — No rate limiting on webhooks or API
-- **Impact:** Any actor with the webhook URL can hammer `/webhooks/sms`. Twilio signature validation rejects unsigned requests in production, so this is partially mitigated. But `/api/*` endpoints have no protection at all (related to KI-2).
-- **Today's mitigation:** Render provides upstream traffic protection; Twilio signature validation protects webhook routes in production.
-- **Fix:** `express-rate-limit` on `/api/*`. Twilio signature validation already protects webhooks.
+- **Impact:** Any actor with the webhook URL can hammer `/webhooks/sms`. Twilio signature validation rejects unsigned requests in production, so this is partially mitigated. `/api/*` now sits behind the session auth gate (KI-2, resolved Sept 9) but that's authentication, not throttling — an authenticated (or correctly-signed) caller can still send unlimited requests.
+- **Today's mitigation:** Render provides upstream traffic protection; Twilio signature validation protects webhook routes in production; `/api/*` also requires a valid session as of Sept 9, 2026.
+- **Fix:** `express-rate-limit` on `/api/*` and `/webhooks/*`. Still not built — this item remains open.
 
 ### KI-6 — Phone numbers not strictly validated as E.164
 - **Impact:** Junk input in the Add Business form could create rows with malformed phone numbers, causing downstream send failures.
@@ -56,10 +58,9 @@
 - **Today's mitigation:** Manual Render log check.
 - **Fix:** Sentry free tier (10k events/mo) is sufficient. Wire `app.use(Sentry.errorHandler())` and capture SMS send failures inside `services/twilio.js`.
 
-### KI-9 — No DB backup strategy
-- **Impact:** SQLite at `/var/data/swoop.db` is on Render's persistent disk. Render does snapshot disks but recovery is per-snapshot, not point-in-time. A corruption (e.g. SIGKILL mid-write — WAL helps but not perfectly) could lose recent writes.
-- **Today's mitigation:** Nothing meaningful. Loss would be limited because there are no paying customers.
-- **Fix:** Cron job that copies `swoop.db` to a daily file in another path on disk (or to S3-compatible storage). Restore by swapping files and restarting.
+### KI-9 — No DB backup strategy — ✅ RESOLVED (predates this session, never updated here)
+- **What shipped:** `server/services/maintenance.js` → `backupDatabase()`, called on every startup (`server/index.js`) and on a daily `25 3 * * *` cron, with retention rotation. Verified directly in code (`grep backupDatabase` finds it wired into both paths) and confirmed live — this session's own local test runs logged `Backup created (startup): ...` on every boot. Already checked off in the root `BACKLOG.md` ("Automatic SQLite backups added... with retention rotation") — this file just never got updated to match.
+- **Residual gap:** Backups are file-copy snapshots, not point-in-time/continuous — a corruption between backups could still lose recent writes. That's a narrower, different risk than "nothing meaningful exists," which is what this item originally described.
 
 ### KI-10 — Render paid runtime still has cold-start watch risk
 - **Impact:** The service is now on Render Starter ($7/mo), so the Free-plan sleep warning is gone, but startup and webhook timing still need observation during real traffic.
@@ -71,11 +72,10 @@
 - **Today's mitigation:** Render URLs don't randomly change.
 - **Fix:** Point Twilio voice webhook at `welcomematdigital.com/webhooks/voice` (requires routing in the frontdesk-ai app, or a Cloudflare worker shim).
 
-### KI-21 — Demo voice flow is not the production forwarded-call flow
-- **Impact:** A direct call to the demo Twilio number plays the disclosure, dials the owner's cell, and may play a second missed-call confirmation. If a customer's existing number forwards an unanswered call to Twilio, repeating that flow would feel long and confusing.
-- **Today's mitigation:** The `833` line is explicitly demo/test only. No real customer should be onboarded to this voice behavior yet.
-- **Fix:** Add a per-business forwarded-call mode. Detect or explicitly configure carrier-forwarded calls, send the SMS, and end the call without dialing `forward_phone` again. Keep the compliance language appropriate to the actual call path and test that exactly one SMS is sent.
-- **Flagged by:** Ray, Priya, Morgan. 🔴 Blocker before first customer.
+### KI-21 — Demo voice flow is not the production forwarded-call flow — 🟡 CORE FIX SHIPPED Sept 9, 2026 (commit `2e866b2`)
+- **What shipped:** `businesses.call_mode` (`direct_dial` default / `carrier_forward`). `carrier_forward` businesses skip the disclosure and the redial entirely and go straight into the missed-call SMS flow — exactly this item's original "Fix." A real `UNIQUE`-index-backed guard also stops a Twilio webhook retry from sending a second text for the same call.
+- **What's still open:** Twilio's `ForwardedFrom` metadata is still not captured/logged anywhere, so there's no per-carrier compatibility data yet. Real-carrier behavior (does "Decline" look different from generic no-answer?) is untested — needs live pilot calls, not more code. See `docs/PILOT_GAP_ANALYSIS.md` → "Conditional-forwarding behavior" for the full writeup.
+- **Flagged by:** Ray, Priya, Morgan. Downgraded from 🔴 to 🟡 — no longer a hard code blocker, but shouldn't be treated as fully closed before a real pilot business goes live on a dedicated number.
 
 ### KI-22 — Toll-free caller reputation warning
 - **Impact:** A tester's phone classified `(833) 783-0902` as possible fraud and recommended hanging up. This can prevent a demo caller from reaching Swoop even though Twilio voice webhooks are configured correctly.
@@ -136,7 +136,9 @@
 
 ## Open Bugs (none currently confirmed)
 
-No untriaged runtime bug is currently confirmed after the August 19 deployment. KI-21 and KI-22 are product/operational blockers and remain open by design until the production architecture is implemented.
+No untriaged runtime bug is currently confirmed. KI-22 remains an operational blocker (external Twilio/carrier reputation, not code) until a local production number replaces the toll-free demo line. KI-21's core code blocker shipped Sept 9, 2026 (see above) — it's now a verification task, not an open bug.
+
+Two real runtime bugs were found and fixed within the same session they were introduced-or-discovered (Sept 9–10, 2026), so they were never carried as open items here: a false-`304` caching bug on `/api/*` JSON responses (Express's default ETag), and a DOM bug where the dashboard's empty-state element was destroyed by its own re-render. Both fixed same-day — see `BACKLOG.md` for commit references.
 
 ---
 
