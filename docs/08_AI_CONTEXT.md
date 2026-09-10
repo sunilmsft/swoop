@@ -17,7 +17,7 @@
 
 These are non-negotiable. Violating any of them has burned past sessions.
 
-1. **NEVER auto-push to remote.** Render auto-deploys from `master`. `git push` = instant production. The flow is always: make changes → commit locally → user reviews on localhost → user says "push it" → THEN push. Never combine commit + push in one command.
+1. **Never commit or push proactively — ask first, every time.** Render auto-deploys from `master`, so `git push` means instant production. After any change, state whether it's local-only, committed-but-not-pushed, or committed-and-pushed, then explicitly ask "want me to commit and push this?" before doing either. Only commit (and push, together as one action) after the user answers affirmatively **in that same turn** — a prior general approval does not carry forward to the next change. (This replaces an older version of this rule that said to always push as a separate, later step after commit — that's no longer the process; commit and push now happen together, but only once explicitly authorized each time. See `CLAUDE.md` at repo root, which is the current source of truth for this rule.)
 
 2. **Always state LOCAL vs PUSHED.** After any change, explicitly tell the user whether it's local-only or live. They will assume the worst (and check the wrong URL) otherwise.
 
@@ -124,7 +124,9 @@ curl -s -X POST http://localhost:3000/webhooks/sms -d "From=%2B14255551234&To=%2
 
 ### Deploy
 ```bash
-  git push origin master   # only after user explicitly says "push it"
+git add <files> && git commit -m "..." && git push origin master
+# Commit + push happen together, in one action — but only after the user explicitly
+# answers "yes" to "want me to commit and push this?" (ask every time, no carryover approval).
 # Render auto-deploys. Watch logs at dashboard.render.com
 ```
 
