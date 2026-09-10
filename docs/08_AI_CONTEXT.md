@@ -1,6 +1,6 @@
 # 08 — AI Context Pack
 
-> **For the next AI assistant who picks up this project.** This file is structured so you can paste it into context and immediately operate as if you'd been on this codebase for months. Read [01_EXECUTIVE_SUMMARY.md](01_EXECUTIVE_SUMMARY.md) first if you haven't.
+> **For the next AI assistant who picks up this project.** This file is structured so you can paste it into context and immediately operate as if you'd been on this codebase for months. Read [01_EXECUTIVE_SUMMARY.md](archive/01_EXECUTIVE_SUMMARY.md) first if you haven't (archived Sept 10, 2026, superseded by `docs/STATUS.md`).
 
 ---
 

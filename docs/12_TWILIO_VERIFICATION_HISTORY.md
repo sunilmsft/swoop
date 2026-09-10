@@ -15,7 +15,7 @@
 | **Twilio Business Profile** | ✅ **Approved June 11, 2026** | Bundle `BUf71fa573b0fd6173b0cc31daba2ba41b`, manual review by Jennifer |
 | **Toll-Free Number** | `+1 (833) 783-0902` | Demo / test line per June 13 decision |
 | **TFV (Toll-Free Verification)** | ✅ **APPROVED June 23** on SID `HH260e95b417689297554480bd502c5e88` | Direct update via `messaging.v1.tollfreeVerifications(sid).update()` bypassed Console form bugs and moved the record into review. Twilio Consumer Trust Team approval email received the same evening confirming `+1 (833) 783-0902` may now send SMS and MMS through Twilio. |
-| **A2P 10DLC** | ⏳ Not started | Production path for customer numbers — see [10_NEXT_STEPS.md](10_NEXT_STEPS.md) N-6 |
+| **A2P 10DLC** | ⏳ Not started | Production path for customer numbers — see [10_NEXT_STEPS.md](archive/10_NEXT_STEPS.md) N-6 (archived Sept 10, 2026) |
 | **BOI (FinCEN)** | ✅ Permanently exempt | March 2025 FinCEN final rule |
 | **Privacy page hardened** | ✅ June 14, 2026 | frontdesk-ai commit `5e3dc3c` — three coverage points of Twilio "magic phrase" |
 | **Consent page — Verbal IVR script (June 22 revision)** | ✅ June 22, 2026 | swoop + frontdesk-ai — step-by-step verbatim IVR dialogue with dynamic business name, message types (callback responses, appointment reminders), frequency (up to 7 per missed call) |

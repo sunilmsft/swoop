@@ -7,9 +7,9 @@
 ## Phase 1 — Get Oriented (read-only, ~30 min)
 
 ### 1.1 Read the preservation docs in order
-- [01_EXECUTIVE_SUMMARY.md](01_EXECUTIVE_SUMMARY.md) — one-page overview
+- [01_EXECUTIVE_SUMMARY.md](archive/01_EXECUTIVE_SUMMARY.md) — one-page overview (archived Sept 10, 2026, superseded by `STATUS.md`)
 - [02_PRODUCT_VISION.md](02_PRODUCT_VISION.md) — why this exists
-- [03_CURRENT_STATE.md](03_CURRENT_STATE.md) — what's shipped
+- [03_CURRENT_STATE.md](archive/03_CURRENT_STATE.md) — what's shipped (archived Sept 10, 2026, superseded by `STATUS.md`)
 - [04_ARCHITECTURE.md](04_ARCHITECTURE.md) — code map
 - [12_TWILIO_VERIFICATION_HISTORY.md](12_TWILIO_VERIFICATION_HISTORY.md) — compliance status (mandatory)
 
@@ -170,7 +170,7 @@ Before touching anything that affects SMS, consent pages, or the AI prompt:
 
 ## Phase 6 — Pick a First Task
 
-Pick something from [06_BACKLOG.md](06_BACKLOG.md). Recommended starter tasks:
+Pick something from the root [`BACKLOG.md`](../BACKLOG.md) — the live source of truth (`docs/06_BACKLOG.md` is archived, see `docs/archive/`). Recommended starter tasks:
 
 | Task | Why a good first task | Est. effort |
 |---|---|---|
@@ -197,7 +197,7 @@ If `TFV is still pending`, **don't push compliance-surface changes** — wait un
 | Architecture map | [04_ARCHITECTURE.md](04_ARCHITECTURE.md) |
 | Past major decisions | [05_DECISION_LOG.md](05_DECISION_LOG.md) |
 | Tech debt + bugs | [07_KNOWN_ISSUES.md](07_KNOWN_ISSUES.md) |
-| What to do next | [10_NEXT_STEPS.md](10_NEXT_STEPS.md) |
+| What to do next | [`STATUS.md`](STATUS.md) (`10_NEXT_STEPS.md` is [archived](archive/10_NEXT_STEPS.md), superseded by STATUS.md) |
 
 ## Help, I Need a Human
 

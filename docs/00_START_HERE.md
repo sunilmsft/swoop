@@ -12,9 +12,9 @@ Do not begin implementation immediately.
 ## Required Reading Order
 Read these files in order:
 
-1. [01_EXECUTIVE_SUMMARY.md](01_EXECUTIVE_SUMMARY.md)
+1. [01_EXECUTIVE_SUMMARY.md](archive/01_EXECUTIVE_SUMMARY.md) — archived Sept 10, 2026, superseded by [STATUS.md](STATUS.md)
 2. [08_AI_CONTEXT.md](08_AI_CONTEXT.md)
-3. [10_NEXT_STEPS.md](10_NEXT_STEPS.md)
+3. [10_NEXT_STEPS.md](archive/10_NEXT_STEPS.md) — archived Sept 10, 2026, superseded by [STATUS.md](STATUS.md)
 4. [11_RELATED_PROJECTS.md](11_RELATED_PROJECTS.md)
 
 Additional project-specific files:

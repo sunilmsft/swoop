@@ -96,7 +96,7 @@ welcomematdigital.com (Cloudflare DNS)
 ├── MX records       → Zoho Mail (hello@, privacy@)
 └── (nothing yet)    → Render: swoop service (swoop-x79g.onrender.com)
                         └── Will eventually move to welcomematdigital.com/swoop/app
-                            once auth is built (N-10 in 10_NEXT_STEPS.md)
+                            once auth is built (N-10 in the now-archived docs/archive/10_NEXT_STEPS.md)
 
 sunilmsft.github.io/swoop/ (GitHub Pages)
 └── Mirrored docs: PLAYBOOK, OUTREACH_PLAYBOOK, consent, landing
