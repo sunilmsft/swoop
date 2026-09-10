@@ -2,7 +2,7 @@
 
 **Read this first in any new session.** For full history and background, see `docs/PILOT_DOCS_INDEX.md`. This file gets fully rewritten at the end of each work session — it's a snapshot, not a log.
 
-Last updated: September 9/10, 2026 (late session)
+Last updated: September 10, 2026 (end of session)
 
 ## What's live in production right now
 
@@ -12,6 +12,18 @@ Last updated: September 9/10, 2026 (late session)
 - Admin console password gate (shared password, session-based) covering `admin.html` + `index.html` + their APIs — NOT covering `/webhooks/*` or `/api/test/*`
 - 401 handling fix (session expiry now redirects to `/login` instead of showing a broken dashboard)
 - API caching bug fix (JSON endpoints no longer served as false HTTP 304s)
+- Dashboard empty-state bug fixed (commit `ca7f7f9`) — `#empty-state` was coded as a child of `#lead-list`, so the first lead-list refresh destroyed it; the next 30s auto-refresh then hit `document.getElementById('empty-state') === null` and threw, which the dashboard's generic error handling mislabeled as "Cannot reach API source" / Offline, even though the server was healthy. Fixed by making `#empty-state` a sibling instead of a child. Deployed and verified live.
+
+## Documentation reconciliation completed today
+
+`docs/`, `BACKLOG.md`, `CLAUDE.md`, and `.github/copilot-instructions.md` had drifted from what's actually shipped and from each other — this got a full pass:
+
+- **`BACKLOG.md` + `docs/PILOT_GAP_ANALYSIS.md`** reconciled against shipped code (commits `4591082`, `d6d1f94`) — stale duplicate-tracked items closed, new done entries added, scattered per-business-auth items consolidated into one prioritized entry.
+- **Docs reconciliation, three phases:**
+  - **Phase 1** (commit `b1dc2ea`) — fixed an actively-wrong claim in `docs/08_AI_CONTEXT.md`'s "Hard Operating Rules": it said to always push as a separate, later step after commit ("never combine commit + push in one command"), which directly contradicted the real `CLAUDE.md`-governed workflow.
+  - **Phase 2** (commit `ad226c0`) — rewrote `docs/PILOT_DOCS_INDEX.md` into the real source of truth: `docs/STATUS.md` added as the mandatory first-read, real index entries added for 8 previously-unindexed docs, 5 superseded docs (`01_EXECUTIVE_SUMMARY.md`, `03_CURRENT_STATE.md`, `10_NEXT_STEPS.md`, `06_BACKLOG.md`, `SWOOP_MVP_PILOT_WORKBOOK.html`) moved to `docs/archive/` via `git mv` (history preserved, nothing deleted), and all 6 resulting broken relative links in other docs fixed so nothing points at a dead path.
+  - **Phase 3** (commit `6af14d1`) — reconciled the two partially-stale files rather than archiving them: `docs/04_ARCHITECTURE.md` now documents `server/middleware/auth.js` and the `call_mode` split (folder map, component detail, and its "production forwarding" section rewritten from "still needed" to "shipped"); `docs/07_KNOWN_ISSUES.md` had KI-2 (auth) and KI-21 (production forwarding) marked resolved and KI-9 (DB backups — predates this session, verified directly in code) marked resolved, with every other catalogued issue reviewed and left open where still genuinely open.
+- **Squad Review / Backlog Sync retirement** (commit `4784b46`) — `.github/copilot-instructions.md`'s Squad Review gate (the Ray/Priya/Jordan/Morgan approval table) hadn't actually been followed all session despite `CLAUDE.md` pointing to it as authoritative. Marked retired/historical in place (content kept, not deleted) rather than left silently unused; `CLAUDE.md`'s commit/push rule is now the sole documented process governing commits.
 
 ## The #1 remaining blocker
 
@@ -39,3 +51,4 @@ Last updated: September 9/10, 2026 (late session)
 
 - Never trust a "committed and pushed" claim — always verify with `git log`/`git status`, then confirm the matching commit is live in Render's Events tab.
 - Stay in manual mode (not auto-accept) for anything touching real logic, not just cosmetic changes.
+- Documentation drifts silently and duplicates worse than code does — nothing enforces it at build time. The forwarded-call-mode fix went stale in two different backlog entries at once before anyone noticed. `CLAUDE.md` now has standing rules for `docs/STATUS.md` and `BACKLOG.md` specifically to keep this from recurring.
