@@ -392,11 +392,19 @@ async function handleInboundSMS(businessId, callerPhone, body) {
     ).run(newTurnCount, isHandoff ? 1 : 0, statusAfterReply, lead.id);
 
     if (isHandoff) {
-      // Build summary for the business owner
+      // Build summary for the business owner. lead.location_hint/urgency_level in memory still
+      // hold this message's PRE-update values (the DB row was already updated above via COALESCE
+      // with inferredLocation/tier) — merge those locals in so the summary reflects what was just
+      // captured, not stale data.
       const allMessages = db.prepare(
         'SELECT direction, body FROM messages WHERE lead_id = ? ORDER BY sent_at ASC'
       ).all(lead.id);
-      const summary = buildHandoffSummary(lead, allMessages);
+      const summaryLead = {
+        ...lead,
+        location_hint: inferredLocation || lead.location_hint,
+        urgency_level: tier || lead.urgency_level,
+      };
+      const summary = buildHandoffSummary(summaryLead, allMessages);
 
       db.prepare('UPDATE leads SET notes = ? WHERE id = ?').run(summary, lead.id);
       console.log(`🤝 AI handoff complete for lead ${lead.id}: ${summary}`);

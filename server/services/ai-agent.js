@@ -73,7 +73,7 @@ function buildSystemPrompt(business, lead = null) {
 - Urgency: ${knownUrgency || 'UNKNOWN'}`;
 
   prompt += `\n\nFRONT DESK INTAKE FLOW (SMS):
-1) Name: ask for first name if unknown.
+1) Name: ask for name if unknown.
 2) Service need: clarify the actual issue/job.
 3) Location: ask city/location if unknown.
 4) Urgency: ask whether this is urgent right now.
@@ -92,7 +92,7 @@ Rules for the flow:
   if (missingName && missingLocation) {
     prompt += `\n\nCAPTURE REQUIREMENT: Name and city are both unknown — your next message MUST ask for both together (e.g. "What's your name and what city are you in?"), not one at a time.`;
   } else if (missingName) {
-    prompt += `\n\nCAPTURE REQUIREMENT: Prioritize collecting their first name before ending the conversation.`;
+    prompt += `\n\nCAPTURE REQUIREMENT: Prioritize collecting their name before ending the conversation.`;
   } else if (missingLocation) {
     prompt += `\n\nCAPTURE REQUIREMENT: Prioritize collecting their city/location before ending the conversation.`;
   }
@@ -126,6 +126,18 @@ async function generateReply(business, lead, inboundMessage) {
   if (lead.ai_handoff_done) {
     console.log('🤖 AI agent: Handoff already done, skipping AI reply');
     return null;
+  }
+
+  // The single most-repeated, most-important step in the flow — don't trust the LLM to follow
+  // the "ask both together" instruction reliably (it doesn't, in practice). On the very first
+  // turn, if both are unknown, always ask for them together with a fixed template instead of
+  // calling OpenAI at all.
+  const missingName = !lead.caller_name;
+  const missingLocation = !lead.location_hint;
+  const isFirstTurn = (lead.ai_turn_count || 0) === 0;
+  if (missingName && missingLocation && isFirstTurn) {
+    console.log('🤖 AI agent: name + city both unknown on first turn — using deterministic ask');
+    return "Got it — what's your name, and what city is this for?";
   }
 
   // If this is the last turn, append handoff instruction
@@ -300,14 +312,20 @@ function isAfterHours(business) {
 }
 
 /**
- * Build a handoff summary for the business owner.
- * This is shown on the dashboard when a lead needs attention.
+ * Build a short handoff summary for the business owner from the lead's captured fields.
+ * Deliberately NOT a join of every raw inbound message — that got unreadable fast, and after
+ * repeated test resets on the same lead, mixed unrelated old messages into one confusing blob.
  */
 function buildHandoffSummary(lead, messages) {
-  const inboundMsgs = messages.filter(m => m.direction === 'inbound');
-  const summary = inboundMsgs.map(m => m.body).join(' | ');
-  const truncated = summary.length > 200 ? summary.slice(0, 200) + '…' : summary;
-  return `Customer said: "${truncated}" — ${inboundMsgs.length} messages exchanged, expecting callback.`;
+  const firstInbound = messages.find(m => m.direction === 'inbound');
+  const request = firstInbound ? firstInbound.body : 'their request';
+  const truncatedRequest = request.length > 140 ? request.slice(0, 140) + '…' : request;
+
+  const who = lead.caller_name || 'Customer';
+  const where = lead.location_hint || 'their area';
+  const urgency = lead.urgency_level || 'not stated';
+
+  return `${who} in ${where} needs help with: ${truncatedRequest}. Urgency: ${urgency}.`;
 }
 
 /**
