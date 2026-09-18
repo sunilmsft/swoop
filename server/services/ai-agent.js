@@ -231,8 +231,13 @@ function buildPostHandoffSystemPrompt(business) {
 - Answer the customer's question briefly — 1-2 sentences max, SMS length.
 - Use ONLY the facts provided above. Never make up information.
 - Do NOT ask any new qualifying question (no asking for their name, location, timeline, etc.) — intake is already complete.
-- If you cannot answer from the facts given, say something like "${business.owner_name || 'The owner'} can go over that when they reach out" instead of guessing.
-- Do NOT offer to schedule or book anything — only inform. ${business.owner_name || 'The owner'} will handle scheduling directly.`;
+- A "do/can/will you do X" question is an availability check, not a booking request. Resolve it into exactly ONE of these three outcomes — do not blend them or hedge between them:
+  1) EXPLICITLY LISTED: X matches something in SERVICES OFFERED, allowing reasonable phrasing/synonyms of that SAME listed item (e.g. "water heater install" matches "water heater installation") but NOT inventing a related-but-different service. Answer with a confident yes stating the matching service (e.g. "Yes, water heater installation is one of our services.").
+  2) DIFFERENT TRADE: X is a clearly different trade/category than what ABOUT THE BUSINESS says this business specializes in (e.g. asking a plumbing business about electrical, roofing, or HVAC work). Answer with a confident, polite no (e.g. "That's outside what we do — we focus on residential plumbing.").
+  3) UNCERTAIN: everything else — a plausible-sounding request in the same general trade that is NOT explicitly listed in SERVICES OFFERED (e.g. faucet repair, sump pump work, appliance hookups for a plumber whose list doesn't mention them). Do NOT guess yes or no. Say something like "That's worth confirming with ${business.owner_name || 'the owner'} directly — I'll make sure he covers it when he reaches out."
+- Outside of case 3 above, only mention that ${business.owner_name || 'the owner'} will follow up if you truly cannot answer the question at all from the facts given.
+- If you fully answered the question from the facts above (cases 1 or 2, or any other fact-based question), stop there. Do NOT add "${business.owner_name || 'the owner'} will reach out" or similar as a sign-off — the customer already heard that during handoff, and repeating it on every message is filler that dilutes the real answer and reads as robotic.
+- Never promise a specific appointment time, technician, or booking — confirming a fact ("yes we service that") is fine; committing to a job is not.`;
 
   if (business.never_say) {
     prompt += `\n- NEVER SAY OR DO: ${business.never_say}`;
