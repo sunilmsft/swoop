@@ -298,6 +298,24 @@
         .lead-card .info .lead-detail { font-size: 0.78rem; color: #475569; margin-top: 0.15rem; }
         .lead-card .meta { text-align: right; flex-shrink: 0; }
         .lead-card .meta .time { font-size: 0.78rem; color: var(--text-muted); }
+        .test-reset { margin-top: 0.4rem; }
+        .test-reset label {
+            display: flex; align-items: center; justify-content: flex-end; gap: 0.25rem;
+            font-size: 0.68rem; color: var(--text-muted); cursor: pointer;
+        }
+        .test-reset label input { margin: 0; }
+        .btn-reset-testing {
+            font-size: 0.7rem;
+            padding: 0.2rem 0.55rem;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: #f8fafc;
+            color: var(--text-muted);
+            cursor: pointer;
+            margin-top: 0.25rem;
+        }
+        .btn-reset-testing:hover { border-color: var(--primary); color: var(--primary); }
+        .test-reset-note { font-size: 0.65rem; color: var(--text-muted); margin-top: 0.15rem; max-width: 140px; }
 
         .badge {
             display: inline-block;
@@ -1049,6 +1067,11 @@
                     <div class="meta">
                         <div class="time">${timeAgo(lead.updated_at)}</div>
                         <div class="badge badge-${lead.lead_status === 'needs_attention' ? 'needs_attention' : lead.lead_status === 'new' ? 'new' : lead.lead_status === 'engaged' ? 'engaged' : lead.lead_status === 'review_sent' ? 'review' : 'converted'}">${lead.lead_status === 'needs_attention' ? '🔔 needs attention' : lead.lead_status}</div>
+                        <div class="test-reset" onclick="event.stopPropagation()">
+                            <label><input type="checkbox" id="reset-full-${lead.id}"> full reset</label>
+                            <button class="btn-reset-testing" onclick="resetLeadForTesting(${lead.id})">🔄 Reset for testing</button>
+                            <div class="test-reset-note">Testing/demo only — writes directly to live lead data.</div>
+                        </div>
                     </div>
                 </div>
             `;
@@ -1142,6 +1165,22 @@
         async function requestReview(id) {
             await apiFetch(`/api/leads/${id}/review`, { method: 'POST' });
             openLead(id); // Refresh the modal
+            loadDashboard();
+        }
+
+        // Testing/demo utility — resets AI conversation state directly on live lead data.
+        // Not a customer-facing action; see the muted note under the button in renderLeads().
+        async function resetLeadForTesting(id) {
+            const checkbox = document.getElementById(`reset-full-${id}`);
+            const full = !!(checkbox && checkbox.checked);
+            const scope = full ? 'FULL reset (also clears captured name + location)' : 'reset (AI turn count + handoff only)';
+            if (!confirm(`${scope} for lead ${id}? This writes directly to live lead data.`)) return;
+
+            await apiFetch(`/api/leads/${id}/reset`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ full }),
+            });
             loadDashboard();
         }
 
