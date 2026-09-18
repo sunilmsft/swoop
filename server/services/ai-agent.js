@@ -6,6 +6,13 @@ if (process.env.OPENAI_API_KEY) {
   openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 }
 
+// Explicit machine-readable handoff signal. Detecting "is this a handoff reply" by pattern-matching
+// arbitrary phrasing (e.g. "owner will reach out") is unreliable — real replies use wording that
+// doesn't match any hardcoded phrase. Instead, the model is instructed to emit this exact token on
+// its own line whenever it's ending the conversation for an owner follow-up; leads.js checks for its
+// presence/absence as the sole source of truth for isHandoff, then strips it before the customer sees it.
+const HANDOFF_TOKEN = '[[HANDOFF]]';
+
 /**
  * Build a system prompt from the business profile.
  * This grounds the AI agent in the business's identity, services, and rules.
@@ -63,6 +70,8 @@ function buildSystemPrompt(business, lead = null) {
   }
 
   prompt += `\n\nYOUR GOAL: Acknowledge the customer's need, ask one qualifying question (like location, timeline, or scope), then confirm you'll have ${business.owner_name || 'someone'} reach out to them.`;
+
+  prompt += `\n\nHANDOFF SIGNAL: Whenever your reply ends the conversation because ${business.owner_name || 'the owner'} will personally follow up with the customer — whether because you now have enough info (name, location, and the service need) to hand off early, or because you were explicitly told this is the final turn — end your reply with a new line containing EXACTLY the token ${HANDOFF_TOKEN} and nothing else on that line. This is a system signal, not something the customer should ever see: never mention it, explain it, or refer to it in any way. If your reply does NOT end the conversation for an owner follow-up, do not include this token at all.`;
 
   const knownName = lead && lead.caller_name ? lead.caller_name : null;
   const knownLocation = lead && lead.location_hint ? lead.location_hint : null;
@@ -172,7 +181,7 @@ async function generateReply(business, lead, inboundMessage) {
 
     chatMessages.push({
       role: 'system',
-      content: `IMPORTANT: This is your final reply. You MUST end this message by telling the customer that ${business.owner_name || 'the owner'} will personally reach out to them ${handoffTime}. Be warm and reassuring. Do NOT ask any more questions.`,
+      content: `IMPORTANT: This is your final reply. You MUST end this message by telling the customer that ${business.owner_name || 'the owner'} will personally reach out to them ${handoffTime}. Be warm and reassuring. Do NOT ask any more questions. As instructed, end with a new line containing EXACTLY ${HANDOFF_TOKEN} and nothing else — the customer must never see this token.`,
     });
   }
 
@@ -362,4 +371,4 @@ async function extractName(messages) {
   }
 }
 
-module.exports = { generateReply, generatePostHandoffReply, buildHandoffSummary, buildSystemPrompt, extractName };
+module.exports = { generateReply, generatePostHandoffReply, buildHandoffSummary, buildSystemPrompt, extractName, HANDOFF_TOKEN };

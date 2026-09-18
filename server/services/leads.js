@@ -1,6 +1,6 @@
 const db = require('../db/database');
 const { sendSMS } = require('./twilio');
-const { generateReply, generatePostHandoffReply, buildHandoffSummary, extractName } = require('./ai-agent');
+const { generateReply, generatePostHandoffReply, buildHandoffSummary, extractName, HANDOFF_TOKEN } = require('./ai-agent');
 
 const STOP_KEYWORDS = new Set(['stop', 'stopall', 'unsubscribe', 'cancel', 'end', 'quit']);
 const START_KEYWORDS = new Set(['start', 'unstop']);
@@ -360,11 +360,20 @@ async function handleInboundSMS(businessId, callerPhone, body) {
   if (business && !lead.ai_handoff_done && business.ai_enabled) {
     const aiReply = await generateReply(business, lead, body);
     const fallbackReply = buildFallbackIntakeQuestion(business, lead);
-    const replyBody = aiReply || fallbackReply;
+    const rawReplyBody = aiReply || fallbackReply;
 
     if (!aiReply) {
       console.log('🤖 AI agent unavailable, using fallback response');
     }
+
+    // The model signals handoff explicitly with a [[HANDOFF]] token on its own line — pattern-matching
+    // arbitrary phrasing (e.g. "owner will reach out") missed real replies worded differently (e.g.
+    // "Mike will reach out to you"). Token presence/absence is the sole source of truth for isHandoff;
+    // it's stripped out below so the customer never sees it.
+    const isHandoff = rawReplyBody.includes(HANDOFF_TOKEN);
+    const replyBody = isHandoff
+      ? rawReplyBody.split('\n').filter((line) => line.trim() !== HANDOFF_TOKEN).join('\n').trim()
+      : rawReplyBody;
 
     // Send the generated or fallback reply
     let twilioSid = null;
@@ -382,9 +391,6 @@ async function handleInboundSMS(businessId, callerPhone, body) {
 
     // Increment turn count
     const newTurnCount = (lead.ai_turn_count || 0) + 1;
-    const maxTurns = business.max_ai_turns || 3;
-    const ownerCallbackIntent = /have\s+\w+\s+reach\s+out|reach\s+out\s+shortly|call\s+you\s+shortly|owner\s+will\s+reach\s+out/i.test(replyBody);
-    const isHandoff = ownerCallbackIntent || newTurnCount >= maxTurns;
     const statusAfterReply = (isHandoff || tier === 'emergency' || tier === 'urgent') ? 'needs_attention' : 'engaged';
 
     db.prepare(
