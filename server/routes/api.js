@@ -118,7 +118,7 @@ router.get('/leads/:id', (req, res) => {
  * PATCH /api/leads/:id — Update lead status or notes
  */
 router.patch('/leads/:id', (req, res) => {
-  const { lead_status, notes, caller_name } = req.body;
+  const { lead_status, notes, caller_name, ai_handoff_done, ai_turn_count, urgency_level } = req.body;
   const lead = db.prepare('SELECT * FROM leads WHERE id = ?').get(req.params.id);
   if (!lead) return res.status(404).json({ error: 'Lead not found' });
 
@@ -128,6 +128,9 @@ router.patch('/leads/:id', (req, res) => {
   if (lead_status) { updates.push('lead_status = ?'); values.push(lead_status); }
   if (notes !== undefined) { updates.push('notes = ?'); values.push(notes); }
   if (caller_name !== undefined) { updates.push('caller_name = ?'); values.push(caller_name); }
+  if (ai_handoff_done !== undefined) { updates.push('ai_handoff_done = ?'); values.push(ai_handoff_done ? 1 : 0); }
+  if (ai_turn_count !== undefined) { updates.push('ai_turn_count = ?'); values.push(Number(ai_turn_count) || 0); }
+  if (urgency_level !== undefined) { updates.push('urgency_level = ?'); values.push(urgency_level || null); }
 
   if (updates.length > 0) {
     updates.push('updated_at = datetime(\'now\')');
