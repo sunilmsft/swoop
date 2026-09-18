@@ -81,18 +81,20 @@ function buildSystemPrompt(business, lead = null) {
 6) Confirm contact: confirm this phone is best number.
 
 Rules for the flow:
-- Ask only ONE question at a time unless combining name + city naturally in one short line.
+- If BOTH name and city are unknown, always ask for them together in one short message (e.g. "What's your name and what city are you in?") — never split them into two separate turns.
+- If only one of name or city is unknown, ask for just that one.
 - Do not repeat fields already known.
 - If customer indicates emergency/urgent risk, prioritize urgency and escalate fast.
 - Once name + location + service need are known, you may hand off without exhausting all questions.`;
 
   const missingName = !lead || !lead.caller_name;
   const missingLocation = !lead || !lead.location_hint;
-  if (missingName || missingLocation) {
-    const asks = [];
-    if (missingName) asks.push('their first name');
-    if (missingLocation) asks.push('their city/location');
-    prompt += `\n\nCAPTURE REQUIREMENT: If missing, prioritize collecting ${asks.join(' and ')} before ending the conversation.`;
+  if (missingName && missingLocation) {
+    prompt += `\n\nCAPTURE REQUIREMENT: Name and city are both unknown — your next message MUST ask for both together (e.g. "What's your name and what city are you in?"), not one at a time.`;
+  } else if (missingName) {
+    prompt += `\n\nCAPTURE REQUIREMENT: Prioritize collecting their first name before ending the conversation.`;
+  } else if (missingLocation) {
+    prompt += `\n\nCAPTURE REQUIREMENT: Prioritize collecting their city/location before ending the conversation.`;
   }
 
   return prompt;
@@ -182,6 +184,106 @@ async function generateReply(business, lead, inboundMessage) {
 }
 
 /**
+ * Build a factual-only system prompt for answering a customer after handoff has already
+ * happened. Deliberately excludes the qualifying/intake-flow instructions from
+ * buildSystemPrompt — the goal here is to answer from known facts, not keep gathering intake.
+ */
+function buildPostHandoffSystemPrompt(business) {
+  let prompt = `You are a text-message assistant for ${business.name}. This customer's request has already been handed off to the owner for a personal follow-up.`;
+
+  if (business.owner_name) {
+    prompt += ` The owner's name is ${business.owner_name}.`;
+  }
+
+  if (business.description) {
+    prompt += `\n\nABOUT THE BUSINESS:\n${business.description}`;
+  }
+
+  if (business.services) {
+    prompt += `\n\nSERVICES OFFERED:\n${business.services}`;
+  }
+
+  if (business.pricing) {
+    prompt += `\n\nPRICING:\n${business.pricing}`;
+  }
+
+  if (business.service_area) {
+    prompt += `\n\nSERVICE AREA: ${business.service_area}`;
+  }
+
+  if (business.hours) {
+    prompt += `\n\nBUSINESS HOURS: ${business.hours}`;
+  }
+
+  if (business.emergency_policy) {
+    prompt += `\n\nEMERGENCY/AFTER-HOURS: ${business.emergency_policy}`;
+  }
+
+  if (business.faqs) {
+    prompt += `\n\nFREQUENTLY ASKED QUESTIONS:\n${business.faqs}`;
+  }
+
+  if (business.forward_phone) {
+    prompt += `\n\nOWNER'S DIRECT PHONE: ${business.forward_phone}`;
+  }
+
+  prompt += `\n\nRULES:
+- Answer the customer's question briefly — 1-2 sentences max, SMS length.
+- Use ONLY the facts provided above. Never make up information.
+- Do NOT ask any new qualifying question (no asking for their name, location, timeline, etc.) — intake is already complete.
+- If you cannot answer from the facts given, say something like "${business.owner_name || 'The owner'} can go over that when they reach out" instead of guessing.
+- Do NOT offer to schedule or book anything — only inform. ${business.owner_name || 'The owner'} will handle scheduling directly.`;
+
+  if (business.never_say) {
+    prompt += `\n- NEVER SAY OR DO: ${business.never_say}`;
+  }
+
+  return prompt;
+}
+
+/**
+ * Generate a single lightweight reply to a customer message arriving AFTER handoff has already
+ * happened. Answers from known business facts only — no qualifying questions, no intake flow,
+ * no conversation history. Does not touch turn/handoff state; the caller owns that.
+ *
+ * @returns {string|null} The reply text, or null if AI is disabled/unavailable/errors out.
+ */
+async function generatePostHandoffReply(business, lead, inboundMessage) {
+  if (!openai) {
+    console.log('🤖 Post-handoff reply: OpenAI not configured (no OPENAI_API_KEY)');
+    return null;
+  }
+
+  if (!business.ai_enabled) {
+    console.log('🤖 Post-handoff reply: Disabled for this business');
+    return null;
+  }
+
+  const chatMessages = [
+    { role: 'system', content: buildPostHandoffSystemPrompt(business) },
+    { role: 'user', content: inboundMessage },
+  ];
+
+  try {
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: chatMessages,
+      max_tokens: 100,
+      temperature: 0.5,
+    });
+
+    const reply = completion.choices[0]?.message?.content?.trim();
+    if (!reply) return null;
+
+    console.log(`🤖 Post-handoff reply generated for lead ${lead.id}`);
+    return reply;
+  } catch (err) {
+    console.error('🤖 Post-handoff reply error:', err.message);
+    return null;
+  }
+}
+
+/**
  * Check if current time is outside business hours.
  * Simple heuristic — assumes 8am-6pm local time.
  * TODO: Use business.hours + business.timezone for real parsing.
@@ -237,4 +339,4 @@ async function extractName(messages) {
   }
 }
 
-module.exports = { generateReply, buildHandoffSummary, buildSystemPrompt, extractName };
+module.exports = { generateReply, generatePostHandoffReply, buildHandoffSummary, buildSystemPrompt, extractName };

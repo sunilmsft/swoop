@@ -1,6 +1,6 @@
 const db = require('../db/database');
 const { sendSMS } = require('./twilio');
-const { generateReply, buildHandoffSummary, extractName } = require('./ai-agent');
+const { generateReply, generatePostHandoffReply, buildHandoffSummary, extractName } = require('./ai-agent');
 
 const STOP_KEYWORDS = new Set(['stop', 'stopall', 'unsubscribe', 'cancel', 'end', 'quit']);
 const START_KEYWORDS = new Set(['start', 'unstop']);
@@ -22,6 +22,11 @@ const URGENT_PATTERN = /no heat\b|no a\/?c\b|no air ?conditioning|no hot water|\
 
 // Hardcoded, pre-approved — never AI-generated or paraphrased. {business_name} is substituted at send time.
 const EMERGENCY_RESPONSE_TEMPLATE = "That sounds like it could be a safety emergency. Please call 911 right away — if you smell gas, get to fresh air first, then call 911 or your gas company's emergency line. {business_name} will follow up once you're safe.";
+
+// After this long without any activity, a handed-off lead is treated as a fresh conversation again
+// instead of staying silently stuck — a customer texting back days later shouldn't be met with the
+// post-handoff ack forever.
+const HANDOFF_RESET_HOURS = 24;
 
 /**
  * Classify inbound text into an urgency tier: 'emergency' | 'urgent' | null (routine).
@@ -291,7 +296,13 @@ async function handleInboundSMS(businessId, callerPhone, body) {
   const inferredLocation = inferLocationHint(body);
   const priorUrgencyLevel = lead.urgency_level;
   const tier = resolveUrgencyTier(body, business);
-  const statusFromUrgency = (tier === 'emergency' || tier === 'urgent') ? 'needs_attention' : 'engaged';
+  // A lead already escalated (handed off, or already flagged needs_attention) stays escalated
+  // through a routine follow-up text — only an emergency/urgent tier can (re-)set needs_attention;
+  // a routine message is never allowed to downgrade it back to engaged.
+  const alreadyEscalated = !!lead.ai_handoff_done || lead.lead_status === 'needs_attention';
+  const statusFromUrgency = (tier === 'emergency' || tier === 'urgent')
+    ? 'needs_attention'
+    : (alreadyEscalated ? 'needs_attention' : 'engaged');
 
   // Update lead status — they replied, they're engaged
   db.prepare(
@@ -327,6 +338,22 @@ async function handleInboundSMS(businessId, callerPhone, body) {
   // First time this lead crosses into 'urgent', alert the owner immediately — don't wait for handoff.
   if (tier === 'urgent' && priorUrgencyLevel !== 'urgent' && priorUrgencyLevel !== 'emergency') {
     await notifyOwner(business, 'urgent', `Caller said: "${body}"`);
+  }
+
+  // A handed-off lead that's gone quiet for a while is treated as a fresh conversation again,
+  // rather than staying stuck on the post-handoff ack indefinitely. Uses lead.updated_at from the
+  // original SELECT at the top of the function (pre-dates any UPDATEs run above).
+  if (lead.ai_handoff_done) {
+    const lastUpdatedUtc = new Date(`${lead.updated_at.replace(' ', 'T')}Z`);
+    const hoursSinceUpdate = (Date.now() - lastUpdatedUtc.getTime()) / (1000 * 60 * 60);
+    if (hoursSinceUpdate > HANDOFF_RESET_HOURS) {
+      db.prepare(
+        'UPDATE leads SET ai_turn_count = 0, ai_handoff_done = 0, updated_at = datetime(\'now\') WHERE id = ?'
+      ).run(lead.id);
+      lead.ai_turn_count = 0;
+      lead.ai_handoff_done = 0;
+      console.log(`🔄 Lead ${lead.id}: handoff auto-reset after ${hoursSinceUpdate.toFixed(1)}h of inactivity`);
+    }
   }
 
   // --- AI Reply Agent ---
@@ -375,6 +402,25 @@ async function handleInboundSMS(businessId, callerPhone, body) {
       console.log(`🤝 AI handoff complete for lead ${lead.id}: ${summary}`);
       await notifyOwner(business, tier, summary);
     }
+  } else if (business && lead.ai_handoff_done) {
+    // Already handed off before this message. Try a quick factual answer first; fall back to the
+    // static ack if AI is unavailable. Either way: doesn't touch turn count or handoff state, and
+    // doesn't re-run emergency/urgent tier logic (already handled earlier in this function).
+    const staticAck = `Thanks — I'll make sure ${business.owner_name || 'the owner'} sees that before reaching out.`;
+    const aiReply = await generatePostHandoffReply(business, lead, body);
+    const replyBody = aiReply || staticAck;
+
+    let twilioSid = null;
+    try {
+      const twilioMsg = await sendSMS(callerPhone, replyBody);
+      twilioSid = twilioMsg.sid;
+    } catch (err) {
+      console.log(`⚠️ Post-handoff reply SMS send failed: ${err.message}`);
+    }
+
+    db.prepare(
+      'INSERT INTO messages (lead_id, direction, body, twilio_sid) VALUES (?, ?, ?, ?)'
+    ).run(lead.id, 'outbound', replyBody, twilioSid);
   }
 
   // --- Auto-extract customer name from conversation ---
