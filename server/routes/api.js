@@ -146,7 +146,11 @@ router.patch('/leads/:id', (req, res) => {
 /**
  * POST /api/leads/:id/reset — Testing/demo utility: reset AI conversation state on one lead.
  * Body: { full?: boolean }. Default resets ai_turn_count/ai_handoff_done only (today's behavior).
- * full=true also clears caller_name/location_hint, simulating a brand-new caller on the same lead.
+ * full=true also clears caller_name/location_hint (simulating a brand-new caller) AND deletes this
+ * lead's prior messages — generateReply/buildHandoffSummary/extractName all load full, unfiltered
+ * message history by lead_id with no awareness of ai_turn_count/ai_handoff_done, so old messages
+ * (e.g. a prior emergency-pattern test) would otherwise leak into the AI's context and the UI
+ * thread even after the lead row itself looks reset.
  */
 router.post('/leads/:id/reset', (req, res) => {
   const lead = db.prepare('SELECT * FROM leads WHERE id = ?').get(req.params.id);
@@ -158,6 +162,7 @@ router.post('/leads/:id/reset', (req, res) => {
     db.prepare(
       "UPDATE leads SET ai_turn_count = 0, ai_handoff_done = 0, caller_name = NULL, location_hint = NULL, updated_at = datetime('now') WHERE id = ?"
     ).run(lead.id);
+    db.prepare('DELETE FROM messages WHERE lead_id = ?').run(lead.id);
   } else {
     db.prepare(
       "UPDATE leads SET ai_turn_count = 0, ai_handoff_done = 0, updated_at = datetime('now') WHERE id = ?"
