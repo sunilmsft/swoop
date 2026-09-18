@@ -26,7 +26,7 @@ const EMERGENCY_RESPONSE_TEMPLATE = "That sounds like it could be a safety emerg
 // After this long without any activity, a handed-off lead is treated as a fresh conversation again
 // instead of staying silently stuck — a customer texting back days later shouldn't be met with the
 // post-handoff ack forever.
-const HANDOFF_RESET_HOURS = 24;
+const HANDOFF_RESET_HOURS = 2;
 
 /**
  * Classify inbound text into an urgency tier: 'emergency' | 'urgent' | null (routine).
