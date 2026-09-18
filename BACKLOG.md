@@ -10,6 +10,15 @@
 
 ---
 
+## ✅ Done (Sept 17, 2026) — Post-Handoff SMS Silence Fix
+- [x] 🔴 **Post-handoff silence fixed** (commit `8092476`) — once `ai_handoff_done=1`, any further inbound SMS got zero reply at all (`generateReply` returned null immediately and the AI-block gate skipped everything). Added `generatePostHandoffReply()` (`server/services/ai-agent.js`) — a single lightweight, facts-only OpenAI call with no qualifying questions or scheduling — with a deterministic ack-template fallback when AI is unavailable. Found via live production debugging during demo prep: a follow-up text to a lead already handed off (from an earlier emergency-pattern test message) got no response at all.
+- [x] 🟡 **`lead_status` downgrade bug fixed** (commit `8092476`) — a routine post-handoff follow-up text was resetting an already-`needs_attention` lead back to `engaged`. Only emergency/urgent tiers can change status once a lead is escalated now.
+- [x] 🟡 **Handoff auto-reset** (commit `8092476`) — a handed-off lead that goes quiet for `HANDOFF_RESET_HOURS` (named constant in `server/services/leads.js`; shipped at 24h, tuned down to 2h in commit `102461f`) re-enters the normal AI intake flow on its next inbound text instead of getting the post-handoff ack forever.
+- [x] 🟢 **AI prompt: mandatory combined name+city ask** (commit `8092476`) — `buildSystemPrompt` now requires asking for name and city together in one message when both are unknown, instead of treating that as optional.
+- [x] 🟡 **`PATCH /api/leads/:id` can reset `ai_handoff_done`/`ai_turn_count`/`urgency_level`** (commit `a4af847`) — needed to manually un-stick a production lead ahead of the demo; no prior endpoint could touch these fields on a single lead without wiping all of a business's leads.
+
+---
+
 ## 🧭 August 19, 2026 Restart Snapshot
 - [x] Created a share-safe new-collaborator brief at `docs/SWOOP_ONBOARDING_BRIEF.html` covering vision, opportunity, current status, pilot strategy, blockers, and a first-session path
 - [ ] 🟢 Refresh the onboarding brief's date, repository checkpoint, and status table after each major pilot milestone — _Priya: "A new collaborator needs to know when the snapshot stopped being current."_
@@ -229,6 +238,8 @@
 - [ ] 🔴 Bug: Owner dashboard can show stale/local leads while live Twilio traffic lands on a different host (file:// or localhost view vs `swoop-x79g.onrender.com`). Add explicit environment/source indicator + enforce single canonical dashboard URL for live operations. — _Ray: "If I can't trust what I see, I can't run my day."_
 - [ ] 🔴 Bug: Render deploys were reseeding the database on every build, which wiped live lead data and replaced it with demo rows. Remove destructive production seeding and keep seed only for local/dev. — _Priya: "I need the real conversations to survive deploys."_
 - [x] 🔴 Guard destructive purge endpoint in production (`DELETE /api/businesses/:id/leads`) unless `ALLOW_LEAD_PURGE=true`. — _Morgan: "No single click should erase customer history in prod."_
+- [ ] 🔴 Bug: Declining/rejecting a call can route to native/carrier voicemail before Twilio's `<Dial>` ever reports a no-answer/busy status back; if the voicemail interaction runs 15+ seconds, the call looks "answered" to the system and no missed-call text is sent, even though the owner never actually took the call. Needs per-carrier/device investigation (`docs/STATUS.md` already notes a related AT&T Live Voicemail issue) and possibly a `<Dial>` timeout tuning fix.
+- [ ] 🔴 Bug: Double-check whether "Next callback urgency" on the Owner Briefing dashboard pulls from the correct/most recent lead — seen showing "emergency" while the active lead's actual urgency tier was "urgent," which may mean it's reading stale data from an earlier test lead rather than live state.
 - [x] 🟡 Automatic SQLite backups added (startup snapshot + daily cron) with retention rotation. — _Priya: "If a tester asks where data went, we need a recovery story."_
 - [x] 🟡 Dashboard stat consistency fix: pending follow-up counts now JOIN non-test leads and startup cleanup removes orphan rows. — _Ray: "Numbers must agree at a glance."_
 - [x] 🟡 Owner-facing call-flow explainer added in dashboard (Twilio-primary mode + when a lead is created). — _Ray: "Tell me why a call did or did not show up."_
@@ -267,6 +278,8 @@
 - [ ] 🟡 Text owner when a lead hits "needs_attention" — _Ray: "No way to know a lead needs me unless I'm watching the dashboard"_
 - [ ] 🟢 Email notification option for leads needing attention
 - [ ] 🟢 Choose who gets notified (owner phone/email)
+- [ ] 🟢 Send a lightweight follow-up "update" text to the owner once name+location are captured on an urgent/emergency lead, rather than delaying the original instant alert until that info is known.
+- [ ] 🟡 Owner-facing urgent/emergency alerts and the dashboard should surface the actual SLA due-by time (e.g. "callback due by 11:00 AM" / "X minutes remaining"), not just a static urgency label — consider an escalation/reminder as the SLA nears expiry.
 
 **Coverage & Delegation**
 - [ ] 🟢 Redirect notifications to a backup person (owner on vacation/unavailable)
@@ -333,6 +346,8 @@
 - [ ] Lead routing by zip code (multi-truck businesses)
 
 ### AI Features (Advanced)
+- [ ] 🟡 Post-handoff AI replies should carry forward the specific callback commitment already made to the customer (e.g. "You can go over that with Mike when he calls about the leak") instead of a generic, disconnected "the owner will follow up" — should feel like one continuous conversation, not repeated boilerplate.
+- [ ] **Open product decision (not a bug):** decide whether urgency should always be required/confirmed before allowing early handoff to the owner, or remain optional as currently designed.
 - [ ] Smart lead scoring (based on message sentiment, response speed)
 - [ ] AI-generated follow-up messages tailored to the lead's inquiry
 - [ ] Appointment booking via text (integrate with calendar)
