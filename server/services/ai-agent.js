@@ -61,9 +61,15 @@ function buildSystemPrompt(business, lead = null) {
 - Keep responses SHORT — 1-3 sentences max. This is SMS, not email.
 - Be warm and helpful but don't over-promise.
 - Never make up information not provided above.
-- If you don't know the answer, say "${business.owner_name || 'the owner'} can give you more details on that."
 - Never badmouth competitors.
-- Never sign up the customer for marketing, newsletters, or anything they didn't ask for. They consented to a service reply only.`;
+- Never sign up the customer for marketing, newsletters, or anything they didn't ask for. They consented to a service reply only.
+
+CAPABILITY QUESTIONS: When the customer asks, directly or by describing a job, whether this business can do something, resolve it into exactly ONE of these three outcomes — do not blend them or hedge between them:
+  1) EXPLICITLY LISTED: the request matches something in SERVICES OFFERED, allowing reasonable phrasing/synonyms of that SAME listed item (e.g. "water heater install" matches "water heater installation") but NOT inventing a related-but-different service. Give a confident yes naming the matching service, then carry on with the intake flow as normal.
+  2) DIFFERENT TRADE: ONLY when the request belongs to a different trade entirely from the work described in ABOUT THE BUSINESS (e.g. electrical, roofing, or HVAC work for a plumbing business). If the request is the kind of work described in ABOUT THE BUSINESS — even if it is NOT in SERVICES OFFERED — it is NEVER this case. Give a confident, polite no (e.g. "That's outside what we do — we focus on residential plumbing.") and don't keep qualifying for that specific job.
+  3) UNCERTAIN (the default): everything else — a request that fits the work described in ABOUT THE BUSINESS but is NOT explicitly listed in SERVICES OFFERED (e.g. sump pumps, outdoor spigots, or shower valves for a plumber whose list doesn't mention them). Do NOT guess yes or no, and never call it outside what we do. Say something like "Good question — that's not on our standard list, so ${business.owner_name || 'the owner'} can confirm when reaching out." and keep gathering the rest of the intake info (name/location/urgency) so the handoff still happens.
+  If you are unsure whether a request is case 2 or case 3, choose case 3.
+- For anything else you don't know (scheduling specifics, pricing nuance, etc. — not a capability question), say "${business.owner_name || 'the owner'} can give you more details on that."`;
 
   if (business.never_say) {
     prompt += `\n- NEVER SAY OR DO: ${business.never_say}`;
@@ -71,7 +77,7 @@ function buildSystemPrompt(business, lead = null) {
 
   prompt += `\n\nYOUR GOAL: Acknowledge the customer's need, ask one qualifying question (like location, timeline, or scope), then confirm you'll have ${business.owner_name || 'someone'} reach out to them.`;
 
-  prompt += `\n\nHANDOFF SIGNAL: Whenever your reply ends the conversation because ${business.owner_name || 'the owner'} will personally follow up with the customer — whether because you now have enough info (name, location, and the service need) to hand off early, or because you were explicitly told this is the final turn — end your reply with a new line containing EXACTLY the token ${HANDOFF_TOKEN} and nothing else on that line. This is a system signal, not something the customer should ever see: never mention it, explain it, or refer to it in any way. If your reply does NOT end the conversation for an owner follow-up, do not include this token at all.`;
+  prompt += `\n\nHANDOFF SIGNAL: Whenever your reply ends the conversation because ${business.owner_name || 'the owner'} will personally follow up with the customer — whether because you now have enough info (name, location, and the service need) to hand off early, or because you were explicitly told this is the final turn — end your reply with a new line containing EXACTLY the token ${HANDOFF_TOKEN} and nothing else on that line. This is a system signal, not something the customer should ever see: never mention it, explain it, or refer to it in any way. If your reply does NOT end the conversation for an owner follow-up, do not include this token at all. On a handoff reply, do NOT add your own closing question or sign-off (e.g. "Talk soon!") after confirming the follow-up — a closing question is appended automatically after your message.`;
 
   const knownName = lead && lead.caller_name ? lead.caller_name : null;
   const knownLocation = lead && lead.location_hint ? lead.location_hint : null;
@@ -140,11 +146,13 @@ async function generateReply(business, lead, inboundMessage) {
   // The single most-repeated, most-important step in the flow — don't trust the LLM to follow
   // the "ask both together" instruction reliably (it doesn't, in practice). On the very first
   // turn, if both are unknown, always ask for them together with a fixed template instead of
-  // calling OpenAI at all.
+  // calling OpenAI at all. Skipped when the customer asked something ("?"), so the question gets
+  // a real answer — the CAPTURE REQUIREMENT in buildSystemPrompt still has the model ask for both.
   const missingName = !lead.caller_name;
   const missingLocation = !lead.location_hint;
   const isFirstTurn = (lead.ai_turn_count || 0) === 0;
-  if (missingName && missingLocation && isFirstTurn) {
+  const customerAskedQuestion = String(inboundMessage || '').includes('?');
+  if (missingName && missingLocation && isFirstTurn && !customerAskedQuestion) {
     console.log('🤖 AI agent: name + city both unknown on first turn — using deterministic ask');
     return "Got it — what's your name, and what city is this for?";
   }
@@ -175,13 +183,11 @@ async function generateReply(business, lead, inboundMessage) {
 
   // If it's handoff turn, add a system instruction
   if (isHandoffTurn) {
-    const handoffTime = isAfterHours(business)
-      ? (business.handoff_after_hours_msg || 'first thing tomorrow morning')
-      : `within ${business.handoff_minutes || 120} minutes`;
+    const handoffTime = getHandoffTimeframe(business);
 
     chatMessages.push({
       role: 'system',
-      content: `IMPORTANT: This is your final reply. You MUST end this message by telling the customer that ${business.owner_name || 'the owner'} will personally reach out to them ${handoffTime}. Be warm and reassuring. Do NOT ask any more questions. As instructed, end with a new line containing EXACTLY ${HANDOFF_TOKEN} and nothing else — the customer must never see this token.`,
+      content: `IMPORTANT: This is your final reply. You MUST end this message by telling the customer that ${business.owner_name || 'the owner'} will personally reach out to them ${handoffTime}. Be warm and reassuring. Do NOT ask any questions and do NOT add a closing question or sign-off (e.g. "Talk soon!") — a closing question is appended automatically after your message. As instructed, end with a new line containing EXACTLY ${HANDOFF_TOKEN} and nothing else — the customer must never see this token.`,
     });
   }
 
@@ -254,10 +260,12 @@ function buildPostHandoffSystemPrompt(business) {
 - Do NOT ask any new qualifying question (no asking for their name, location, timeline, etc.) — intake is already complete.
 - A "do/can/will you do X" question is an availability check, not a booking request. Resolve it into exactly ONE of these three outcomes — do not blend them or hedge between them:
   1) EXPLICITLY LISTED: X matches something in SERVICES OFFERED, allowing reasonable phrasing/synonyms of that SAME listed item (e.g. "water heater install" matches "water heater installation") but NOT inventing a related-but-different service. Answer with a confident yes stating the matching service (e.g. "Yes, water heater installation is one of our services.").
-  2) DIFFERENT TRADE: X is a clearly different trade/category than what ABOUT THE BUSINESS says this business specializes in (e.g. asking a plumbing business about electrical, roofing, or HVAC work). Answer with a confident, polite no (e.g. "That's outside what we do — we focus on residential plumbing.").
-  3) UNCERTAIN: everything else — a plausible-sounding request in the same general trade that is NOT explicitly listed in SERVICES OFFERED (e.g. faucet repair, sump pump work, appliance hookups for a plumber whose list doesn't mention them). Do NOT guess yes or no. Say something like "That's worth confirming with ${business.owner_name || 'the owner'} directly — I'll make sure he covers it when he reaches out."
+  2) DIFFERENT TRADE: ONLY when X belongs to a different trade entirely from the work described in ABOUT THE BUSINESS (e.g. electrical, roofing, or HVAC work for a plumbing business). If X is the kind of work described in ABOUT THE BUSINESS — even if it is NOT in SERVICES OFFERED — it is NEVER this case. Answer with a confident, polite no (e.g. "That's outside what we do — we focus on residential plumbing.").
+  3) UNCERTAIN (the default): everything else — X fits the work described in ABOUT THE BUSINESS but is NOT explicitly listed in SERVICES OFFERED (e.g. sump pumps, outdoor spigots, or shower valves for a plumber whose list doesn't mention them). Do NOT guess yes or no, and never call it outside what we do. Say something like "Good question — that's not on our standard list, so ${business.owner_name || 'the owner'} can confirm when reaching out."
+  If you are unsure whether X is case 2 or case 3, choose case 3.
 - Outside of case 3 above, only mention that ${business.owner_name || 'the owner'} will follow up if you truly cannot answer the question at all from the facts given.
 - If you fully answered the question from the facts above (cases 1 or 2, or any other fact-based question), stop there. Do NOT add "${business.owner_name || 'the owner'} will reach out" or similar as a sign-off — the customer already heard that during handoff, and repeating it on every message is filler that dilutes the real answer and reads as robotic.
+- If the customer is adding details for ${business.owner_name || 'the owner'} to know, or saying there's nothing else (not asking a question), don't treat it as a question to answer. Just acknowledge briefly, e.g. "Got it — ${business.owner_name || 'the owner'} will see that before reaching out." or "Sounds good — talk soon!"
 - Never promise a specific appointment time, technician, or booking — confirming a fact ("yes we service that") is fine; committing to a job is not.`;
 
   if (business.never_say) {
@@ -320,6 +328,14 @@ function isAfterHours(business) {
   return hour < 8 || hour >= 18;
 }
 
+// The callback window promised at handoff — shared by the AI final-turn instruction and the
+// deterministic no-AI fallback handoff in leads.js so both promise the same thing.
+function getHandoffTimeframe(business) {
+  return isAfterHours(business)
+    ? (business.handoff_after_hours_msg || 'first thing tomorrow morning')
+    : `within ${business.handoff_minutes || 120} minutes`;
+}
+
 /**
  * Build a short handoff summary for the business owner from the lead's captured fields.
  * Deliberately NOT a join of every raw inbound message — that got unreadable fast, and after
@@ -371,4 +387,4 @@ async function extractName(messages) {
   }
 }
 
-module.exports = { generateReply, generatePostHandoffReply, buildHandoffSummary, buildSystemPrompt, extractName, HANDOFF_TOKEN };
+module.exports = { generateReply, generatePostHandoffReply, buildHandoffSummary, buildSystemPrompt, extractName, getHandoffTimeframe, HANDOFF_TOKEN };

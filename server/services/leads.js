@@ -1,6 +1,6 @@
 const db = require('../db/database');
 const { sendSMS } = require('./twilio');
-const { generateReply, generatePostHandoffReply, buildHandoffSummary, extractName, HANDOFF_TOKEN } = require('./ai-agent');
+const { generateReply, generatePostHandoffReply, buildHandoffSummary, extractName, getHandoffTimeframe, HANDOFF_TOKEN } = require('./ai-agent');
 
 const STOP_KEYWORDS = new Set(['stop', 'stopall', 'unsubscribe', 'cancel', 'end', 'quit']);
 const START_KEYWORDS = new Set(['start', 'unstop']);
@@ -93,6 +93,25 @@ function inferLocationHint(text) {
   }
 
   return null;
+}
+
+// Appended deterministically to every handoff reply (see handleInboundSMS) instead of asking the
+// model to write it — the model doesn't reliably follow "always end with X" instructions (same
+// reason the first-turn name+city ask is hardcoded in generateReply in ai-agent.js). No "he/she"
+// so it works for any owner name.
+function buildHandoffClosing(business) {
+  const owner = business.owner_name || 'the owner';
+  return `Is there anything else ${owner} should know before reaching out, or anything else we can help with?`;
+}
+
+// No-AI handoff for when OpenAI is unavailable on the final turn. Without this, the fallback intake
+// question never carries the [[HANDOFF]] token, so the lead sails past max_ai_turns with no handoff
+// and no owner notification. Carries the token so the normal handoff path (status, summary,
+// notifyOwner, closing question) handles it exactly like an AI handoff.
+function buildFallbackHandoff(business, lead) {
+  const owner = business.owner_name || 'our team';
+  const thanks = lead.caller_name ? `Thanks, ${lead.caller_name}!` : 'Thanks!';
+  return `${business.name}: ${thanks} ${owner} will personally reach out to you ${getHandoffTimeframe(business)}.\n${HANDOFF_TOKEN}`;
 }
 
 function buildFallbackIntakeQuestion(business, lead) {
@@ -359,7 +378,10 @@ async function handleInboundSMS(businessId, callerPhone, body) {
   // --- AI Reply Agent ---
   if (business && !lead.ai_handoff_done && business.ai_enabled) {
     const aiReply = await generateReply(business, lead, body);
-    const fallbackReply = buildFallbackIntakeQuestion(business, lead);
+    const reachedMaxTurns = (lead.ai_turn_count || 0) + 1 >= (business.max_ai_turns || 3);
+    const fallbackReply = reachedMaxTurns
+      ? buildFallbackHandoff(business, lead)
+      : buildFallbackIntakeQuestion(business, lead);
     const rawReplyBody = aiReply || fallbackReply;
 
     if (!aiReply) {
@@ -372,7 +394,7 @@ async function handleInboundSMS(businessId, callerPhone, body) {
     // it's stripped out below so the customer never sees it.
     const isHandoff = rawReplyBody.includes(HANDOFF_TOKEN);
     const replyBody = isHandoff
-      ? rawReplyBody.split('\n').filter((line) => line.trim() !== HANDOFF_TOKEN).join('\n').trim()
+      ? `${rawReplyBody.split('\n').filter((line) => line.trim() !== HANDOFF_TOKEN).join('\n').trim()} ${buildHandoffClosing(business)}`
       : rawReplyBody;
 
     // Send the generated or fallback reply
