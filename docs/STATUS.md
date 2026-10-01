@@ -2,7 +2,7 @@
 
 **Read this first in any new session.** For full history and background, see `docs/PILOT_DOCS_INDEX.md`. This file gets fully rewritten at the end of each work session — it's a snapshot, not a log.
 
-Last updated: September 18, 2026 (end of session)
+Last updated: October 1, 2026 (catch-up — reflects all commits through `f7e69f4`, Sept 18; nothing has shipped since. `f7e69f4` confirmed as the current live deploy in Render's Events tab, Oct 1)
 
 ## What's live in production right now
 
@@ -22,10 +22,16 @@ Last updated: September 18, 2026 (end of session)
 - **Unreliable LLM-driven "ask name and city together" step made deterministic** (commit `915bfc1`) — a live demo run showed the model didn't reliably follow that instruction even though the system prompt said to. `generateReply` now returns a fixed template ("Got it — what's your name, and what city is this for?") on the very first AI turn when both are unknown, without calling OpenAI at all.
 - **Handoff summary rewritten** (commit `915bfc1`) — was a raw `" | "`-joined dump of every inbound message, which got unreadable fast and, after repeated test resets on the same lead, mixed unrelated old messages into one blob. Now a short structured summary built from the lead's actual captured fields (name, location, first request, urgency).
 - "First name" wording changed to "name" throughout the AI system prompt's intake-flow instructions (commit `915bfc1`).
+- **Handoff detection now uses an explicit `[[HANDOFF]]` token instead of a regex** (commit `13249aa`). The old `ownerCallbackIntent` regex in `leads.js` only matched a few hardcoded phrasings, so a real early handoff ("Mike will reach out to you to help with replacing the faucets in Sammamish") was missed. `ai_handoff_done` never got set, the lead never reached `needs_attention`, and the owner was never notified. The regex could also false-positive on non-handoff replies ("I'll have Mike reach out... What's the best time?"). `buildSystemPrompt` now tells the model to end every handoff reply (early or forced final turn) with a bare `[[HANDOFF]]` line. `leads.js` uses only that token's presence to decide `isHandoff` and strips it before storing or sending. The regex and its `maxTurns` OR-fallback are gone. Verified live with a real OpenAI key.
+- **Self-serve "Reset for testing" on each lead card** (commit `dc2ca57`, extended in `fc5f1d4`). New endpoint `POST /api/leads/:id/reset` sits behind the existing admin session gate. Default mode clears `ai_turn_count`/`ai_handoff_done`. `full=true` also clears `caller_name`/`location_hint` and, since `fc5f1d4`, **deletes that lead's message rows**. Without that, old messages kept feeding the AI's context and showing in the thread, because `generateReply`, `buildHandoffSummary`, and `extractName` load full history by `lead_id`. `follow_ups` are left untouched. The button and "full reset" checkbox show on every lead card in `index.html` with a confirm prompt and a "testing/demo only" note. **They are not hidden behind dev mode.** Tracked in `BACKLOG.md` (Security & Auth) as needing a server-side gate before a second business owner gets dashboard access.
+- `PATCH /api/leads/:id` also accepts `location_hint` (commit `759b582`), so a lead can be reset all the way to a brand-new-caller state.
+- **Dashboard tab's hidden second half fixed** (commit `fd3a7c3`). The prod tab's content was split across two `<div data-panel="prod">` blocks (dating back to tabs-split commit `1d0d6de`), and only the first was marked `active`. `switchTab()` only runs on clicks, so the setup banner, Recent Leads, and `#lead-list` stayed `display: none` from page load, even though `renderLeads()` kept filling them. Found while tracing why the new reset button wasn't visible.
 
 ## Live production DB access (working pattern established this session)
 
 There is no direct DB shell/SQL access to the Render instance from a local machine. The only way to read or write live SQLite data is through the deployed app's own authenticated `/api/*` routes: log into `https://swoop-x79g.onrender.com/login` with the production `ADMIN_PASSWORD` to get a session cookie, then call `/api/businesses`, `/api/leads`, `/api/leads/:id`, etc. over HTTPS. This was used repeatedly tonight to confirm real production state (Twilio config, specific lead rows) instead of trusting seed defaults or local dev data, and to manually un-stick specific leads via `PATCH /api/leads/:id` — verified each time by an independent re-fetch afterward, not just the write response.
+
+For routine demo resets, the dashboard's per-lead "Reset for testing" button (`POST /api/leads/:id/reset`) replaces the hand-built PATCH calls.
 
 ## Documentation reconciliation completed (Sept 9–10, 2026 session)
 
@@ -60,15 +66,25 @@ There is no direct DB shell/SQL access to the Render instance from a local machi
 
 **The owner-facing dashboard/console needs a real UX rethink before onboarding real pilot businesses.** Current console feels too complex and not built mobile-first. What's needed: something simple, easily accessible and navigable on a phone, that gives the business owner a clear understanding of how things stand the moment they open it — not something they have to study. Hasn't been designed yet — this is the next major thing to work through with fresh focus.
 
-## Known open item from tonight
+## Open items surfaced by Sept 17 live demo testing
 
-A `BACKLOG.md` update (new "Done (Sept 17, 2026)" section documenting this session's post-handoff-silence fixes) was drafted locally during the session but, as of this file's last edit, had not yet been committed — it needs explicit sign-off (per the standing diff-then-confirm rule) before it's pushed.
+Filed in `BACKLOG.md` in commit `f7e69f4`, none started yet. (The BACKLOG "Done (Sept 17, 2026)" update this section used to flag as uncommitted shipped in that same commit.)
+
+- 🔴 Declining a call can hit carrier/native voicemail before `<Dial>` reports no-answer/busy; a 15s+ voicemail interaction looks "answered" and no missed-call text goes out (Owner Dashboard — Leads).
+- 🔴 "Next callback urgency" on the Owner Briefing may read a stale earlier lead: it showed "emergency" while the active lead was "urgent" (Owner Dashboard — Leads).
+- 🟡 Owner alerts and the dashboard should show the actual SLA due-by time, not just an urgency label (Notifications).
+- 🟢 Send a follow-up "update" text to the owner once name+location are captured on an urgent/emergency lead (Notifications).
+- 🟡 Post-handoff replies should carry forward the specific callback commitment instead of generic boilerplate (AI Features).
+- Open product decision: should urgency be required before an early handoff is allowed? (AI Features).
 
 ## Process reminders (hard-won this session)
 
 - Verify the actual Twilio Console config via the live API before assuming it's misconfigured — tonight's "is VoiceUrl wrong" concern turned out to already be correct; the real bug was downstream in the app's own handoff-state logic, not Twilio config.
-- A lead stuck in `ai_handoff_done=1` goes completely silent on every further text, with no error logged — it looks like nothing happened at all. There are now two ways out: `PATCH /api/leads/:id` for a manual reset, and the automatic `HANDOFF_RESET_HOURS` (currently 2h) reset after inactivity.
+- Before `8092476`, a lead stuck in `ai_handoff_done=1` went completely silent on every further text, with no error logged, so it looked like nothing happened at all. Post-handoff texts now get a facts-only reply. To put a lead back into normal intake there are three ways: the dashboard's "Reset for testing" button, `PATCH /api/leads/:id`, and the automatic `HANDOFF_RESET_HOURS` (currently 2h) reset after inactivity.
 - Don't trust the LLM to reliably follow a multi-field instruction like "ask name and city together," even when the system prompt says to do it every time — a live demo showed it silently didn't. Enforce single-shot, high-repetition flow steps deterministically in code instead of relying only on the system prompt.
+- Don't infer state transitions from the LLM's free-text phrasing. The handoff regex both missed real handoffs and matched non-handoffs. Have the model emit an explicit machine-readable token (`[[HANDOFF]]`) and strip it before sending.
+- A "full" test reset has to clear everything the AI reads, not just the lead row. Message history is loaded by `lead_id` regardless of turn/handoff fields.
+- If shipped UI isn't visible, check the panel/visibility wiring before the feature itself. `fd3a7c3` was a pre-existing hidden-panel bug, not a reset-button bug.
 - AI-driven prompt changes need testing with a real, working OpenAI key, not just mock mode — mock-mode/invalid-key testing only proves the code path runs, not that the replies are good. Real-key testing this session caught a hallucinated "yes" to a service that wasn't actually listed, and a redundant "owner will reach out" sign-off tacked onto answers that had already fully answered the question.
 - Never trust a "committed and pushed" claim — always verify with `git log`/`git status`, then confirm the matching commit is live in Render's Events tab.
 - Documentation drifts silently; the standing `CLAUDE.md` rules for `docs/STATUS.md` and `BACKLOG.md` exist specifically to catch this.
